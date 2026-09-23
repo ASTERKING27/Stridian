@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy policy — Stridian</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui,sans-serif' font-size='20' font-weight='700' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root { --bg: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --line: #e1e0d9; --accent: #2a78d6; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7; --line: #2c2c2a; --accent: #3987e5; }
+    }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+           font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+    .mark { width: 32px; height: 32px; border-radius: 8px; background: var(--accent); color: #fff;
+            display: grid; place-items: center; font-weight: 700; }
+    h1 { font-size: 1.8rem; margin: 28px 0 4px; letter-spacing: -0.01em; }
+    h2 { font-size: 1.1rem; margin: 28px 0 6px; }
+    p, li { color: var(--ink-2); }
+    .updated { font-size: .9rem; }
+    a { color: var(--accent); }
+    ul { padding-left: 20px; }
+    footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: .9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="brand" href="/"><span class="mark">S</span><b>Stridian</b></a>
+
+  <h1>Privacy policy</h1>
+  <p class="updated">Last updated: 23 September 2026</p>
+
+  <p>
+    Stridian is a university sports talent-profiling tool. Students enter their details,
+    coaches record test results and match or drill videos, and Stridian suggests the
+    position that suits each student best, with the reasons, a training plan and a diet
+    plan. This page explains what it stores and who can see it.
+  </p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li>Details a student enters: name, sport, age, height, weight, blood group, the
+      position they play, diet preference, allergies, daily training hours and notes.</li>
+    <li>What coaches record: test results, notes, the position they confirm, and videos of
+      drills and matches.</li>
+    <li>Coach accounts: name, email address, sport and a securely hashed password.</li>
+  </ul>
+
+  <h2>How it is used</h2>
+  <p>
+    Only to produce each student's position analysis, training suggestions and diet plan,
+    and to improve Stridian's position suggestions from coaches' confirmations. Nothing is
+    sold, used for advertising, or shared with anyone outside the university's coaching staff.
+  </p>
+
+  <h2>Who can see it</h2>
+  <ul>
+    <li>A coach sees only the students of the sport they coach.</li>
+    <li>The site administrator can see all students, including in a private Google Sheet
+      summary.</li>
+  </ul>
+
+  <h2>Where it is stored</h2>
+  <ul>
+    <li>Student and coach records: a Postgres database hosted by Neon (Singapore).</li>
+    <li>Videos and preview images: a private folder in the administrator's Google Drive.
+      <strong>Video files are deleted 30 days after upload</strong>; the measurements taken
+      from them are kept.</li>
+    <li>The website itself runs on Vercel.</li>
+  </ul>
+
+  <h2>Google account access</h2>
+  <p>
+    Stridian connects to the administrator's own Google account with the
+    <code>drive.file</code> permission only. That lets it create and manage the video folder
+    and the squad sheet it made itself — it cannot see any other file in that Drive. Stridian
+    does not ask students or coaches to sign in with Google.
+  </p>
+  <p>
+    Stridian's use and transfer of information received from Google APIs adheres to the
+    <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API
+    Services User Data Policy</a>, including the Limited Use requirements.
+  </p>
+
+  <h2>Removing your data</h2>
+  <p>
+    Ask your coach or the administrator, and your record, results and videos will be deleted.
+    Deleting a student in Stridian removes their videos from storage as well.
+  </p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="mailto:arthabiswas0987@gmail.com">arthabiswas0987@gmail.com</a></p>
+
+  <footer><a href="/">Back to Stridian</a></footer>
+</main>
+</body>
+</html>

@@ -157,6 +157,8 @@ body {
 .whoami small { color: var(--ink-3); font-size: 11px; }
 
 main { padding: 26px 30px 40px; max-width: 1140px; width: 100%; }
+.sitefoot { margin-top: 32px; font-size: .8rem; color: var(--ink-3); }
+.sitefoot a { color: inherit; }
 
 .topbar { display: none; }
 .tabbar { display: none; }

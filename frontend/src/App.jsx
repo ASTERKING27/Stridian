@@ -172,7 +172,10 @@ export default function App() {
           </div>
         </header>
 
-        <main>{body}</main>
+        <main>
+          {body}
+          <footer className="sitefoot"><a href="/privacy.html">Privacy policy</a></footer>
+        </main>
 
         <nav className="tabbar" aria-label="Sections">
           {nav.map(item => (

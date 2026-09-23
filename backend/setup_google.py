@@ -36,9 +36,9 @@ ENV = Path(__file__).resolve().parent.parent / ".env"
 
 def set_env(key, value):
     """Add or replace one KEY=value line in .env, leaving every other line alone."""
-    lines = ENV.read_text().splitlines() if ENV.exists() else []
+    lines = ENV.read_text(encoding="utf-8-sig").splitlines() if ENV.exists() else []
     lines = [ln for ln in lines if not ln.startswith(f"{key}=")] + [f"{key}={value}"]
-    ENV.write_text("\n".join(lines) + "\n")
+    ENV.write_text("\n".join(lines) + "\n", encoding="utf-8")
     os.environ[key] = value
 
 

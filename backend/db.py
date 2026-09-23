@@ -48,9 +48,14 @@ else:
         SQLALCHEMY_URL,
         pool_pre_ping=True,   # Neon suspends when idle; don't hand out a dead connection
         pool_recycle=300,
-        # Neon's pooled endpoint is PgBouncer in transaction mode, which server-side
-        # prepared statements don't survive
-        connect_args={"prepare_threshold": None},
+        connect_args={
+            # Neon's pooled endpoint is PgBouncer in transaction mode, which server-side
+            # prepared statements don't survive
+            "prepare_threshold": None,
+            # a network that blocks port 5432 otherwise hangs silently for minutes;
+            # fail fast with a real error instead
+            "connect_timeout": 15,
+        },
     )
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
