@@ -1,0 +1,11 @@
+# The website's Python dependencies — what Vercel installs for the API.
+# Deliberately light: no OpenCV, MediaPipe or PyTorch. Those only run on the worker
+# computer and live in backend/requirements.txt.
+fastapi==0.141.1
+sqlalchemy==2.0.54
+pydantic==2.13.5
+psycopg[binary]==3.3.6
+numpy>=1.26,<3
+google-auth==2.58.0
+requests==2.34.2
+tzdata==2026.4

@@ -1,0 +1,16 @@
+# Match-footage analysis (the YOLO lane). Optional — install it on top of
+# requirements.txt when you want multi-player match analysis.
+#
+# This pulls in PyTorch, so expect a few hundred MB and a slower install. The rest
+# of the app works without it; match uploads simply report "unavailable".
+#
+# On Windows/Linux CPU-only, install torch first to avoid the CUDA build:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# then:
+#   pip install -r requirements-match.txt
+
+ultralytics==8.4.158
+lap==0.5.12
+# ultralytics asks for opencv-python by name; pin it to the same version as the
+# opencv-contrib-python in requirements.txt so only one cv2 build is in play.
+opencv-python==4.10.0.84
