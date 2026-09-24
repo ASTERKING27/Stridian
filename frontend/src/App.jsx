@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { api, initials, setUnauthorizedHandler, token } from './api'
 import Icon from './Icon'
 import Login from './Login'
@@ -248,6 +249,7 @@ export default function App() {
           </nav>
         )}
       </div>
+      <Analytics />
     </div>
   )
 }
