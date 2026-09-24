@@ -1,5 +1,5 @@
 """
-Match-footage analysis: YOLO pose + ByteTrack over every player.
+Match-footage analysis: YOLO person detection + ByteTrack over every player.
 
 This is the second analysis lane. The MediaPipe lane (video.py) looks at one athlete
 doing a drill and judges *technique*. This lane takes a full match or a snippet, finds
@@ -28,7 +28,11 @@ from match_metrics import (MIN_RATE_SECONDS, aggregate, build_track_metrics,  # 
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = BASE_DIR / "models"
-POSE_MODEL = MODEL_DIR / "yolo11n-pose.pt"
+# The plain detector, not the pose model: only the boxes are used here, and the pose model
+# misses players the size they are in a wide shot (0 of ~20 in broadcast frames, where
+# this finds them all).
+DETECT_MODEL = MODEL_DIR / "yolo11n.pt"
+IMGSZ = 1280            # 640 shrinks a 1080p frame 3x, and distant players with it
 RELEASE = "https://github.com/ultralytics/assets/releases/download/v8.3.0"
 
 SAMPLE_FPS = 5          # ByteTrack copes fine at 5 fps and it keeps a long clip tractable
@@ -36,6 +40,7 @@ MAX_FRAMES = 900        # hard ceiling: 3 minutes of play at the sample rate
 MAX_TRACKS_KEPT = 30    # a squad plus officials; the rest is detection noise
 MIN_TRACK_SECONDS = 2.0
 MIN_TRACK_SHARE = 0.06  # seen in at least 6% of sampled frames
+FRAME_CHOICES = 16      # stills kept for calibration, spread through the clip
 
 
 # --------------------------------------------------------------------------- #
@@ -64,20 +69,25 @@ def backend_status():
             "available": False,
             "detail": "ultralytics is not installed — run: pip install -r requirements-match.txt",
         }
-    if not _ensure(POSE_MODEL):
+    if not _ensure(DETECT_MODEL):
         return {
             "available": False,
-            "detail": f"Pose weights missing. Download {RELEASE}/{POSE_MODEL.name} to {POSE_MODEL}.",
+            "detail": f"YOLO weights missing. Download {RELEASE}/{DETECT_MODEL.name} to {DETECT_MODEL}.",
         }
-    return {"available": True, "detail": "YOLO11n-pose + ByteTrack"}
+    return {"available": True, "detail": "YOLO11n + ByteTrack"}
 
 
 # --------------------------------------------------------------------------- #
 # The pipeline
 # --------------------------------------------------------------------------- #
 
-def analyse_match(path, attack_direction="right", keyframe_path=None, family="field"):
-    """Track every player in the clip. Never raises — returns a status dict."""
+def analyse_match(path, attack_direction="right", keyframe_path=None, family="field",
+                  frames_dir=None):
+    """Track every player in the clip. Never raises — returns a status dict.
+
+    With `frames_dir`, it also saves FRAME_CHOICES stills from across the clip (plus the
+    keyframe) there, so the coach can calibrate on a moment where the marking they need
+    is fully in view."""
     status = backend_status()
     if not status["available"]:
         return {"status": "unavailable", "message": status["detail"], "tracks": []}
@@ -95,10 +105,11 @@ def analyse_match(path, attack_direction="right", keyframe_path=None, family="fi
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         step = max(1, round(src_fps / SAMPLE_FPS))
 
-        pose = YOLO(str(POSE_MODEL))
+        model = YOLO(str(DETECT_MODEL))
 
         raw = defaultdict(list)     # track id -> [(t, cx, cy, box_h)]
         frame_boxes, frames_kept = {}, {}
+        sampled_at = []             # frame index of every sampled frame
         index = sampled = 0
 
         while sampled < MAX_FRAMES:
@@ -110,8 +121,11 @@ def analyse_match(path, attack_direction="right", keyframe_path=None, family="fi
                 continue
 
             t = round(index / src_fps, 3)
-            result = pose.track(frame, persist=True, classes=[0], conf=0.35,
-                                imgsz=640, tracker="bytetrack.yaml", verbose=False)[0]
+            sampled_at.append(index)
+            # conf 0.1 on purpose: ByteTrack uses the weak boxes to keep a partly hidden
+            # player's track going, and only starts new tracks from confident ones
+            result = model.track(frame, persist=True, classes=[0], conf=0.1,
+                                 imgsz=IMGSZ, tracker="bytetrack.yaml", verbose=False)[0]
 
             boxes = getattr(result, "boxes", None)
             if boxes is not None and boxes.id is not None:
@@ -184,7 +198,20 @@ def analyse_match(path, attack_direction="right", keyframe_path=None, family="fi
                 for tid, cx, cy, bw, bh in frame_boxes[best_index] if tid in kept_ids
             ]
             if keyframe_path:
-                _write_keyframe(path, best_index, keyframe_path)
+                _write_frames(path, {best_index: keyframe_path})
+
+        frames, frames_start = [], None
+        if frames_dir and frames_kept:
+            n = len(sampled_at)
+            count = min(FRAME_CHOICES, n)
+            picks = sorted({sampled_at[round(i * (n - 1) / max(1, count - 1))]
+                            for i in range(count)} | {best_index})
+            targets = {i: Path(frames_dir) / f"frame-{k}.jpg" for k, i in enumerate(picks)}
+            written = _write_frames(path, targets)
+            kept_picks = [i for i in picks if i in written]
+            frames = [{"t": round(i / src_fps, 2), "path": str(targets[i])} for i in kept_picks]
+            if best_index in kept_picks:
+                frames_start = kept_picks.index(best_index)
 
         return {
             **base, "status": "done",
@@ -192,22 +219,29 @@ def analyse_match(path, attack_direction="right", keyframe_path=None, family="fi
             "teamMeanX": round(team_mean_x, 3),
             "tracks": tracks,
             "keyframeBoxes": keyframe_boxes,
+            "frames": frames,
+            "framesStart": frames_start,
         }
     finally:
         cap.release()
 
 
-def _write_keyframe(video_path, frame_index, out_path):
-    """Save the chosen frame unannotated — the UI draws the clickable boxes over it."""
+def _write_frames(video_path, targets):
+    """Save {frame index: path} unannotated — the UI draws the clickable boxes and the
+    calibration points over them. Returns the indices actually written."""
     cap = cv2.VideoCapture(str(video_path))
+    written = set()
     try:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-        ok, frame = cap.read()
-        if not ok:
-            return
-        h, w = frame.shape[:2]
-        if w > 1280:
-            frame = cv2.resize(frame, (1280, int(h * 1280 / w)))
-        cv2.imwrite(str(out_path), frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        for index in sorted(targets):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, index)
+            ok, frame = cap.read()
+            if not ok:
+                continue
+            h, w = frame.shape[:2]
+            if w > 1280:
+                frame = cv2.resize(frame, (1280, int(h * 1280 / w)))
+            if cv2.imwrite(str(targets[index]), frame, [cv2.IMWRITE_JPEG_QUALITY, 85]):
+                written.add(index)
     finally:
         cap.release()
+    return written

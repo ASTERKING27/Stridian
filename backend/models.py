@@ -222,6 +222,9 @@ class MatchClip(UploadJob, Base):
     # four image points + the real-world metres they correspond to; set once a coach
     # marks out the pitch, and enough to re-derive every metric without re-reading video
     calibration: Mapped[dict | None] = mapped_column(JSON)
+    # stills from across the clip to calibrate on: {"items": [{"key", "t"}], "start": index
+    # of the keyframe among them}. Kept after the video itself is deleted, like the keyframe.
+    calibration_frames: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     assignments: Mapped[list["MatchAssignment"]] = relationship(

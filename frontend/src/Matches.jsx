@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, authedImage, inFlight, statusPill, statusWord, usePoll, utc } from './api'
 import Icon from './Icon'
 import { UploadButton, WorkerNote } from './VideoCard'
@@ -141,6 +141,9 @@ function MatchUploader({ onUploaded }) {
   )
 }
 
+// seconds -> "1:05"
+const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+
 function ClipDetail({ id, onBack, onChanged, onDeleted }) {
   const [clip, setClip] = useState(null)
   const [students, setStudents] = useState([])
@@ -152,6 +155,10 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
   const [preset, setPreset] = useState(null)
   const [calPoints, setCalPoints] = useState([])
   const [calNote, setCalNote] = useState(null)
+  // calibrating on a still other than the keyframe: which one, and its image once loaded
+  const [frameAt, setFrameAt] = useState(null)
+  const [shot, setShot] = useState(null)
+  const shots = useRef({})
 
   const loadClip = () => api.match(id).then(c => { setClip(c); setError('') }).catch(e => setError(e.message))
   useEffect(() => {
@@ -170,6 +177,21 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
       .catch(() => {})
     return () => { dead = true; if (url) URL.revokeObjectURL(url) }
   }, [id, ready])
+
+  useEffect(() => {
+    if (frameAt === null) return undefined
+    let dead = false
+    const have = shots.current[frameAt]
+    if (have) {
+      setShot({ at: frameAt, url: have })
+      return undefined
+    }
+    authedImage(`/api/matches/${id}/frames/${frameAt}`)
+      .then(url => { shots.current[frameAt] = url; if (!dead) setShot({ at: frameAt, url }) })
+      .catch(() => {})
+    return () => { dead = true }
+  }, [id, frameAt])
+  useEffect(() => () => Object.values(shots.current).forEach(u => URL.revokeObjectURL(u)), [])
 
   const byTrack = useMemo(
     () => Object.fromEntries((clip?.tracks ?? []).map(t => [t.trackId, t])),
@@ -205,8 +227,26 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
     onDeleted()
   }
 
+  const frames = clip.frames ?? []
+  const scrubbing = preset && frames.length > 1
+  const shotReady = !scrubbing || shot?.at === frameAt    // don't mark points on the old still
+  const shown = scrubbing ? (shot?.url ?? frame) : frame
+
+  function startCalibrating(p) {
+    setPreset(p)
+    setCalPoints([])
+    setSelected(null)
+    if (frames.length > 1) setFrameAt(clip.framesStart ?? 0)
+  }
+
+  function stopCalibrating() {
+    setPreset(null)
+    setCalPoints([])
+    setFrameAt(null)
+  }
+
   function markPoint(event) {
-    if (!preset || calPoints.length >= 4) return
+    if (!preset || calPoints.length >= 4 || !shotReady) return
     const box = event.currentTarget.getBoundingClientRect()
     setCalPoints(p => [...p, {
       x: Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
@@ -225,8 +265,7 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
         label: preset.label,
       })
       setClip(res)
-      setPreset(null)
-      setCalPoints([])
+      stopCalibrating()
       setCalNote({ ok: true, text: res.message })
       onChanged()
     } catch (err) {
@@ -302,8 +341,9 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
 
           <div className={`frame ${preset ? 'calibrating' : ''}`}
                onClick={preset ? markPoint : undefined}>
-            {frame
-              ? <img src={frame} alt="Frame from the match clip with every tracked player boxed" />
+            {shown
+              ? <img src={shown} alt="Frame from the match clip with every tracked player boxed"
+                     style={shotReady ? undefined : { opacity: 0.5 }} />
               : <div className="skeleton">Loading frame…</div>}
 
             {preset && calPoints.map((p, i) => (
@@ -332,6 +372,20 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
           {preset && (
             <div className="banner warn" style={{ marginTop: 14, marginBottom: 0 }}>
               <b>{preset.label}</b> — click each corner in order.
+              {scrubbing && (
+                <div className="field" style={{ margin: '10px 0 0' }}>
+                  <label htmlFor="calframe">
+                    Frame at {clock(frames[frameAt].t)} — move this until every corner is in view
+                  </label>
+                  <input id="calframe" type="range" min="0" max={frames.length - 1} step="1"
+                         value={frameAt}
+                         onChange={e => { setFrameAt(Number(e.target.value)); setCalPoints([]) }} />
+                  <p className="muted" style={{ marginTop: 4 }}>
+                    The metres are worked out for the camera position in this frame, so they
+                    are only right if the camera stayed still for the whole clip.
+                  </p>
+                </div>
+              )}
               <ol className="calsteps">
                 {preset.corners.map((corner, i) => (
                   <li key={corner}
@@ -347,9 +401,7 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
                 </button>
                 <button className="linkbtn" onClick={() => setCalPoints([])}
                         disabled={!calPoints.length}>Start over</button>
-                <button className="linkbtn" onClick={() => { setPreset(null); setCalPoints([]) }}>
-                  Cancel
-                </button>
+                <button className="linkbtn" onClick={stopCalibrating}>Cancel</button>
               </div>
             </div>
           )}
@@ -404,12 +456,12 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
           ) : (
             <>
               <p className="muted" style={{ marginBottom: 8 }}>
-                Pick whichever marking is fully visible and clearly in shot:
+                Pick a marking you can see all four corners of — you can move through the
+                clip to find a frame where it is fully in view:
               </p>
               <div className="toggles">
                 {clip.calibrationPresets.map(p => (
-                  <button key={p.key} type="button"
-                          onClick={() => { setPreset(p); setCalPoints([]); setSelected(null) }}>
+                  <button key={p.key} type="button" onClick={() => startCalibrating(p)}>
                     {p.label}
                   </button>
                 ))}

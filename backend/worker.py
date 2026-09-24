@@ -116,11 +116,15 @@ def run_video(db, job, tmp):
     import video
 
     src = tmp / ("clip" + Path(job.original_name).suffix.lower())
-    storage.download(job.stored_name, src)
+    stored, student = job.stored_name, job.student
+    height, sport = student.height_cm, student.sport
+    # Hand the database connection back before minutes of download and analysis. Held
+    # open and idle that long, it gets cut (by Neon, WARP or the network), and saving the
+    # result then fails; from the pool it is checked, and replaced if it died.
+    db.commit()
+    storage.download(stored, src)
     thumb = tmp / "thumb.jpg"
-    student = job.student
-    result = video.analyse_video(src, height_cm=student.height_cm, sport=student.sport,
-                                 thumbnail_path=thumb)
+    result = video.analyse_video(src, height_cm=height, sport=sport, thumbnail_path=thumb)
 
     job.status = result.get("status", "failed")
     job.message = result.get("message")
@@ -150,11 +154,13 @@ def run_match(db, job, tmp):
     import match_video
 
     src = tmp / ("match" + Path(job.original_name).suffix.lower())
-    storage.download(job.stored_name, src)
-    keyframe = tmp / "key.jpg"
-    result = match_video.analyse_match(src, attack_direction=job.attack_direction,
-                                       keyframe_path=keyframe,
-                                       family=sc.SPORT_MATCH_FAMILY[job.sport])
+    stored, direction, family = job.stored_name, job.attack_direction, sc.SPORT_MATCH_FAMILY[job.sport]
+    db.commit()   # release the connection for the long part, as in run_video
+    storage.download(stored, src)
+    keyframe, frames_dir = tmp / "key.jpg", tmp / "frames"
+    frames_dir.mkdir()
+    result = match_video.analyse_match(src, attack_direction=direction, keyframe_path=keyframe,
+                                       family=family, frames_dir=frames_dir)
 
     job.status = result.get("status", "failed")
     job.message = result.get("message")
@@ -165,6 +171,9 @@ def run_match(db, job, tmp):
     job.keyframe_boxes = result.get("keyframeBoxes", [])
     if keyframe.exists():
         job.keyframe_key = storage.save_bytes(f"match-{job.id}-keyframe.jpg", keyframe.read_bytes())
+    items = [{"key": storage.save_bytes(f"match-{job.id}-frame-{k}.jpg", Path(f["path"]).read_bytes()),
+              "t": f["t"]} for k, f in enumerate(result.get("frames", []))]
+    job.calibration_frames = {"items": items, "start": result.get("framesStart")} if items else None
     job.claimed_at = None
     db.commit()
 

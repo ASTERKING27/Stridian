@@ -983,6 +983,10 @@ def coach_clip(clip_id: int, coach: Coach, db: Session) -> MatchClip:
     return clip
 
 
+def frame_items(clip: MatchClip) -> list:
+    return (clip.calibration_frames or {}).get("items") or []
+
+
 def clip_detail(clip: MatchClip) -> dict:
     """The clip as the UI needs it. Raw per-frame samples stay on the server — they are
     only there so calibration can re-derive metrics, and they would dwarf the payload."""
@@ -999,6 +1003,8 @@ def clip_detail(clip: MatchClip) -> dict:
             for t in (clip.tracks or [])
         ],
         "keyframeBoxes": clip.keyframe_boxes or [],
+        "frames": [{"t": f["t"]} for f in frame_items(clip)],
+        "framesStart": (clip.calibration_frames or {}).get("start"),
         "calibration": clip.calibration,
         "calibrationPresets": CALIBRATION_PRESETS.get(clip.sport, []),
     }
@@ -1107,6 +1113,14 @@ def get_match(clip_id: int, db: Session = Depends(get_db),
 def match_keyframe(clip_id: int, db: Session = Depends(get_db),
                    coach: Coach = Depends(auth.current_coach)):
     return stored_image(keyframe_of(coach_clip(clip_id, coach, db)), "No keyframe for this clip")
+
+
+@app.get("/api/matches/{clip_id}/frames/{n}")
+def match_frame(clip_id: int, n: int, db: Session = Depends(get_db),
+                coach: Coach = Depends(auth.current_coach)):
+    """One of the stills a coach can scrub through to calibrate on."""
+    items = frame_items(coach_clip(clip_id, coach, db))
+    return stored_image(items[n]["key"] if 0 <= n < len(items) else None, "No such frame")
 
 
 def assigned_students(clip: MatchClip):
@@ -1229,7 +1243,7 @@ def delete_match(clip_id: int, db: Session = Depends(get_db),
                  coach: Coach = Depends(auth.current_coach)):
     clip = coach_clip(clip_id, coach, db)
     touched = assigned_students(clip)
-    forget_files(clip.stored_name, keyframe_of(clip))
+    forget_files(clip.stored_name, keyframe_of(clip), *(f["key"] for f in frame_items(clip)))
     db.delete(clip)
     db.commit()
     sync_sheet(db, touched)

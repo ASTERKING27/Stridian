@@ -9,7 +9,7 @@ training plan and a diet plan on top.
 
 - **Backend:** FastAPI + SQLAlchemy — Postgres (Neon) online, SQLite on one computer
 - **Drill video:** MediaPipe Pose + OpenCV — one athlete, technique
-- **Match video:** YOLO11n-pose + ByteTrack — every player, what they did in the game
+- **Match video:** YOLO11n + ByteTrack — every player, what they did in the game
 - **Frontend:** React + Vite — no UI kit, no chart library, no router
 - **Auth:** coach and student accounts, PBKDF2 passwords, bearer-token sessions, email
   codes over Gmail SMTP (stdlib only)
@@ -341,7 +341,7 @@ They answer different questions and neither replaces the other.
 
 | | Drill lane | Match lane |
 |---|---|---|
-| Model | MediaPipe Pose | YOLO11n-pose + ByteTrack |
+| Model | MediaPipe Pose | YOLO11n + ByteTrack |
 | Input | one athlete, one movement | full match or snippet, everyone visible |
 | Belongs to | a student | the squad, until a coach identifies players |
 | Measures | technique — joint angles, symmetry, trunk stability | output — distance, speed, sprints, positioning |
@@ -416,7 +416,12 @@ A match clip (up to 600 MB) is uploaded the same way, with a label and which way
 team attacks, and queued for the worker. YOLO
 detects every person, ByteTrack follows them at 5 fps over the first three minutes, and
 each track that survives (seen for 2+ seconds in 6%+ of frames) becomes a candidate
-player. The app then serves a keyframe — the moment with the most players visible — and
+player.
+
+It uses YOLO's plain person detector at 1280 pixels, not the pose model at 640: only the
+boxes are needed, and in wide broadcast frames the pose model found none of the ~20
+players (60–130 pixels tall) that the detector found. The larger size costs about three
+times the time per frame, which a background worker can afford. The app then serves a keyframe — the moment with the most players visible — and
 the coach clicks their student once. That track's numbers attach to that student, and
 several students can be identified in the same clip.
 
@@ -457,11 +462,17 @@ camera — framing shifts these numbers more than the players do.
 
 ### Pitch calibration — getting real metres
 
-Click one marking you know the size of and everything becomes real. On the same keyframe
-used for identification, pick a preset (penalty area, six-yard box, full pitch, FIBA
-court, volleyball court, cricket pitch, badminton or tennis court, Kho-Kho field), click
-the four corners in the order the app lists them, and a homography maps every tracked
-position onto the ground plane in metres.
+Click one marking you know the size of and everything becomes real. Pick a preset
+(penalty area, six-yard box, full pitch, FIBA court, volleyball court, cricket pitch,
+badminton or tennis court, Kho-Kho field), move the frame slider to a moment where all
+four of its corners are in view, click them in the order the app lists them, and a
+homography maps every tracked position onto the ground plane in metres.
+
+The slider steps through 16 stills the worker saves from across the analysed part of the
+clip, starting on the identification keyframe. They are kept after the video itself is
+deleted, like the keyframe. Calibration is worked out for the camera position in the
+chosen still, so it is only right for footage from a camera that stays put — a tripod
+at the side of the pitch, not a broadcast camera that pans with the ball.
 
 What that unlocks:
 
@@ -551,6 +562,7 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `PUT` | `/api/matches/{id}/upload` | own sport | one piece of the match video |
 | `GET` | `/api/matches/{id}` | own sport | tracks, metrics and clickable keyframe boxes |
 | `GET` | `/api/matches/{id}/keyframe` | own sport | the frame the coach identifies players on |
+| `GET` | `/api/matches/{id}/frames/{n}` | own sport | one of the stills to calibrate on |
 | `POST` | `/api/matches/{id}/assign` | own sport | "track 7 is this student" |
 | `DELETE` | `/api/matches/{id}/assign/{track}` | own sport | undo an identification |
 | `POST` `DELETE` | `/api/matches/{id}/calibrate` | own sport | mark out the pitch / remove it |
