@@ -197,6 +197,11 @@ then Google, then Vercel, because each step produces a value the next one needs.
 5. **Worker.** On the laptop (later the iMac): same `.env`, `pip install -r
    backend/requirements.txt` (plus the YOLO extras), then `python backend/worker.py`.
 
+**Visitor statistics** use Vercel Web Analytics: turn it on under the project's
+**Analytics** tab, and the next deployment starts counting page views (anonymous, no
+cookies). The site only includes the analytics script in builds Vercel makes, so a copy
+built on a laptop never asks for it.
+
 `COACH_SIGNUP_CODE` matters once the site is public: without it anyone could create a
 coach account and read a squad's details, including allergies and blood groups — so on
 Vercel, sign-up stays closed until it is set. Share the code only with your coaches.
