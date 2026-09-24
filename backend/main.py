@@ -29,7 +29,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 import auth
@@ -1130,7 +1130,8 @@ def assigned_students(clip: MatchClip):
 @app.post("/api/matches/{clip_id}/assign")
 def assign_track(clip_id: int, payload: MatchAssignIn, db: Session = Depends(get_db),
                  coach: Coach = Depends(auth.current_coach)):
-    """'This tracked player is that student.' Re-assigning a track replaces the old link."""
+    """'This tracked player is that student.' A track names one student and a student is
+    one track per clip, so naming them again moves the link rather than adding a second."""
     clip = coach_clip(clip_id, coach, db)
     student = coach_student(payload.student_id, coach, db)
 
@@ -1139,12 +1140,13 @@ def assign_track(clip_id: int, payload: MatchAssignIn, db: Session = Depends(get
         raise HTTPException(404, f"Track {payload.track_id} is not in this clip")
 
     touched = [student]
-    existing = db.scalar(select(MatchAssignment).where(
-        MatchAssignment.clip_id == clip.id, MatchAssignment.track_id == payload.track_id))
-    if existing:
-        touched.append(existing.student)
-        db.delete(existing)
-        db.flush()
+    for old in db.scalars(select(MatchAssignment).where(
+            MatchAssignment.clip_id == clip.id,
+            or_(MatchAssignment.track_id == payload.track_id,
+                MatchAssignment.student_id == student.id))).all():
+        touched.append(old.student)
+        db.delete(old)
+    db.flush()
 
     db.add(MatchAssignment(clip_id=clip.id, student_id=student.id, track_id=payload.track_id,
                            metrics=track["metrics"], context=track["context"]))

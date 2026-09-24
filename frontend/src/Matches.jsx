@@ -217,8 +217,16 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
   }
 
   async function unassign(trackId) {
-    setClip(await api.unassignTrack(id, trackId))
-    onChanged()
+    setBusy(true)
+    try {
+      setClip(await api.unassignTrack(id, trackId))
+      if (selected === trackId) setSelected(null)
+      onChanged()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function remove() {
@@ -289,6 +297,10 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
   }
 
   const boxes = clip.keyframeBoxes ?? []
+  // a student is one player per clip: picking them for another box moves them there
+  const trackOf = Object.fromEntries(
+    clip.tracks.filter(t => t.assignedTo).map(t => [t.assignedTo.studentId, t.trackId]))
+  const selectedWho = selected ? byTrack[selected]?.assignedTo : null
   const assignedCount = clip.tracks.filter(t => t.assignedTo).length
 
   return (
@@ -413,11 +425,22 @@ function ClipDetail({ id, onBack, onChanged, onDeleted }) {
                 <select value={choice} onChange={e => setChoice(e.target.value)}
                         style={{ width: 'auto', minWidth: 190 }} aria-label="Student">
                   <option value="">Choose a student…</option>
-                  {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {students.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                      {trackOf[s.id] && trackOf[s.id] !== selected ? ` — now #${trackOf[s.id]}, moves here` : ''}
+                    </option>
+                  ))}
                 </select>
-                <button className="btn sm" onClick={assign} disabled={!choice || busy}>
+                <button className="btn sm" onClick={assign}
+                        disabled={!choice || busy || Number(choice) === selectedWho?.studentId}>
                   {busy ? 'Saving…' : 'Identify'}
                 </button>
+                {selectedWho && (
+                  <button className="linkbtn danger" onClick={() => unassign(selected)} disabled={busy}>
+                    Not {selectedWho.name} — remove
+                  </button>
+                )}
                 <button className="linkbtn" onClick={() => setSelected(null)}>Cancel</button>
               </div>
             </div>
