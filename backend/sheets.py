@@ -21,7 +21,7 @@ SHEETS = "https://sheets.googleapis.com/v4/spreadsheets"
 TABS = ("Pending", "Verified")
 
 HEADER = [
-    "Student ID", "Name", "Sport", "Status",
+    "Student ID", "Name", "Email", "Sport", "Status",
     "Verified position", "Verified by", "Verified on",
     "Recommended position", "Fit /100", "Confidence", "Coach agrees with system",
     "Tests vs match footage", "Strengths", "Weak links",
@@ -69,7 +69,8 @@ def row_for(report: dict, student) -> list:
         agrees = "Yes" if rec.get("position") == student.verified_position else "No"
 
     row = [
-        student.id, student.name, student.sport, "Verified" if verified else "Pending",
+        student.id, student.name, student.email or "", student.sport,
+        "Verified" if verified else "Pending",
         student.verified_position or "", student.verified_by_name or "",
         _local(student.verified_at),
         rec.get("position", ""), rec.get("fit", ""), rec.get("confidence", ""), agrees,

@@ -7,7 +7,9 @@ import VideoCard from './VideoCard'
 
 const TABS = ['Overview', 'Measurements', 'Positions', 'Match', 'Training', 'Diet', 'Video']
 
-export default function Report({ id, onBack, onDeleted, onChanged }) {
+/* A coach's view of one student, or — with `readOnly` — a verified student's view of
+   their own report: no verifying, no deleting, no video tab. */
+export default function Report({ id, readOnly = false, onBack, onDeleted, onChanged }) {
   const [data, setData] = useState(null)
   const [history, setHistory] = useState([])
   const [error, setError] = useState('')
@@ -15,9 +17,13 @@ export default function Report({ id, onBack, onDeleted, onChanged }) {
 
   useEffect(() => {
     setData(null)
+    if (readOnly) {
+      api.myReport().then(r => { setHistory(r.history); setData(r) }).catch(e => setError(e.message))
+      return
+    }
     api.analysis(id).then(setData).catch(e => setError(e.message))
     api.history(id).then(setHistory).catch(() => {})
-  }, [id])
+  }, [id, readOnly])
 
   const byMetric = useMemo(() => {
     const out = {}
@@ -33,7 +39,7 @@ export default function Report({ id, onBack, onDeleted, onChanged }) {
   const { student, recommended, metrics, positions, developmentPlan, videos, diet } = data
   const videoDrills = (videos ?? []).flatMap(v => v.metrics?.drills ?? [])
   const tabs = TABS.filter(t =>
-    (t !== 'Video' || (videos && videos.length > 0)) &&
+    (t !== 'Video' || (!readOnly && videos && videos.length > 0)) &&
     (t !== 'Match' || (data.matchClips && data.matchClips.length > 0))
   )
 
@@ -45,9 +51,11 @@ export default function Report({ id, onBack, onDeleted, onChanged }) {
 
   return (
     <>
-      <button className="linkbtn" onClick={onBack} style={{ marginBottom: 12 }}>
-        <Icon name="back" size={13} /> All students
-      </button>
+      {onBack && (
+        <button className="linkbtn" onClick={onBack} style={{ marginBottom: 12 }}>
+          <Icon name="back" size={13} /> All students
+        </button>
+      )}
 
       <div className="pagehead">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -55,17 +63,18 @@ export default function Report({ id, onBack, onDeleted, onChanged }) {
             <h1>{student.name}</h1>
             <p className="muted">
               {data.sport}
+              {student.email ? ` · ${student.email}` : ''}
               {student.age ? ` · ${student.age} yrs` : ''}
               {student.height_cm ? ` · ${student.height_cm} cm` : ''}
               {student.weight_kg ? ` · ${student.weight_kg} kg` : ''}
               {student.blood_group ? ` · ${student.blood_group}` : ''}
             </p>
           </div>
-          <button className="linkbtn danger" onClick={remove}>Delete student</button>
+          {!readOnly && <button className="linkbtn danger" onClick={remove}>Delete student</button>}
         </div>
       </div>
 
-      <VerifyCard student={student} positions={positions} recommended={recommended}
+      <VerifyCard student={student} positions={positions} recommended={recommended} readOnly={readOnly}
                   onChange={s => { setData(d => ({ ...d, student: s })); onChanged?.() }} />
 
       <div className="seg" role="tablist" style={{ maxWidth: 620 }}>
@@ -126,7 +135,7 @@ export default function Report({ id, onBack, onDeleted, onChanged }) {
 
 /* The coach's confirmation of where this student plays. It moves them to the Verified
    tab of the squad sheet and becomes a training example for the model. */
-function VerifyCard({ student, positions, recommended, onChange }) {
+function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
   const [choice, setChoice] = useState(recommended?.position ?? positions[0]?.position ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -159,8 +168,10 @@ function VerifyCard({ student, positions, recommended, onChange }) {
               ? agrees ? 'The system agrees.' : `The system currently suggests ${recommended.position}.`
               : ''}
           </span>
-          <button className="linkbtn" disabled={busy}
-                  onClick={() => run(() => api.unverify(student.id))}>Undo</button>
+          {!readOnly && (
+            <button className="linkbtn" disabled={busy}
+                    onClick={() => run(() => api.unverify(student.id))}>Undo</button>
+          )}
         </div>
         {error && <div className="note err">{error}</div>}
       </div>
@@ -209,7 +220,7 @@ function Overview({ data }) {
       <div className="card">
         <p className="empty">
           <b>No test results yet</b>
-          Record them in Coach Entry and the full report appears here.
+          The full report appears here once test results are recorded.
         </p>
       </div>
     )
@@ -608,7 +619,7 @@ function Training({ plan, drills, role, hasVideo }) {
           </div>
         </div>
         {!hasVideo
-          ? <p className="empty"><b>No clips yet</b>Upload footage in Coach Entry and the movement work appears here.</p>
+          ? <p className="empty"><b>No clips yet</b>Movement work appears here once drill footage has been analysed.</p>
           : drills.length === 0
             ? <p className="muted">Nothing in the uploaded clips crossed a coaching threshold.</p>
             : <ul className="advice">

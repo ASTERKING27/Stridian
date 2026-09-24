@@ -21,8 +21,12 @@ const EMPTY = {
   training_hours_per_day: '',
 }
 
+/* Two users: a signed-in student enrolling themselves (they pick the sport and type the
+   enrolment code their coach gave them), or a coach adding someone by hand to their own
+   sport. */
 export default function StudentForm({ sports, coach, onSaved }) {
   const [sport, setSport] = useState(coach?.sport ?? sports[0].name)
+  const [enrolCode, setEnrolCode] = useState('')
   const [form, setForm] = useState(EMPTY)
   const [allergies, setAllergies] = useState([])
   const [allergens, setAllergens] = useState(Object.keys(ALLERGEN_LABELS))
@@ -47,7 +51,7 @@ export default function StudentForm({ sports, coach, onSaved }) {
     setBusy(true)
     setStatus(null)
     try {
-      await api.createStudent({
+      const body = {
         name: form.name.trim(),
         sport,
         age: num(form.age),
@@ -59,8 +63,14 @@ export default function StudentForm({ sports, coach, onSaved }) {
         diet_preference: form.diet_preference,
         allergies: allergies.join(',') || null,
         training_hours_per_day: num(form.training_hours_per_day),
-      })
-      setStatus({ ok: true, text: `Thanks, ${form.name.trim()} — your ${sport} coach can now add your test results.` })
+      }
+      if (!coach) {
+        // the page switches to "waiting for your coach" once this lands
+        onSaved(await api.enrol({ ...body, enrol_code: enrolCode }))
+        return
+      }
+      await api.createStudent(body)
+      setStatus({ ok: true, text: `${form.name.trim()} added to ${sport}. They won't have a login — students who enrol themselves do.` })
       setForm({ ...EMPTY, diet_preference: form.diet_preference })
       setAllergies([])
       onSaved()
@@ -74,22 +84,33 @@ export default function StudentForm({ sports, coach, onSaved }) {
   return (
     <form onSubmit={submit}>
       <div className="pagehead">
-        <h1>Student entry</h1>
+        <h1>{coach ? 'Add a student' : 'Enrol'}</h1>
         <p className="lede">
-          Fill this in once. It goes straight to the coach for your sport — nobody else
-          sees it — and they add the test results afterwards.
+          {coach
+            ? `For someone who can't enrol themselves. Students normally enrol on their own, with their university email and your enrolment code (on the Dashboard).`
+            : `Fill this in once. It goes straight to the coach for your sport — nobody else sees it. They record your test results, and your report appears here once they've verified you.`}
         </p>
       </div>
 
       <div className="card">
         <div className="card-head"><div><h2>About you</h2></div></div>
 
-        <div className="field">
-          <label htmlFor="sport">Sport</label>
-          <select id="sport" value={sport}
-                  onChange={e => { setSport(e.target.value); set('declared_position', '') }}>
-            {sports.map(s => <option key={s.slug} value={s.name}>{s.name}</option>)}
-          </select>
+        <div className="grid2">
+          <div className="field">
+            <label htmlFor="sport">Sport</label>
+            <select id="sport" value={sport} disabled={!!coach}
+                    onChange={e => { setSport(e.target.value); set('declared_position', '') }}>
+              {sports.map(s => <option key={s.slug} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
+          {!coach && (
+            <div className="field">
+              <label htmlFor="ecode">Enrolment code *</label>
+              <input id="ecode" required autoComplete="off" value={enrolCode}
+                     onChange={e => setEnrolCode(e.target.value)} />
+              <p className="muted" style={{ marginTop: 6 }}>Your coach gives you this.</p>
+            </div>
+          )}
         </div>
 
         <div className="grid2">
@@ -183,8 +204,8 @@ export default function StudentForm({ sports, coach, onSaved }) {
                     value={form.student_notes} onChange={e => set('student_notes', e.target.value)} />
         </div>
 
-        <button className="btn" disabled={busy || !form.name.trim()}>
-          {busy ? 'Saving…' : 'Submit my details'}
+        <button className="btn" disabled={busy || !form.name.trim() || (!coach && !enrolCode.trim())}>
+          {busy ? 'Saving…' : coach ? 'Add student' : 'Enrol'}
         </button>
         {status && <div className={`note ${status.ok ? 'ok' : 'err'}`}>{status.text}</div>}
       </div>

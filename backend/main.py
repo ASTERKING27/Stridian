@@ -4,9 +4,11 @@ Stridian — API.
 Run from this folder:  uvicorn main:app --reload
 Interactive docs:      http://127.0.0.1:8000/docs
 
-Access model: students enter their own details without an account. Everything else
-is coach-only, and a coach is locked to one sport — a football coach never sees
-basketball students, their weights, or their videos.
+Access model: students sign in with their university email (proved by an emailed
+code) and enrol with an enrolment code their coach hands out. They see their own report,
+read-only, once a coach has verified them. Everything else is coach-only, and a coach is
+locked to one sport — a football coach never sees basketball students, their weights,
+or their videos.
 
 This process never runs a vision model. Uploaded videos are queued, and the worker
 (worker.py, on the laptop or the lab iMac) analyses them whenever it is switched on.
@@ -17,9 +19,10 @@ import hmac
 import logging
 import os
 import re
+import secrets
 from collections import Counter
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
@@ -30,6 +33,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 import auth
+import mailer
 import match_metrics
 import migrate
 import nutrition
@@ -40,12 +44,12 @@ import storage
 import trainer
 from db import Base, SessionLocal, engine, get_db
 from models import (AppState, Coach, MatchAssignment, MatchClip, ModelVersion, PositionWeight,
-                    Student, TestResult, VideoAnalysis)
+                    Student, StudentAccount, StudentSession, TestResult, VideoAnalysis)
 from models import _now as utcnow
 from schemas import (CalibrationIn, CoachLogin, CoachOut, CoachSignup, MatchAssignIn,
-                     MatchClipOut, MatchUploadIn, ResultsIn, StudentCreate, StudentListItem,
-                     StudentOut, StudentUpdate, TokenOut, UploadIn, VerifyIn, VideoOut,
-                     WeightsIn)
+                     MatchClipOut, MatchUploadIn, ResultsIn, StudentCodeIn, StudentCreate,
+                     StudentEnrol, StudentListItem, StudentLogin, StudentOut, StudentUpdate,
+                     StudentVerifyIn, TokenOut, UploadIn, VerifyIn, VideoOut, WeightsIn)
 
 log = logging.getLogger("stridian")
 
@@ -128,6 +132,15 @@ def record_baseline(db: Session, sport_name: str, note: str):
     """Weights a person chose become a version too — the starting point for training."""
     db.add(ModelVersion(sport=sport_name, kind="baseline", weights=load_weights(db, sport_name),
                         deployed=True, note=note))
+
+
+def history_rows(db: Session, student_id: int) -> list:
+    """Every recorded measurement, oldest first, for progress-over-time charts."""
+    rows = db.scalars(
+        select(TestResult).where(TestResult.student_id == student_id)
+        .order_by(TestResult.recorded_at.asc(), TestResult.id.asc())
+    ).all()
+    return [{"metric_key": r.metric_key, "value": r.value, "recorded_at": r.recorded_at} for r in rows]
 
 
 def latest_results(db: Session, student_id: int) -> dict:
@@ -302,7 +315,11 @@ def sync_sheet(db: Session, students=()):
     next pass, so a missed push repairs itself.
     """
     try:
-        for student in students:
+        # a row cached before a sheet column was added would land in the wrong columns;
+        # rebuild those instead of pushing them
+        width = len(sheets.HEADER)
+        stale = [s for s in db.scalars(select(Student)) if s.sheet_row and len(s.sheet_row) != width]
+        for student in {*students, *stale}:
             student.sheet_row = sheets.row_for(build_report(db, student), student)
         db.commit()
         if sheets.configured():
@@ -362,6 +379,7 @@ def health(db: Session = Depends(get_db)):
         "storage": storage.backend(),
         "worker": worker_status(db),
         "chunkSize": storage.CHUNK,
+        "studentDomain": student_domain(),
     }
 
 
@@ -410,6 +428,160 @@ def logout(authorization: str = Header(), db: Session = Depends(get_db),
            coach: Coach = Depends(auth.current_coach)):
     """Revoke just the token that made this call, leaving other devices signed in."""
     auth.revoke_token(db, authorization.split(" ", 1)[1].strip())
+
+
+# ----------------------------- student accounts ---------------------------- #
+#
+# Sign-up and "forgot password" are one flow: ask for a code, then send the code with
+# the password you want. Whoever can read the inbox sets the password, so a stranger who
+# types someone else's email first gains nothing.
+
+def student_domain() -> str:
+    return os.environ.get("STUDENT_EMAIL_DOMAIN", "srmist.edu.in").strip().lower().lstrip("@")
+
+
+CODES_PER_DAY = 300   # all accounts together — stays under Gmail's ~500 emails a day
+
+
+def university_email(raw: str) -> str:
+    email = raw.strip().lower()
+    # a plain local part only: anything looser (an "=?q?...?=" encoded word, say) can be
+    # decoded by the mail library into a different, outside recipient
+    if not re.fullmatch(r"[a-z0-9._%+-]+@" + re.escape(student_domain()), email):
+        raise HTTPException(400, f"Use your university email — the one ending in @{student_domain()}.")
+    return email
+
+
+def student_view(account: StudentAccount) -> dict:
+    """What a signed-in student sees about themselves. Coach notes stay with the coach."""
+    s = account.student
+    return {"email": account.email,
+            "student": StudentOut.model_validate(s).model_dump(exclude={"coach_notes"}) if s else None}
+
+
+@app.post("/api/student/code", status_code=202)
+def student_code(payload: StudentCodeIn, db: Session = Depends(get_db)):
+    """Email a 6-digit code — to create an account, or to reset a forgotten password."""
+    email = university_email(payload.email)
+    since = utcnow() - timedelta(days=1)
+    if (db.scalar(select(func.count()).select_from(StudentAccount)
+                  .where(StudentAccount.code_sent_at > since)) or 0) >= CODES_PER_DAY:
+        raise HTTPException(429, "Stridian has sent a lot of sign-in codes today — try again "
+                                 "tomorrow, or tell your coach.")
+    account = db.scalar(select(StudentAccount).where(StudentAccount.email == email))
+    if account is None:
+        account = StudentAccount(email=email)
+        db.add(account)
+    elif auth.code_cooling_down(account):
+        raise HTTPException(429, "A code was sent less than a minute ago — check your inbox "
+                                 "(and spam folder) before asking for another.")
+    code = auth.new_code(account)
+    try:
+        mailer.send_code(email, code)
+    except mailer.MailError as exc:
+        db.rollback()   # nothing was sent, so don't start the resend timer
+        raise HTTPException(503, str(exc)) from exc
+    db.commit()
+    return {"email": email}
+
+
+@app.post("/api/student/verify")
+def student_verify(payload: StudentVerifyIn, db: Session = Depends(get_db)):
+    """The emailed code plus a new password: sets the password and signs the student in."""
+    email = payload.email.strip().lower()
+    # locked until commit, so guesses sent in parallel still count one at a time
+    account = db.scalar(select(StudentAccount).where(StudentAccount.email == email).with_for_update())
+    ok = account is not None and auth.use_code(account, payload.code)
+    db.commit()     # a wrong guess still counts
+    if not ok:
+        raise HTTPException(400, "That code is wrong or has expired — ask for a new one.")
+    account.password_hash = auth.hash_password(payload.password)
+    # a new password signs out every other device
+    db.query(StudentSession).filter(StudentSession.account_id == account.id).delete()
+    db.commit()
+    return {"token": auth.issue_student_token(db, account), "me": student_view(account)}
+
+
+@app.post("/api/student/login")
+def student_login(payload: StudentLogin, db: Session = Depends(get_db)):
+    email = payload.email.strip().lower()
+    account = db.scalar(select(StudentAccount).where(StudentAccount.email == email))
+    stored = account.password_hash if account and account.password_hash else auth.dummy_hash()
+    if not auth.verify_password(payload.password, stored) or not (account and account.password_hash):
+        raise HTTPException(401, "Email or password is incorrect")
+    return {"token": auth.issue_student_token(db, account), "me": student_view(account)}
+
+
+@app.get("/api/student/me")
+def student_me(account: StudentAccount = Depends(auth.current_student)):
+    return student_view(account)
+
+
+@app.post("/api/student/logout", status_code=204)
+def student_logout(authorization: str = Header(), db: Session = Depends(get_db),
+                   account: StudentAccount = Depends(auth.current_student)):
+    auth.revoke_token(db, authorization.split(" ", 1)[1].strip(), StudentSession)
+
+
+@app.post("/api/student/enrol", status_code=201)
+def student_enrol(payload: StudentEnrol, db: Session = Depends(get_db),
+                  account: StudentAccount = Depends(auth.current_student)):
+    """A signed-in student joins a sport, using the code that sport's coach gave out."""
+    if account.student is not None:
+        raise HTTPException(409, f"You're already enrolled in {account.student.sport}.")
+    sport = require_sport(payload.sport)
+    code = get_state(db, f"enrol:{sport}").get("code", "")
+    typed = re.sub(r"[\s-]", "", payload.enrol_code).upper()
+    if not code or not hmac.compare_digest(typed.encode(), code.encode()):
+        raise HTTPException(403, f"That enrolment code isn't right for {sport} — ask your coach for it.")
+    data = payload.model_dump(exclude={"enrol_code"})
+    data["sport"] = sport
+    student = Student(**data)
+    account.student = student
+    db.add(student)
+    db.commit()
+    sync_sheet(db, [student])
+    db.refresh(account)
+    return student_view(account)
+
+
+@app.get("/api/student/report")
+def student_report(db: Session = Depends(get_db),
+                   account: StudentAccount = Depends(auth.current_student)):
+    """The student's own report — read-only, and only once a coach has verified them."""
+    student = account.student
+    if student is None or student.status != "verified":
+        raise HTTPException(403, "Your report appears here once your coach has verified you.")
+    report = build_report(db, student)
+    report["student"].pop("coach_notes", None)
+    report["history"] = history_rows(db, student.id)
+    return report
+
+
+# ----------------------- enrolment codes (for coaches) ---------------------- #
+
+CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # no 0/O or 1/I to misread
+
+
+def enrol_code(db: Session, sport: str, fresh: bool = False) -> str:
+    """This sport's enrolment code, made on first use. `fresh` replaces it, so the old
+    one stops working (students already enrolled are unaffected)."""
+    key = f"enrol:{sport}"
+    code = get_state(db, key).get("code")
+    if fresh or not code:
+        code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(6))
+        set_state(db, key, {"code": code})
+    return code
+
+
+@app.get("/api/enrol-code")
+def get_enrol_code(db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    return {"sport": coach.sport, "code": enrol_code(db, coach.sport)}
+
+
+@app.post("/api/enrol-code/rotate")
+def rotate_enrol_code(db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    return {"sport": coach.sport, "code": enrol_code(db, coach.sport, fresh=True)}
 
 
 # ---------------------------- sports & weights ----------------------------- #
@@ -482,10 +654,13 @@ def reset_weights(sport: str, db: Session = Depends(get_db),
 # --------------------------------- students -------------------------------- #
 
 @app.post("/api/students", response_model=StudentOut, status_code=201)
-def create_student(payload: StudentCreate, db: Session = Depends(get_db)):
-    """Public — students register themselves; the sport decides which coach sees them."""
+def create_student(payload: StudentCreate, db: Session = Depends(get_db),
+                   coach: Coach = Depends(auth.current_coach)):
+    """A coach adding a student by hand, in their own sport. Students enrol themselves
+    through /api/student/enrol instead."""
     data = payload.model_dump()
     data["sport"] = require_sport(payload.sport)
+    auth.require_own_sport(coach, data["sport"])
     student = Student(**data)
     db.add(student)
     db.commit()
@@ -610,13 +785,7 @@ def put_results(student_id: int, payload: ResultsIn, db: Session = Depends(get_d
 @app.get("/api/students/{student_id}/history")
 def get_history(student_id: int, db: Session = Depends(get_db),
                 coach: Coach = Depends(auth.current_coach)):
-    """Every recorded measurement, for progress-over-time charts."""
-    student = coach_student(student_id, coach, db)
-    rows = db.scalars(
-        select(TestResult).where(TestResult.student_id == student.id)
-        .order_by(TestResult.recorded_at.asc(), TestResult.id.asc())
-    ).all()
-    return [{"metric_key": r.metric_key, "value": r.value, "recorded_at": r.recorded_at} for r in rows]
+    return history_rows(db, coach_student(student_id, coach, db).id)
 
 
 # --------------------------------- analysis -------------------------------- #
@@ -1086,7 +1255,8 @@ def training_overview(db: Session = Depends(get_db), coach: Coach = Depends(auth
 
     # how often the live model already agrees with the coaches, from the cached rows
     judged = [s.sheet_row[AGREES_COLUMN] for s in verified
-              if s.sheet_row and s.sheet_row[AGREES_COLUMN] in ("Yes", "No")]
+              if s.sheet_row and len(s.sheet_row) == len(sheets.HEADER)
+              and s.sheet_row[AGREES_COLUMN] in ("Yes", "No")]
 
     versions = db.scalars(select(ModelVersion).where(ModelVersion.sport == sport)
                           .order_by(ModelVersion.id.desc()).limit(25)).all()

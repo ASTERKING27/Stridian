@@ -2,8 +2,8 @@
 
 *Sports talent intelligence.*
 
-Sport-specific talent profiling for students. A student registers themselves, their
-coach records test results, and the app scores them against every position in that
+Sport-specific talent profiling for students. A student signs in with their university
+email and enrols with their coach's code, the coach records test results, and the app scores them against every position in that
 sport, ranks them, and explains *why* — then adds pose-based video analysis, a
 training plan and a diet plan on top.
 
@@ -11,7 +11,8 @@ training plan and a diet plan on top.
 - **Drill video:** MediaPipe Pose + OpenCV — one athlete, technique
 - **Match video:** YOLO11n-pose + ByteTrack — every player, what they did in the game
 - **Frontend:** React + Vite — no UI kit, no chart library, no router
-- **Auth:** coach accounts, PBKDF2 passwords, bearer-token sessions (stdlib only)
+- **Auth:** coach and student accounts, PBKDF2 passwords, bearer-token sessions, email
+  codes over Gmail SMTP (stdlib only)
 - **Online:** website on Vercel, videos in Google Drive, heavy lifting on a worker
   computer (the laptop now, the lab iMac later), a live Google Sheet of the squad
 
@@ -21,20 +22,47 @@ Sports covered: Football, Basketball, Volleyball, Cricket, Badminton/Tennis, Kho
 
 ## Who sees what
 
-| | Needs an account | Scope |
+| | Who | Scope |
 |---|---|---|
-| Student Entry | no | anyone can register themselves for any sport |
-| Coach Entry, Dashboard, Weights | yes | **only the coach's own sport** |
+| Enrol, then My profile | a student, signed in with their university email | **only their own record**; the report is read-only and appears once a coach has verified them |
+| Add Student, Coach Entry, Dashboard, Weights, AI Training | a coach | **only the coach's own sport** |
 
 A coach signs up once and picks their sport. From then on every list, report, video
 and weight they can reach belongs to that sport — a football coach asking for a
-basketball student gets a 404, and asking for basketball weights gets a 403. Students
-never need an account: they pick their sport on the form and land in that coach's
-squad automatically.
+basketball student gets a 404, and asking for basketball weights gets a 403.
+
+### Student accounts
+
+A student signs in with their **university email** (`@srmist.edu.in`, set by
+`STUDENT_EMAIL_DOMAIN`) and a password they choose **for Stridian** — never their
+university email password, which Stridian never sees. To prove the address is theirs,
+Stridian emails a 6-digit code to it; the password is only ever set together with
+that code. So signing up and "forgot password" are the same two steps, and someone who
+types a classmate's email first gains nothing — they never see the code. Codes last 15
+minutes, die after 5 wrong guesses, and a new one can be sent once a minute.
+
+Being a university student is not enough to join a squad: enrolling needs that sport's
+**enrolment code**, shown to its coaches on the Dashboard (six characters, no 0/O or
+1/I to misread). "Make a new code" retires the old one; students already enrolled are
+unaffected. A coach can still add someone by hand from **Add Student** — that student
+has no login.
+
+Once enrolled, a student sees what they sent and "waiting for your coach". After a
+coach verifies them, the same page becomes their report — best position and why,
+measurements, positions, match, training and diet — with nothing they can change. The
+coach's private notes are never sent to them. Un-verifying hides it again, and deleting
+the student leaves the login in place so they can enrol again.
+
+The codes are sent through a Gmail account over SMTP with an **app password**: turn on
+2-Step Verification for that Google account, create an app password at
+<https://myaccount.google.com/apppasswords>, and set `SMTP_USER` (the Gmail address)
+and `SMTP_PASSWORD` (the 16-letter app password). On a laptop without them the code is
+printed in the server's terminal instead; on Vercel sign-up says email isn't set up.
 
 Passwords are PBKDF2-SHA256 with a per-user salt at 240k iterations. Session tokens
 are 256-bit random strings and only their SHA-256 is stored, so a database dump does
-not hand anyone a live session.
+not hand anyone a live session. Coach and student sessions live in separate tables, so
+a student's token opens no coach endpoint.
 
 ---
 
@@ -163,8 +191,9 @@ then Google, then Vercel, because each step produces a value the next one needs.
    creates the video folder and the squad sheet and writes the rest of `.env` itself.
 4. **Vercel.** Import the GitHub repository. `vercel.json` already sets the build, the
    Python function and the Singapore region. Under Settings → Environment Variables add
-   `DATABASE_URL`, `COACH_SIGNUP_CODE`, `STORAGE=drive`, and the five `GOOGLE_*` values
-   from your `.env`. Deploy.
+   `DATABASE_URL`, `COACH_SIGNUP_CODE`, `STORAGE=drive`, the five `GOOGLE_*` values
+   from your `.env`, and `SMTP_USER` / `SMTP_PASSWORD` for the students' email codes.
+   Deploy.
 5. **Worker.** On the laptop (later the iMac): same `.env`, `pip install -r
    backend/requirements.txt` (plus the YOLO extras), then `python backend/worker.py`.
 
@@ -212,7 +241,8 @@ A Google Sheet with two tabs, **Pending** and **Verified**, rewritten whenever a
 changes — a student enrols, a coach records results, verifies someone, identifies them
 in match footage, or edits weights. Each row carries the student's details, status,
 who verified them and when, the verified and recommended positions and whether they
-agree, strengths, weak links, the diet targets, allergies and notes.
+agree, strengths, weak links, the diet targets, allergies and notes, and the
+student's university email when they enrolled themselves.
 
 Each student's row is computed when their data changes and cached, so a push is two
 API calls however big the squad gets. Every push rewrites both tabs completely, so a
@@ -497,7 +527,14 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `GET` `POST` | `/api/auth/me` `/logout` | coach | current account, revoke this token |
 | `GET` | `/api/sports`, `/api/sports/{sport}` | — | metric batteries and positions |
 | `GET` `PUT` `POST` | `/api/sports/{sport}/weights[/reset]` | own sport | read / edit / reset weights |
-| `POST` | `/api/students` | — | student registers themselves |
+| `POST` | `/api/student/code` | — | email a 6-digit code (new account or forgotten password) |
+| `POST` | `/api/student/verify` | — | code + chosen password → signed in |
+| `POST` | `/api/student/login` | — | student sign-in |
+| `GET` `POST` | `/api/student/me` `/logout` | student | own account and enrolment, revoke this token |
+| `POST` | `/api/student/enrol` | student | join a sport with its enrolment code |
+| `GET` | `/api/student/report` | student | own report, read-only, once verified |
+| `GET` `POST` | `/api/enrol-code[/rotate]` | coach | the sport's enrolment code / make a new one |
+| `POST` | `/api/students` | own sport | a coach adds a student by hand |
 | `GET` | `/api/students` | coach | roster, already scoped to their sport |
 | `GET` `PATCH` `DELETE` | `/api/students/{id}` | own sport | one student |
 | `GET` `PUT` | `/api/students/{id}/results` | own sport | read / record test results |
@@ -532,8 +569,11 @@ for the progress sparklines, while the analysis always uses the newest value per
 
 ## The interface
 
-Six screens behind a rail on desktop and a bottom tab bar on phones, with a
-light / dark / follow-system theme toggle that persists.
+Six coach screens behind a rail on desktop and a bottom tab bar on phones, with a
+light / dark / follow-system theme toggle that persists. Signed out, the site opens on
+the student sign-in, with a link across to the coach one. A student gets a single page
+that moves from the enrolment form, to "waiting for your coach", to their own
+read-only report.
 
 The report itself is tabbed: **Overview** (best-fit position, the reasoning, the radar,
 standouts and weak links, and the two-source panel with its reconciliation),
@@ -574,11 +614,12 @@ backend/
   sheets.py         the Pending / Verified Google Sheet
   gapi.py           the one Google login both of those use
   setup_google.py   one-time: Google sign-in, creates the folder and the sheet
-  auth.py           password hashing + bearer-token sessions
+  auth.py           password hashing, bearer-token sessions, email codes
+  mailer.py         sends students their codes through Gmail SMTP
   db.py             Postgres (DATABASE_URL) or SQLite engine + session
   migrate.py        adds missing columns on startup
-  models.py         coaches, students, test results, weights, videos, match clips,
-                    model versions, app state
+  models.py         coaches, students, student logins, test results, weights, videos,
+                    match clips, model versions, app state
   schemas.py        request/response validation
   sports_config.py  sports, metrics, reference ranges, default weights, match
                     archetypes, nutrition profiles
@@ -594,8 +635,9 @@ backend/
 
 frontend/src/
   App.jsx           app shell, nav, theme, auth state
-  Login.jsx         sign in / create account
-  StudentForm.jsx   public student self-entry
+  Login.jsx         coach sign in / create account
+  StudentAuth.jsx   student sign in, email code, new password
+  StudentForm.jsx   student enrolment (and a coach's Add Student)
   CoachEntry.jsx    roster, test results, drill-video upload
   Matches.jsx       match clips, the click-to-identify frame, per-player table
   Dashboard.jsx     squad overview + roster

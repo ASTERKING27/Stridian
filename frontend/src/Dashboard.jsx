@@ -76,6 +76,8 @@ export default function Dashboard({ coach, version, onChanged }) {
         </div>
       </div>
 
+      <EnrolCode sport={coach.sport} />
+
       <div className="card flush">
         <div className="row" style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', gap: 10 }}>
           <input placeholder="Search by name…" aria-label="Search students" style={{ flex: '1 1 200px' }}
@@ -93,7 +95,7 @@ export default function Dashboard({ coach, version, onChanged }) {
           <p className="empty">
             <b>{students.length === 0 ? 'Nobody here yet' : 'Nobody matches'}</b>
             {students.length === 0
-              ? `Students register themselves from the Student Entry tab — anyone who picks ${coach.sport} lands here.`
+              ? `Students enrol themselves on this site with their university email and the enrolment code above.`
               : 'Try a different name or filter.'}
           </p>
         ) : (
@@ -121,5 +123,42 @@ export default function Dashboard({ coach, version, onChanged }) {
         )}
       </div>
     </>
+  )
+}
+
+/* The code students type to enrol in this sport. Only people who have it (and a
+   university email) can add themselves to the squad. */
+function EnrolCode({ sport }) {
+  const [code, setCode] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.enrolCode().then(r => setCode(r.code)).catch(e => setError(e.message))
+  }, [])
+
+  async function renew() {
+    if (!confirm('Make a new enrolment code? The current one stops working for anyone who '
+                 + "hasn't enrolled yet. Students already enrolled aren't affected.")) return
+    setError('')
+    try {
+      setCode((await api.newEnrolCode()).code)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  return (
+    <div className="card">
+      <div className="verify">
+        <span>{sport} enrolment code</span>
+        <code className="enrolcode">{code ?? '······'}</code>
+        <button className="linkbtn" onClick={renew} disabled={!code}>Make a new code</button>
+      </div>
+      <p className="muted" style={{ marginTop: 8 }}>
+        Give this to your students. They sign in with their university email, pick {sport} and
+        type this code to enrol. Make a new one if it has been shared too widely.
+      </p>
+      {error && <div className="note err">{error}</div>}
+    </div>
   )
 }

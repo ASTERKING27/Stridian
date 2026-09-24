@@ -43,6 +43,25 @@ class TokenOut(BaseModel):
     coach: CoachOut
 
 
+# ----------------------------- student accounts ---------------------------- #
+
+class StudentCodeIn(BaseModel):
+    email: str = Email
+
+
+class StudentVerifyIn(BaseModel):
+    """The emailed code, plus the Stridian password the student is choosing."""
+
+    email: str = Email
+    code: str = Field(pattern=r"^\d{6}$")
+    password: str = Field(min_length=8, max_length=128)
+
+
+class StudentLogin(BaseModel):
+    email: str = Email
+    password: str = Field(max_length=128)
+
+
 # -------------------------------- students --------------------------------- #
 
 class StudentCreate(BaseModel):
@@ -57,6 +76,12 @@ class StudentCreate(BaseModel):
     diet_preference: DietPreference = "nonveg"
     allergies: str | None = Field(default=None, max_length=255)
     training_hours_per_day: float | None = Field(default=None, ge=0, le=8)
+
+
+class StudentEnrol(StudentCreate):
+    """What a signed-in student sends: their details plus their coach's enrolment code."""
+
+    enrol_code: str = Field(min_length=1, max_length=20)
 
 
 class StudentUpdate(BaseModel):
@@ -79,6 +104,7 @@ class StudentOut(BaseModel):
 
     id: int
     name: str
+    email: str | None = None
     sport: str
     age: int | None
     height_cm: float | None

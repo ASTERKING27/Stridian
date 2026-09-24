@@ -155,6 +155,8 @@ body {
 }
 .whoami b { display: block; font-size: 13px; }
 .whoami small { color: var(--ink-3); font-size: 11px; }
+/* a student's university email is longer than the rail */
+.whoami b, .whoami small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 main { padding: 26px 30px 40px; max-width: 1140px; width: 100%; }
 .sitefoot { margin-top: 32px; font-size: .8rem; color: var(--ink-3); }
@@ -290,6 +292,7 @@ input[type='range'] { padding: 0; border: none; accent-color: var(--accent); bac
 .verify { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .verify select { width: auto; min-width: 200px; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+code.enrolcode { font-size: 1.15rem; font-weight: 700; letter-spacing: .18em; padding: 4px 10px; user-select: all; }
 
 .banner {
   border: 1px solid var(--line); border-left: 3px solid var(--accent);

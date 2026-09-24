@@ -4,20 +4,36 @@ import { useEffect } from 'react'
 // frontend is served by FastAPI the path is already right, so no base URL either way.
 
 const TOKEN_KEY = 'stridian.token'
+const ROLE_KEY = 'stridian.role'
 
+// One signed-in person per browser: a coach or a student. A token saved before
+// students had accounts has no role stored, and was a coach's.
 export const token = {
   get: () => { try { return localStorage.getItem(TOKEN_KEY) } catch { return null } },
-  set: v => { try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY) } catch { /* private mode */ } },
+  role: () => { try { return localStorage.getItem(ROLE_KEY) || 'coach' } catch { return 'coach' } },
+  set: (v, role = 'coach') => {
+    try {
+      if (v) {
+        localStorage.setItem(TOKEN_KEY, v)
+        localStorage.setItem(ROLE_KEY, role)
+      } else {
+        localStorage.removeItem(TOKEN_KEY)
+        localStorage.removeItem(ROLE_KEY)
+      }
+    } catch { /* private mode */ }
+  },
 }
 
-// Set by App so a stale session bounces straight back to the sign-in screen.
+// Set by App so a stale session bounces straight back to the sign-in screen. It gets
+// the role that was signed in, or null when nobody was (a wrong password, say).
 let onUnauthorized = () => {}
 export const setUnauthorizedHandler = fn => { onUnauthorized = fn }
 
 async function unwrap(res) {
   if (res.status === 401) {
+    const role = token.get() ? token.role() : null
     token.set(null)
-    onUnauthorized()
+    onUnauthorized(role)
   }
   if (res.status === 204) return null
   const body = await res.json().catch(() => null)
@@ -89,6 +105,15 @@ export const api = {
   health: () => fetch('/api/health').then(unwrap),
   nutritionOptions: () => fetch('/api/nutrition/options').then(unwrap),
 
+  // students: a code to their university inbox, then that code + the password they pick
+  studentCode: email => send('POST', '/api/student/code', { email }),
+  studentVerify: body => send('POST', '/api/student/verify', body),
+  studentLogin: body => send('POST', '/api/student/login', body),
+  studentMe: () => get('/api/student/me'),
+  studentLogout: () => send('POST', '/api/student/logout'),
+  enrol: body => send('POST', '/api/student/enrol', body),
+  myReport: () => get('/api/student/report'),
+
   signup: body => send('POST', '/api/auth/signup', body),
   login: body => send('POST', '/api/auth/login', body),
   me: () => get('/api/auth/me'),
@@ -98,6 +123,9 @@ export const api = {
   weights: slug => get(`/api/sports/${slug}/weights`),
   saveWeights: (slug, weights) => send('PUT', `/api/sports/${slug}/weights`, { weights }),
   resetWeights: slug => send('POST', `/api/sports/${slug}/weights/reset`),
+
+  enrolCode: () => get('/api/enrol-code'),
+  newEnrolCode: () => send('POST', '/api/enrol-code/rotate'),
 
   students: () => get('/api/students'),
   createStudent: body => send('POST', '/api/students', body),

@@ -33,8 +33,8 @@
   <p class="updated">Last updated: 23 September 2026</p>
 
   <p>
-    Stridian is a university sports talent-profiling tool. Students enter their details,
-    coaches record test results and match or drill videos, and Stridian suggests the
+    Stridian is a university sports talent-profiling tool. Students sign in and enter
+    their details, coaches record test results and match or drill videos, and Stridian suggests the
     position that suits each student best, with the reasons, a training plan and a diet
     plan. This page explains what it stores and who can see it.
   </p>
@@ -45,8 +45,19 @@
       position they play, diet preference, allergies, daily training hours and notes.</li>
     <li>What coaches record: test results, notes, the position they confirm, and videos of
       drills and matches.</li>
+    <li>Student accounts: the student's university email address and a securely hashed
+      password chosen for Stridian. Stridian never asks for, and never sees, the password
+      of a university email account.</li>
     <li>Coach accounts: name, email address, sport and a securely hashed password.</li>
   </ul>
+
+  <h2>Email</h2>
+  <p>
+    To confirm that a university email address belongs to the person signing up, and to
+    reset a forgotten password, Stridian emails a one-time 6-digit code to that address.
+    That is the only email it sends. Only a scrambled (hashed) copy of the code is kept,
+    and it stops working after 15 minutes.
+  </p>
 
   <h2>How it is used</h2>
   <p>
@@ -57,6 +68,9 @@
 
   <h2>Who can see it</h2>
   <ul>
+    <li>A student sees only their own record. Their report — position analysis, training
+      and diet plan — appears once a coach has verified them, and they cannot change it.
+      Coaches' private notes are not shown to students.</li>
     <li>A coach sees only the students of the sport they coach.</li>
     <li>The site administrator can see all students, including in a private Google Sheet
       summary.</li>
@@ -64,7 +78,9 @@
 
   <h2>Where it is stored</h2>
   <ul>
-    <li>Student and coach records: a Postgres database hosted by Neon (Singapore).</li>
+    <li>Student and coach records and accounts: a Postgres database hosted by Neon
+      (Singapore).</li>
+    <li>Sign-in codes are sent through Google's Gmail service.</li>
     <li>Videos and preview images: a private folder in the administrator's Google Drive.
       <strong>Video files are deleted 30 days after upload</strong>; the measurements taken
       from them are kept.</li>
@@ -87,7 +103,8 @@
   <h2>Removing your data</h2>
   <p>
     Ask your coach or the administrator, and your record, results and videos will be deleted.
-    Deleting a student in Stridian removes their videos from storage as well.
+    Deleting a student in Stridian removes their videos from storage as well. To have your
+    sign-in account removed too, email the address below from your university email.
   </p>
 
   <h2>Contact</h2>

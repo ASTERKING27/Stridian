@@ -81,6 +81,9 @@ class Student(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     verified_by: Mapped["Coach | None"] = relationship()
+    # the login that enrolled this student; None for a student a coach added by hand.
+    # Deleting the student unlinks the account, so they can enrol again.
+    account: Mapped["StudentAccount | None"] = relationship(back_populates="student")
 
     results: Mapped[list["TestResult"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"
@@ -95,6 +98,53 @@ class Student(Base):
     @property
     def verified_by_name(self):
         return self.verified_by.name if self.verified_by else None
+
+    @property
+    def email(self):
+        return self.account.email if self.account else None
+
+
+class StudentAccount(Base):
+    """A student's sign-in: their university email and a password chosen for Stridian
+    (never their university one).
+
+    The password is only ever set together with a code emailed to that address, so an
+    account with a password is one whose owner has proved the inbox is theirs. That
+    also makes "forgot password" the same flow as signing up.
+    """
+
+    __tablename__ = "student_accounts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(180), nullable=False, unique=True, index=True)
+    password_hash: Mapped[str | None] = mapped_column(String(255))
+    student_id: Mapped[int | None] = mapped_column(
+        ForeignKey("students.id", ondelete="SET NULL"), unique=True)
+    # the latest emailed code: only its hash, when it went out, and wrong guesses so far
+    code_hash: Mapped[str | None] = mapped_column(String(64))
+    code_sent_at: Mapped[datetime | None] = mapped_column(DateTime)
+    code_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    student: Mapped["Student | None"] = relationship(back_populates="account")
+    sessions: Mapped[list["StudentSession"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
+
+
+class StudentSession(Base):
+    """A student's live login. Only the hash of the token is stored."""
+
+    __tablename__ = "student_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey("student_accounts.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    account: Mapped["StudentAccount"] = relationship(back_populates="sessions")
 
 
 class TestResult(Base):
