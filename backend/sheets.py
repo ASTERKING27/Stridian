@@ -1,16 +1,17 @@
 """
-The Google Sheets, all owned by the account that ran setup_google.py (the admin's):
+The Google Sheets, all owned by the account that ran setup_google.py (the admin's), and
+all made by the app the first time there is something to put in them:
 
-  Squad             Pending and Verified tabs — each student's analysis, one row each
-  Student profiles  the university's record of every student
-  Achievements      every achievement and whether it has been verified
+  <Sport> squad     one file per sport, Pending and Verified tabs — each student's analysis
+  Student profiles  the university's record of every student, a tab per sport
+  Achievements      every achievement and whether it has been verified, a tab per sport
   Coaches           every coach account
 
 Each is rewritten completely on every change to what it holds.
 
 Each student's row is computed when their data changes and cached on the student
 (`sheet_row`), so a push is one query plus two Sheets API calls however big the squad
-gets. Every push rewrites both tabs completely, which means a push that fails (Google
+gets. Every push rewrites the tabs completely, which means a push that fails (Google
 down, no network) is simply repaired by the next one — there is no partial state to
 reconcile.
 
@@ -39,16 +40,20 @@ HEADER = [
 ]
 
 
-def sheet_id():
-    return os.environ.get("GOOGLE_SHEET_ID", "").strip()
-
-
 def configured():
-    return gapi.configured() and bool(sheet_id())
+    return gapi.configured()
 
 
-def sheet_url():
-    return f"https://docs.google.com/spreadsheets/d/{sheet_id()}" if sheet_id() else None
+def url(spreadsheet: str | None):
+    return f"https://docs.google.com/spreadsheets/d/{spreadsheet}" if spreadsheet else None
+
+
+def tab_name(sport: str) -> str:
+    return sport.replace("/", "&")      # "Badminton / Tennis" -> "Badminton & Tennis"
+
+
+def _a1(tab: str) -> str:
+    return "'" + tab.replace("'", "''") + "'"   # quoted, so spaces and "-" are fine
 
 
 def _local(dt):
@@ -118,26 +123,18 @@ def write(spreadsheet: str, tabs: dict) -> None:
     # write first, then clear whatever is left below — the sheet is never blank
     r = http.post(f"{SHEETS}/{spreadsheet}/values:batchUpdate", timeout=30, json={
         "valueInputOption": "RAW",
-        "data": [{"range": f"{tab}!A1", "values": rows} for tab, rows in tabs.items()],
+        "data": [{"range": f"{_a1(tab)}!A1", "values": rows} for tab, rows in tabs.items()],
     })
     r.raise_for_status()
     r = http.post(f"{SHEETS}/{spreadsheet}/values:batchClear", timeout=30, json={
-        "ranges": [f"{tab}!A{len(rows) + 1}:AZ" for tab, rows in tabs.items()],
+        "ranges": [f"{_a1(tab)}!A{len(rows) + 1}:AZ" for tab, rows in tabs.items()],
     })
     r.raise_for_status()
 
 
-def push(students) -> dict:
-    """Rewrite both tabs. Returns a status dict; never raises (a sheet is never worth
-    failing a coach's save over)."""
-    if not configured():
-        return {"ok": False, "error": "Google Sheet not set up"}
-    tabs = tabs_for(students)
-    try:
-        write(sheet_id(), {tab: [HEADER] + rows for tab, rows in tabs.items()})
-    except Exception as exc:  # noqa: BLE001 — reported on the AI Training page instead
-        return {"ok": False, "error": str(exc)[:300]}
-    return {"ok": True, "pending": len(tabs["Pending"]), "verified": len(tabs["Verified"])}
+def squad(students) -> dict:
+    """One sport's squad file: {tab: rows}, header included."""
+    return {tab: [HEADER] + rows for tab, rows in tabs_for(students).items()}
 
 
 # --------------------------------------------------------------------------- #
@@ -164,12 +161,14 @@ ACHIEVEMENT_HEADER = [
 COACH_HEADER = ["Coach ID", "Name", "Email", "Employee ID", "Mobile", "Designation",
                 "Sport", "Admin", "Joined on"]
 
-# key: (spreadsheet title, tab, header)
+# key: (spreadsheet title, header, tab — None for a tab per sport)
 PEOPLE = {
-    "profiles": ("Stridian — Student profiles", "Profiles", PROFILE_HEADER),
-    "achievements": ("Stridian — Achievements", "Achievements", ACHIEVEMENT_HEADER),
-    "coaches": ("Stridian — Coaches", "Coaches", COACH_HEADER),
+    "profiles": ("Stridian — Student profiles", PROFILE_HEADER, None),
+    "achievements": ("Stridian — Achievements", ACHIEVEMENT_HEADER, None),
+    "coaches": ("Stridian — Coaches", COACH_HEADER, "Coaches"),
 }
+# the one tab each file had before sports got a tab each; dropped once they have
+OLD_TABS = {"profiles": ["Profiles"], "achievements": ["Achievements"], "coaches": ["Coaches"]}
 
 
 def profile_row(s) -> list:
@@ -200,11 +199,27 @@ def coach_row(c) -> list:
             c.sport, "Yes" if c.is_admin else "", _local(c.created_at)]
 
 
-def create(title: str, tab: str, header: list) -> str:
-    """Make a new spreadsheet in the admin's Drive and return its id."""
+def _tab(title: str) -> dict:
+    return {"properties": {"title": title, "gridProperties": {"frozenRowCount": 1}}}
+
+
+def create(title: str, tabs: list) -> str:
+    """Make a new spreadsheet in the admin's Drive with these tabs; returns its id."""
     r = gapi.session().post(SHEETS, timeout=30, json={
-        "properties": {"title": title},
-        "sheets": [{"properties": {"title": tab, "gridProperties": {"frozenRowCount": 1}}}],
-    })
+        "properties": {"title": title}, "sheets": [_tab(t) for t in tabs]})
     r.raise_for_status()
     return r.json()["spreadsheetId"]
+
+
+def retab(spreadsheet: str, tabs: list, old: list) -> None:
+    """Add any of `tabs` the file lacks, then remove the `old` ones no longer wanted
+    (only tabs the app itself made — anything the admin added is left alone)."""
+    http = gapi.session()
+    r = http.get(f"{SHEETS}/{spreadsheet}?fields=sheets.properties(sheetId,title)", timeout=30)
+    r.raise_for_status()
+    have = {s["properties"]["title"]: s["properties"]["sheetId"] for s in r.json().get("sheets", [])}
+    changes = ([{"addSheet": _tab(t)} for t in tabs if t not in have]
+               + [{"deleteSheet": {"sheetId": have[t]}} for t in old if t in have and t not in tabs])
+    if changes:
+        http.post(f"{SHEETS}/{spreadsheet}:batchUpdate", timeout=30,
+                  json={"requests": changes}).raise_for_status()

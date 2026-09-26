@@ -329,71 +329,101 @@ def worker_status(db: Session) -> dict:
     return {**w, "seen": True, "online": online, "secondsAgo": round(age)}
 
 
-def sync_sheet(db: Session, students=()):
-    """Recompute these students' sheet rows, then push the whole sheet.
+def publish(db: Session, registry: str, key: str, title: str, tabs: list, old_tabs: list, data):
+    """Rewrite one of the admin's spreadsheets with `data()` ({tab: rows}), making it the
+    first time and adding or dropping tabs when the layout has changed. Records how it
+    went under AppState[registry][key]. Never raises: a Google hiccup must not turn a
+    saved enrolment into an error page, and the worker repeats every push anyway."""
+    entry = dict(get_state(db, registry).get(key) or {})
+    try:
+        if not entry.get("id"):
+            # ponytail: two first-ever pushes at the same moment could each make one;
+            # the spare is simply never written to again
+            entry.update(id=sheets.create(title, tabs), tabs=tabs)
+            set_state(db, registry, {**get_state(db, registry), key: entry})
+        elif entry.get("tabs") != tabs:
+            sheets.retab(entry["id"], tabs, entry.get("tabs") or old_tabs)
+            entry["tabs"] = tabs
+        sheets.write(entry["id"], data())
+        entry.update(ok=True, error=None)
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        log.exception("sheet %s/%s failed", registry, key)
+        entry.update(ok=False, error=str(exc)[:300])
+    entry["at"] = utcnow().isoformat()
+    set_state(db, registry, {**get_state(db, registry), key: entry})
 
-    Called after every change a coach or student makes. Never raises: a Google hiccup
-    must not turn a saved enrolment into an error page. The worker pushes again on its
-    next pass, so a missed push repairs itself.
+
+def sync_sheet(db: Session, students=(), sports=()):
+    """Recompute these students' sheet rows, then rewrite their sports' squad files (and
+    any in `sports`, e.g. one a student just left). One file per sport, so no sport's
+    sheet shows another sport's students.
+
+    Called after every change a coach or student makes. Never raises, and the worker
+    pushes every sport again on its next pass, so a missed push repairs itself.
     """
     try:
         # a row cached before a sheet column was added would land in the wrong columns;
         # rebuild those instead of pushing them
         width = len(sheets.HEADER)
         stale = [s for s in db.scalars(select(Student)) if s.sheet_row and len(s.sheet_row) != width]
-        for student in {*students, *stale}:
+        touched = {*students, *stale}
+        for student in touched:
             student.sheet_row = sheets.row_for(build_report(db, student), student)
         db.commit()
-        if sheets.configured():
-            status = sheets.push(db.scalars(select(Student)).all())
-            set_state(db, "sheet", {**status, "at": utcnow().isoformat()})
+        pushes = sorted({s.sport for s in touched} | set(sports))
     except Exception:  # noqa: BLE001
         db.rollback()
-        log.exception("sheet sync failed")
+        log.exception("sheet rows failed")
+        return
+    if not sheets.configured():
+        return
+    for sport in pushes:
+        publish(db, "squad_sheets", sport, f"Stridian — {sport} squad", list(sheets.TABS),
+                list(sheets.TABS), lambda sport=sport: sheets.squad(sport_students(db, sport)))
+
+
+def squad_sports(db: Session) -> list:
+    """Every sport with students or a squad file already — what the worker repushes."""
+    return sorted(set(db.scalars(select(Student.sport).distinct())) | set(get_state(db, "squad_sheets")))
 
 
 def sync_people(db: Session, *keys):
-    """Rewrite the admin's people spreadsheets (all of them, or just `keys`), creating any
-    that don't exist yet. Never raises, like sync_sheet, and the worker repeats it."""
-    if not sheets.gapi.configured():
+    """Rewrite the admin's people spreadsheets (all of them, or just `keys`): Student
+    profiles and Achievements with a tab per sport, Coaches as one list."""
+    if not sheets.configured():
         return
+
+    def by_sport(pairs):
+        out = {sheets.tab_name(sport): [] for sport in sc.sport_names()}
+        for sport, row in pairs:
+            out.setdefault(sheets.tab_name(sport), []).append(row)
+        return out
+
     rows = {
-        "profiles": lambda: [sheets.profile_row(s) for s in
-                             db.scalars(select(Student).order_by(Student.sport, Student.name))],
-        "achievements": lambda: [sheets.achievement_row(a) for a in
-                                 db.scalars(select(Achievement).where(Achievement.status != "draft")
-                                            .order_by(Achievement.id.desc()))],
-        "coaches": lambda: [sheets.coach_row(c) for c in db.scalars(select(Coach).order_by(Coach.id))],
+        "profiles": lambda: by_sport((s.sport, sheets.profile_row(s)) for s in
+                                     db.scalars(select(Student).order_by(Student.name))),
+        "achievements": lambda: by_sport((a.student.sport, sheets.achievement_row(a)) for a in
+                                         db.scalars(select(Achievement).where(Achievement.status != "draft")
+                                                    .order_by(Achievement.id.desc()))),
+        "coaches": lambda: {"Coaches": [sheets.coach_row(c) for c in
+                                        db.scalars(select(Coach).order_by(Coach.id))]},
     }
     for key in keys or sheets.PEOPLE:
-        title, tab, header = sheets.PEOPLE[key]
-        registry = get_state(db, "people_sheets")
-        entry = dict(registry.get(key) or {})
-        try:
-            if not entry.get("id"):
-                # ponytail: two first-ever pushes at the same moment could each make one;
-                # the spare is simply never written to again
-                entry["id"] = sheets.create(title, tab, header)
-                set_state(db, "people_sheets", {**registry, key: entry})
-            sheets.write(entry["id"], {tab: [header] + rows[key]()})
-            entry.update(ok=True, error=None)
-        except Exception as exc:  # noqa: BLE001
-            db.rollback()
-            log.exception("people sheet %s failed", key)
-            entry.update(ok=False, error=str(exc)[:300])
-        entry["at"] = utcnow().isoformat()
-        set_state(db, "people_sheets", {**get_state(db, "people_sheets"), key: entry})
+        title, header, tab = sheets.PEOPLE[key]
+        tabs = [tab] if tab else [sheets.tab_name(sport) for sport in sc.sport_names()]
+        publish(db, "people_sheets", key, title, tabs, sheets.OLD_TABS[key],
+                lambda key=key, header=header: {t: [header] + r for t, r in rows[key]().items()})
 
 
-def people_sheets(db: Session) -> list:
-    """Links to the admin's people spreadsheets, and how their last push went."""
-    registry = get_state(db, "people_sheets")
-    return [
-        {"key": key, "title": title, **(registry.get(key) or {}),
-         "url": f"https://docs.google.com/spreadsheets/d/{registry[key]['id']}"
-                if (registry.get(key) or {}).get("id") else None}
-        for key, (title, _tab, _header) in sheets.PEOPLE.items()
-    ]
+def admin_sheets(db: Session) -> list:
+    """Every spreadsheet the app keeps for the admin, with a link and how its last push went."""
+    squads, people = get_state(db, "squad_sheets"), get_state(db, "people_sheets")
+    listed = [(f"{sport} squad", squads[sport]) for sport in sc.sport_names() if sport in squads]
+    listed += [(title.replace("Stridian — ", ""), people.get(key) or {})
+               for key, (title, _header, _tab) in sheets.PEOPLE.items()]
+    return [{"title": title, "url": sheets.url(e.get("id")), "ok": e.get("ok"),
+             "error": e.get("error"), "at": e.get("at")} for title, e in listed]
 
 
 def sport_students(db: Session, sport_name: str):
@@ -883,6 +913,7 @@ def update_student(student_id: int, payload: StudentUpdate, db: Session = Depend
     if ADMIN_ONLY & set(data):
         require_admin(coach)
     check_ra_free(db, data.get("ra_number"), student.id)
+    left = student.sport
     if "sport" in data:
         sport = require_sport(data.pop("sport") or "")
         if sport != student.sport:
@@ -898,7 +929,7 @@ def update_student(student_id: int, payload: StudentUpdate, db: Session = Depend
         raise HTTPException(400, "Add at least one parent's mobile number.")
     db.commit()
     db.refresh(student)
-    sync_sheet(db, [student])
+    sync_sheet(db, [student], sports=[left])      # the sport they left, if they moved
     sync_people(db, "profiles")
     return student
 
@@ -910,9 +941,10 @@ def delete_student(student_id: int, db: Session = Depends(get_db),
     for v in student.videos:
         forget_files(v.stored_name, thumb_of(v))
     forget_files(student.photo_key, *(a.cert_key for a in student.achievements))
+    sport = student.sport
     db.delete(student)
     db.commit()
-    sync_sheet(db)
+    sync_sheet(db, sports=[sport])
     sync_people(db, "profiles", "achievements")
 
 
@@ -1838,7 +1870,6 @@ def training_overview(db: Session = Depends(get_db), coach: Coach = Depends(auth
         return db.scalar(select(func.count()).select_from(model).where(*where)) or 0
 
     video_sport = VideoAnalysis.student_id.in_(select(Student.id).where(Student.sport == sport))
-    sheet = get_state(db, "sheet")
     return {
         "sport": sport,
         "minLabels": trainer.MIN_LABELS,
@@ -1861,9 +1892,8 @@ def training_overview(db: Session = Depends(get_db), coach: Coach = Depends(auth
         "worker": worker_status(db),
         "storage": storage.backend(),
         # the Google Sheets belong to the admins; coaches download Excel files instead
-        "sheet": {"configured": sheets.configured(),
-                  "url": sheets.sheet_url() if coach.is_admin else None, **sheet},
-        "peopleSheets": people_sheets(db) if coach.is_admin else None,
+        "sheetsConfigured": sheets.configured(),
+        "sheets": admin_sheets(db) if coach.is_admin else None,
     }
 
 

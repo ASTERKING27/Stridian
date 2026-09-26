@@ -267,7 +267,7 @@ function ProfileTab({ student, isAdmin, sports, onStudent, onMoved }) {
 }
 
 /* The coach's confirmation of where this student plays. It moves them to the Verified
-   tab of the squad sheet and becomes a training example for the model. */
+   tab of the sport's squad sheet and becomes a training example for the model. */
 function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
   const [choice, setChoice] = useState(recommended?.position ?? positions[0]?.position ?? '')
   const [busy, setBusy] = useState(false)
@@ -329,7 +329,7 @@ function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
         </button>
       </div>
       <p className="muted" style={{ marginTop: 8 }}>
-        Verifying moves {student.name} to the Verified tab of the squad sheet, and teaches the
+        Verifying moves {student.name} to the Verified tab of the {student.sport} squad sheet, and teaches the
         model — your call counts even when it differs from the suggestion.
       </p>
       {error && <div className="note err">{error}</div>}

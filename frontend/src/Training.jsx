@@ -4,7 +4,7 @@ import { ago, api, usePoll, utc } from './api'
 const pct = v => (v == null ? '—' : `${Math.round(v * 100)}%`)
 
 /* What the model has learned from the coaches, how sure it is, and whether the
-   analysis computer, the video queue and the squad sheet are all keeping up. */
+   analysis computer, the video queue and the Google Sheets are all keeping up. */
 export default function Training({ coach }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
@@ -17,7 +17,7 @@ export default function Training({ coach }) {
 
   if (!data) return error ? <div className="banner bad">{error}</div> : <div className="skeleton">Loading…</div>
 
-  const { labels, live, worker, queue, sheet, agreement } = data
+  const { labels, live, worker, queue, agreement } = data
   const counts = labels.positions.map(p => [p, labels.byPosition[p] ?? 0])
   const most = Math.max(1, ...counts.map(([, n]) => n))
   const liveId = live?.id
@@ -197,23 +197,17 @@ export default function Training({ coach }) {
               <td>Video storage</td>
               <td className="num">{data.storage === 'drive' ? 'Google Drive (kept 30 days)' : 'This computer'}</td>
             </tr>
-            <tr>
-              <td>Squad sheet</td>
-              <td className="num">
-                {!sheet.configured ? 'Not connected'
-                  : sheet.url ? <a href={sheet.url} target="_blank" rel="noreferrer">Open sheet</a>
-                    : 'Kept by the admins — use Download Excel on the Dashboard'}
-                {sheet.at && (
-                  <div className={`muted ${sheet.ok ? '' : 'err'}`}>
-                    {sheet.ok ? `synced ${utc(sheet.at).toLocaleString()}` : `last sync failed: ${sheet.error}`}
-                  </div>
-                )}
-              </td>
-            </tr>
-            {/* admins only: the other spreadsheets, one per kind of information */}
-            {(data.peopleSheets ?? []).map(p => (
-              <tr key={p.key}>
-                <td>{p.title.replace('Stridian — ', '')} sheet</td>
+            {!data.sheetsConfigured ? (
+              <tr><td>Google Sheets</td><td className="num">Not connected</td></tr>
+            ) : !data.sheets ? (
+              <tr>
+                <td>Google Sheets</td>
+                <td className="num">Kept by the admins — use Download Excel on the Dashboard</td>
+              </tr>
+            ) : data.sheets.map(p => (
+              // admins only: a squad file per sport, then one per kind of information
+              <tr key={p.title}>
+                <td>{p.title} sheet</td>
                 <td className="num">
                   {p.url ? <a href={p.url} target="_blank" rel="noreferrer">Open sheet</a> : 'Made on the next change'}
                   {p.at && (

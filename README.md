@@ -236,10 +236,11 @@ then Google, then Vercel, because each step produces a value the next one needs.
    expires the login after 7 days. Create an OAuth client of type **Desktop app** and
    put its ID and secret in `.env`. Then run `python backend/setup_google.py`: it opens
    a browser, you sign in with the account whose Drive should hold the videos, and it
-   creates the video folder and the squad sheet and writes the rest of `.env` itself.
+   creates the video folder and writes the rest of `.env` itself. (The spreadsheets are
+   made by the app later, in the same Drive.)
 4. **Vercel.** Import the GitHub repository. `vercel.json` already sets the build, the
    Python function and the Singapore region. Under Settings → Environment Variables add
-   `DATABASE_URL`, `COACH_SIGNUP_CODE`, `STORAGE=drive`, the five `GOOGLE_*` values
+   `DATABASE_URL`, `COACH_SIGNUP_CODE`, `STORAGE=drive`, the four `GOOGLE_*` values
    from your `.env`, `SMTP_USER` / `SMTP_PASSWORD` for the students' email codes,
    `ADMIN_EMAILS` for whoever runs the site, and `GEMINI_API_KEY` (optional) to read
    certificates. Deploy.
@@ -278,7 +279,7 @@ squad?* and moves that position's weights towards them.
 - **Nothing is rewritten.** Every model, every coach's weight edit and every reset is
   a version in the history, and any of them can be put back live from the **AI
   Training** page, which also shows what the model has learned in plain words, how
-  often it agrees with the coaches, whether the worker is on, the queue, and the sheet.
+  often it agrees with the coaches, whether the worker is on, the queue, and the sheets.
 
 Training starts once a sport has 6 verified students across at least two positions,
 and only reruns when the verified data has actually changed.
@@ -291,19 +292,21 @@ university's squads, which is the part no pretrained model knows.
 
 ## The Google Sheets and Excel downloads
 
-Four spreadsheets in the admin's Google Drive, one per kind of information, each
-rewritten whenever what it holds changes:
+Spreadsheets in the admin's Google Drive, kept apart by sport and by kind of
+information, each rewritten whenever what it holds changes:
 
 | Spreadsheet | Holds |
 |---|---|
-| **Squad** (made by `setup_google.py`) | each student's analysis, Pending and Verified tabs — below |
-| **Student profiles** | the university record: RA number, DOB, age, contacts, family, Aadhaar, passport, level, verified achievements |
-| **Achievements** | every achievement sent in, its status, who checked it and when, and the name the AI read off the certificate |
+| **Football squad**, **Basketball squad**, … (one file per sport) | each student's analysis, Pending and Verified tabs — below |
+| **Student profiles** (a tab per sport) | the university record: RA number, DOB, age, contacts, family, Aadhaar, passport, level, verified achievements |
+| **Achievements** (a tab per sport) | every achievement sent in, its status, who checked it and when, and the name the AI read off the certificate |
 | **Coaches** | name, email, employee ID, mobile, designation, sport, admin or not |
 
-The last three are made the first time something changes after deployment (the Drive
-login's `drive.file` scope allows that) and linked from the admin's **AI Training**
-page, with when each last synced. Only admins see the links. Everything is written as
+The app makes each one the first time there is something to put in it (a sport's squad
+file when its first student enrols) — the Drive login's `drive.file` scope allows that —
+and lists them all, with links and when each last synced, on the admin's **AI Training**
+page. Since each sport has its own file, an admin can share one sport's file (view only)
+with its coach without showing any other sport. Only admins see the links. Everything is written as
 plain text, so the sheets can't be broken by what people type, and the worker repushes
 all of them on every pass, repairing any push that failed.
 
@@ -313,9 +316,9 @@ just them. An admin also gets **All sports (Excel)**, with a Coaches tab. The do
 are built from the same rows as the sheets. Aadhaar and phone numbers stay text (no
 `4.6E+11`), and anything that looks like a formula is written as text.
 
-### The squad sheet
+### The squad files
 
-A Google Sheet with two tabs, **Pending** and **Verified**, rewritten whenever anything
+One Google Sheet per sport with two tabs, **Pending** and **Verified**, rewritten whenever anything
 changes — a student enrols, a coach records results, verifies someone, identifies them
 in match footage, or edits weights. Each row carries the student's details, status,
 who verified them and when, the verified and recommended positions and whether they
@@ -718,9 +721,9 @@ backend/
   worker.py         the worker: queue, analysis, training, retention, sheet repair
   trainer.py        learns position weights from verified students (pure logic)
   storage.py        videos in Google Drive or a local folder, chunked uploads
-  sheets.py         the Google Sheets: squad, student profiles, achievements, coaches
+  sheets.py         the Google Sheets: a squad file per sport, profiles, achievements, coaches
   gapi.py           the one Google login both of those use
-  setup_google.py   one-time: Google sign-in, creates the folder and the sheet
+  setup_google.py   one-time: Google sign-in, creates the video folder
   auth.py           password hashing, bearer-token sessions, email codes
   mailer.py         sends students their codes through Gmail SMTP
   db.py             Postgres (DATABASE_URL) or SQLite engine + session

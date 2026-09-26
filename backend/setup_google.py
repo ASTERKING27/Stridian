@@ -13,11 +13,12 @@ It then:
   1. opens your browser so you can sign in with the Google account whose Drive should
      hold the videos (the 5 TB one), and asks for access to files this app creates;
   2. creates a "Stridian videos" folder in that Drive;
-  3. creates the "Stridian — Squad" spreadsheet with Pending and Verified tabs;
-  4. writes GOOGLE_REFRESH_TOKEN, GOOGLE_DRIVE_FOLDER_ID, GOOGLE_SHEET_ID and
-     STORAGE=drive into .env and prints them, so you can paste the same into Vercel.
+  3. writes GOOGLE_REFRESH_TOKEN, GOOGLE_DRIVE_FOLDER_ID and STORAGE=drive into .env and
+     prints them, so you can paste the same into Vercel.
 
-Running it again reuses the folder and spreadsheet already recorded in .env.
+The spreadsheets (a squad file per sport, student profiles, achievements, coaches) are
+made by the app itself, in the same Drive, the first time there is something to put in
+them. Running this again reuses the folder already recorded in .env.
 """
 
 import os
@@ -29,7 +30,6 @@ from google.auth.transport.requests import AuthorizedSession
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 from gapi import SCOPES, TOKEN_URI
-from sheets import HEADER, TABS
 
 ENV = Path(__file__).resolve().parent.parent / ".env"
 
@@ -67,27 +67,13 @@ def main():
         r.raise_for_status()
         set_env("GOOGLE_DRIVE_FOLDER_ID", r.json()["id"])
 
-    if not os.environ.get("GOOGLE_SHEET_ID"):
-        r = http.post("https://sheets.googleapis.com/v4/spreadsheets", json={
-            "properties": {"title": "Stridian — Squad"},
-            "sheets": [{"properties": {"title": tab, "gridProperties": {"frozenRowCount": 1}}}
-                       for tab in TABS],
-        })
-        r.raise_for_status()
-        sheet_id = r.json()["spreadsheetId"]
-        http.post(f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values:batchUpdate",
-                  json={"valueInputOption": "RAW",
-                        "data": [{"range": f"{tab}!A1", "values": [HEADER]} for tab in TABS]}
-                  ).raise_for_status()
-        set_env("GOOGLE_SHEET_ID", sheet_id)
     set_env("STORAGE", "drive")
 
-    print("\nDone. These are now in your .env file. Add the same four to Vercel")
+    print("\nDone. These are now in your .env file. Add the same three to Vercel")
     print("(Project -> Settings -> Environment Variables), plus the two you already have:\n")
-    for key in ("GOOGLE_REFRESH_TOKEN", "GOOGLE_DRIVE_FOLDER_ID", "GOOGLE_SHEET_ID"):
+    for key in ("GOOGLE_REFRESH_TOKEN", "GOOGLE_DRIVE_FOLDER_ID"):
         print(f"  {key}={os.environ[key]}")
     print("  STORAGE=drive")
-    print(f"\nYour sheet: https://docs.google.com/spreadsheets/d/{os.environ['GOOGLE_SHEET_ID']}")
 
 
 if __name__ == "__main__":

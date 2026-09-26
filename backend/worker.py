@@ -310,7 +310,9 @@ def maintenance(db):
     for sport in sc.sport_names():
         log.info("training %s: %s", sport, train_sport(db, sport))
     # rows that were never computed (sheet set up after students enrolled) get built here
-    main.sync_sheet(db, db.scalars(select(Student).where(Student.sheet_row.is_(None))).all())
+    # and every sport's squad file is pushed again, repairing any push that failed
+    main.sync_sheet(db, db.scalars(select(Student).where(Student.sheet_row.is_(None))).all(),
+                    sports=main.squad_sports(db))
     # and the people sheets catch up on any push that failed. Not the coaches sheet: its
     # Admin column comes from ADMIN_EMAILS, which only the website needs to have set
     main.sync_people(db, "profiles", "achievements")
