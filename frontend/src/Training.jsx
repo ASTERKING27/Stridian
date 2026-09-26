@@ -201,7 +201,8 @@ export default function Training({ coach }) {
               <td>Squad sheet</td>
               <td className="num">
                 {!sheet.configured ? 'Not connected'
-                  : <a href={sheet.url} target="_blank" rel="noreferrer">Open sheet</a>}
+                  : sheet.url ? <a href={sheet.url} target="_blank" rel="noreferrer">Open sheet</a>
+                    : 'Kept by the admins — use Download Excel on the Dashboard'}
                 {sheet.at && (
                   <div className={`muted ${sheet.ok ? '' : 'err'}`}>
                     {sheet.ok ? `synced ${utc(sheet.at).toLocaleString()}` : `last sync failed: ${sheet.error}`}
@@ -209,6 +210,20 @@ export default function Training({ coach }) {
                 )}
               </td>
             </tr>
+            {/* admins only: the other spreadsheets, one per kind of information */}
+            {(data.peopleSheets ?? []).map(p => (
+              <tr key={p.key}>
+                <td>{p.title.replace('Stridian — ', '')} sheet</td>
+                <td className="num">
+                  {p.url ? <a href={p.url} target="_blank" rel="noreferrer">Open sheet</a> : 'Made on the next change'}
+                  {p.at && (
+                    <div className={`muted ${p.ok ? '' : 'err'}`}>
+                      {p.ok ? `synced ${utc(p.at).toLocaleString()}` : `last sync failed: ${p.error}`}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

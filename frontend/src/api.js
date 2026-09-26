@@ -39,13 +39,33 @@ async function unwrap(res) {
   const body = await res.json().catch(() => null)
   if (!res.ok) {
     const detail = body?.detail
-    throw new Error(
+    const err = new Error(
       typeof detail === 'string' ? detail
-        : Array.isArray(detail) ? detail.map(d => `${d.loc?.at(-1) ?? ''} ${d.msg}`.trim()).join(', ')
+        : Array.isArray(detail) ? detail.map(fieldError).join('; ')
           : `${res.status} ${res.statusText}`
     )
+    err.status = res.status
+    throw err
   }
   return body
+}
+
+// "father_phone" + "Value error, should be…" -> "Father's mobile should be…"
+const FIELD_WORDS = {
+  ra_number: 'RA number', dob: 'Date of birth', phone: 'Mobile', personal_email: 'Personal email',
+  father_name: "Father's name", father_phone: "Father's mobile", mother_name: "Mother's name",
+  mother_phone: "Mother's mobile", aadhaar: 'Aadhaar', passport: 'Passport', id_mark: 'Identification mark',
+  blood_group: 'Blood group', highest_level: 'Highest level', employee_id: 'Employee ID',
+  height_cm: 'Height', weight_kg: 'Weight', name: 'Name', year: 'Year',
+}
+function fieldError(d) {
+  const msg = String(d.msg ?? '').replace(/^Value error, /, '')
+  const field = d.loc?.at(-1)
+  if (typeof field !== 'string' || field === 'body') return msg
+  const word = FIELD_WORDS[field] ?? field.replaceAll('_', ' ')
+  // a field left empty arrives as null ("Input should be a valid string")
+  if (msg === 'Field required' || (d.input == null && msg.startsWith('Input should'))) return `${word} is needed`
+  return /^(Input should|String should)/.test(msg) ? `${word}: ${msg.toLowerCase()}` : `${word} ${msg}`
 }
 
 function authHeaders(extra = {}) {
@@ -61,6 +81,15 @@ const send = (method, url, body) =>
   }).then(unwrap)
 
 const get = url => fetch(url, { headers: authHeaders() }).then(unwrap)
+
+// a photo or certificate goes up as the raw request body (the server checks what it is)
+const sendFile = (method, url, blob, filename) =>
+  fetch(url, {
+    method,
+    headers: authHeaders({ 'Content-Type': blob.type || 'application/octet-stream',
+                           ...(filename ? { 'X-Filename': encodeURIComponent(filename) } : {}) }),
+    body: blob,
+  }).then(unwrap)
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -113,10 +142,19 @@ export const api = {
   studentLogout: () => send('POST', '/api/student/logout'),
   enrol: body => send('POST', '/api/student/enrol', body),
   myReport: () => get('/api/student/report'),
+  updateMyProfile: body => send('PATCH', '/api/student/profile', body),
+  setMyPhoto: blob => sendFile('PUT', '/api/student/photo', blob),
+  myAchievements: () => get('/api/student/achievements'),
+  addMyAchievement: (blob, name) => sendFile('POST', '/api/student/achievements', blob, name),
+  editMyAchievement: (id, body) => send('PATCH', `/api/student/achievements/${id}`, body),
+  deleteMyAchievement: id => send('DELETE', `/api/student/achievements/${id}`),
 
   signup: body => send('POST', '/api/auth/signup', body),
   login: body => send('POST', '/api/auth/login', body),
   me: () => get('/api/auth/me'),
+  updateMe: body => send('PATCH', '/api/auth/me', body),
+  switchSport: sport => send('PATCH', '/api/auth/sport', { sport }),
+  coaches: () => get('/api/coaches'),
   logout: () => send('POST', '/api/auth/logout'),
 
   sports: () => fetch('/api/sports').then(unwrap),
@@ -128,9 +166,20 @@ export const api = {
   newEnrolCode: () => send('POST', '/api/enrol-code/rotate'),
 
   students: () => get('/api/students'),
+  student: id => get(`/api/students/${id}`),
   createStudent: body => send('POST', '/api/students', body),
   updateStudent: (id, body) => send('PATCH', `/api/students/${id}`, body),
   deleteStudent: id => send('DELETE', `/api/students/${id}`),
+  setStudentPhoto: (id, blob) => sendFile('PUT', `/api/students/${id}/photo`, blob),
+
+  achievements: (status = '') => get(`/api/achievements${status ? `?status=${status}` : ''}`),
+  studentAchievements: id => get(`/api/students/${id}/achievements`),
+  addStudentAchievement: (id, blob, name) => sendFile('POST', `/api/students/${id}/achievements`, blob, name),
+  editAchievement: (id, body) => send('PATCH', `/api/achievements/${id}`, body),
+  // `version` is what the coach was looking at, so a verdict never lands on details
+  // the student changed after the page loaded
+  reviewAchievement: (id, decision, note, version) =>
+    send('POST', `/api/achievements/${id}/review`, { decision, note, version }),
 
   results: id => get(`/api/students/${id}/results`),
   saveResults: (id, body) => send('PUT', `/api/students/${id}/results`, body),
@@ -199,6 +248,36 @@ export async function authedImage(url) {
   const res = await fetch(url, { headers: authHeaders() })
   if (!res.ok) throw new Error('not available')
   return URL.createObjectURL(await res.blob())
+}
+
+// A signed-in file (a certificate): open it in a new tab. The tab is opened before the
+// download starts, or pop-up blockers would stop it.
+export async function openAuthed(url) {
+  const tab = window.open('', '_blank')
+  try {
+    const blobUrl = await authedImage(url)
+    if (tab) tab.location = blobUrl
+    else window.location.assign(blobUrl)
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)   // the tab has loaded it by then
+  } catch (err) {
+    tab?.close()
+    throw err
+  }
+}
+
+// A signed-in download (the Excel files), saved under the name the server gives it.
+export async function download(url) {
+  const res = await fetch(url, { headers: authHeaders() })
+  if (!res.ok) await unwrap(res)
+  // the real name (filename*, percent-encoded UTF-8) when given, else the plain one
+  const header = res.headers.get('Content-Disposition') ?? ''
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)?.[1]
+  const name = encoded ? decodeURIComponent(encoded) : (/filename="([^"]+)"/.exec(header)?.[1] ?? 'stridian.xlsx')
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(await res.blob())
+  link.download = name
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(link.href), 10000)
 }
 
 // ---- shared formatting -----------------------------------------------------

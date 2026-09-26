@@ -30,7 +30,7 @@
   <a class="brand" href="/"><span class="mark">S</span><b>Stridian</b></a>
 
   <h1>Privacy policy</h1>
-  <p class="updated">Last updated: 24 September 2026</p>
+  <p class="updated">Last updated: 26 September 2026</p>
 
   <p>
     Stridian is a university sports talent-profiling tool. Students sign in and enter
@@ -41,14 +41,21 @@
 
   <h2>What we collect</h2>
   <ul>
-    <li>Details a student enters: name, sport, age, height, weight, blood group, the
-      position they play, diet preference, allergies, daily training hours and notes.</li>
+    <li>A student's record with the university's sports directorate: name, RA number, date of
+      birth, mobile number, personal email, parents' names and mobile numbers, Aadhaar number,
+      passport number (if any), identification mark, blood group, the highest level they have
+      played at, and a photo.</li>
+    <li>Sport details a student enters: height, weight, the position they play, diet
+      preference, allergies, daily training hours and notes.</li>
+    <li>Achievements: certificates a student uploads (photos or PDFs) as proof, what each one
+      is for, and whether a coach verified or rejected it and why.</li>
     <li>What coaches record: test results, notes, the position they confirm, and videos of
       drills and matches.</li>
     <li>Student accounts: the student's university email address and a securely hashed
       password chosen for Stridian. Stridian never asks for, and never sees, the password
       of a university email account.</li>
-    <li>Coach accounts: name, email address, sport and a securely hashed password.</li>
+    <li>Coach accounts: name, email address, employee ID, mobile number, designation, sport and
+      a securely hashed password.</li>
   </ul>
 
   <h2>Email</h2>
@@ -57,6 +64,18 @@
     reset a forgotten password, Stridian emails a one-time 6-digit code to that address.
     That is the only email it sends. Only a scrambled (hashed) copy of the code is kept,
     and it stops working after 15 minutes.
+  </p>
+
+  <h2>Reading certificates with AI</h2>
+  <p>
+    When a certificate is uploaded, Stridian sends that one image or PDF to Google's Gemini
+    AI service, which reads the event, level, year and result off it so the student doesn't
+    have to type them. The student checks those details before sending them to their coach,
+    and a coach looks at the certificate itself before verifying it. Only the certificate is
+    sent — never the student's Aadhaar, phone numbers or other details. Stridian currently
+    uses Gemini's free service, under which <strong>Google may use what it is sent to improve
+    its products</strong>, and people at Google may review it. If that is not acceptable for a
+    certificate, ask the administrator to add it for you instead.
   </p>
 
   <h2>How it is used</h2>
@@ -68,12 +87,15 @@
 
   <h2>Who can see it</h2>
   <ul>
-    <li>A student sees only their own record. Their report — position analysis, training
-      and diet plan — appears once a coach has verified them, and they cannot change it.
-      Coaches' private notes are not shown to students.</li>
-    <li>A coach sees only the students of the sport they coach.</li>
-    <li>The site administrator can see all students, including in a private Google Sheet
-      summary.</li>
+    <li>A student sees only their own record. They can correct their own details, except that
+      their RA number, sport and date of birth, once given, are changed only by an
+      administrator. Their report — position analysis, training and diet plan — appears once a
+      coach has verified them, and they cannot change it. Coaches' private notes are not shown
+      to students.</li>
+    <li>A coach sees only the students of the sport they coach — their full record, Aadhaar
+      and passport numbers included — and can download it as an Excel file.</li>
+    <li>The site administrators can see and change every student's record, in every sport,
+      including in private Google Sheets kept in the administrator's Google Drive.</li>
   </ul>
 
   <h2>Where it is stored</h2>
@@ -81,9 +103,10 @@
     <li>Student and coach records and accounts: a Postgres database hosted by Neon
       (Singapore).</li>
     <li>Sign-in codes are sent through Google's Gmail service.</li>
-    <li>Videos and preview images: a private folder in the administrator's Google Drive.
-      <strong>Video files are deleted 30 days after upload</strong>; the measurements taken
-      from them are kept.</li>
+    <li>Videos, preview images, photos and certificates: a private folder in the
+      administrator's Google Drive. <strong>Video files are deleted 30 days after
+      upload</strong>; the measurements taken from them are kept. Photos and certificates are
+      kept until the student's record is deleted.</li>
     <li>The website itself runs on Vercel.</li>
   </ul>
 
@@ -99,8 +122,8 @@
   <h2>Google account access</h2>
   <p>
     Stridian connects to the administrator's own Google account with the
-    <code>drive.file</code> permission only. That lets it create and manage the video folder
-    and the squad sheet it made itself — it cannot see any other file in that Drive. Stridian
+    <code>drive.file</code> permission only. That lets it create and manage the folder and
+    the spreadsheets it made itself — it cannot see any other file in that Drive. Stridian
     does not ask students or coaches to sign in with Google.
   </p>
   <p>
@@ -111,8 +134,9 @@
 
   <h2>Removing your data</h2>
   <p>
-    Ask your coach or the administrator, and your record, results and videos will be deleted.
-    Deleting a student in Stridian removes their videos from storage as well. To have your
+    Ask your coach or the administrator, and your record, results, videos, photo and
+    certificates will be deleted. Deleting a student in Stridian removes those files from
+    storage as well. To have your
     sign-in account removed too, email the address below from your university email.
   </p>
 

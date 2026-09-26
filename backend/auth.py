@@ -132,7 +132,7 @@ def current_student(
 
 # ------------------------------ email codes -------------------------------- #
 
-def _code_hash(email: str, code: str) -> str:
+def code_hash(email: str, code: str) -> str:
     return _fingerprint(f"{email}:{code}")
 
 
@@ -146,7 +146,7 @@ def new_code(account: StudentAccount) -> str:
     """Make a fresh 6-digit code for this account (caller commits once it is sent).
     Any earlier code stops working."""
     code = f"{secrets.randbelow(1_000_000):06d}"
-    account.code_hash = _code_hash(account.email, code)
+    account.code_hash = code_hash(account.email, code)
     account.code_sent_at = _now()
     account.code_attempts = 0
     return code
@@ -159,7 +159,7 @@ def use_code(account: StudentAccount, code: str) -> bool:
             or (_now() - account.code_sent_at).total_seconds() > CODE_MINUTES * 60
             or (account.code_attempts or 0) >= CODE_TRIES):
         return False
-    if hmac.compare_digest(account.code_hash, _code_hash(account.email, code)):
+    if hmac.compare_digest(account.code_hash, code_hash(account.email, code)):
         account.code_hash = None
         return True
     account.code_attempts = (account.code_attempts or 0) + 1

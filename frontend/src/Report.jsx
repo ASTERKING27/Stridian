@@ -1,19 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, band, bandWord, formatValue, shortLabel, utc, wrapLabel } from './api'
+import { api, band, bandWord, download, formatValue, shortLabel, utc, wrapLabel } from './api'
 import { Radar, Sparkline } from './charts'
 import Diet from './Diet'
 import Icon from './Icon'
 import VideoCard from './VideoCard'
+import {
+  Achievement, CertificateUpload, DetailsForm, DetailsView, Photo, PhotoButton,
+} from './people'
 
-const TABS = ['Overview', 'Measurements', 'Positions', 'Match', 'Training', 'Diet', 'Video']
+const TABS = ['Overview', 'Profile', 'Measurements', 'Positions', 'Match', 'Training', 'Diet', 'Video']
 
 /* A coach's view of one student, or — with `readOnly` — a verified student's view of
-   their own report: no verifying, no deleting, no video tab. */
-export default function Report({ id, readOnly = false, onBack, onDeleted, onChanged }) {
+   their own report: no verifying, no deleting, no profile or video tab (their portal
+   has their profile). */
+export default function Report({ id, readOnly = false, initialTab = 'Overview', isAdmin = false, sports,
+                                 onBack, onDeleted, onChanged }) {
   const [data, setData] = useState(null)
   const [history, setHistory] = useState([])
   const [error, setError] = useState('')
-  const [tab, setTab] = useState('Overview')
+  const [tab, setTab] = useState(initialTab)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setData(null)
@@ -39,6 +45,7 @@ export default function Report({ id, readOnly = false, onBack, onDeleted, onChan
   const { student, recommended, metrics, positions, developmentPlan, videos, diet } = data
   const videoDrills = (videos ?? []).flatMap(v => v.metrics?.drills ?? [])
   const tabs = TABS.filter(t =>
+    (t !== 'Profile' || !readOnly) &&
     (t !== 'Video' || (!readOnly && videos && videos.length > 0)) &&
     (t !== 'Match' || (data.matchClips && data.matchClips.length > 0))
   )
@@ -49,20 +56,37 @@ export default function Report({ id, readOnly = false, onBack, onDeleted, onChan
     onDeleted()
   }
 
+  async function saveExcel() {
+    setSaving(true)
+    try {
+      await download(`/api/students/${id}/export`)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const setStudent = s => { setData(d => ({ ...d, student: s })); onChanged?.() }
+
   return (
     <>
       {onBack && (
-        <button className="linkbtn" onClick={onBack} style={{ marginBottom: 12 }}>
+        <button className="linkbtn noprint" onClick={onBack} style={{ marginBottom: 12 }}>
           <Icon name="back" size={13} /> All students
         </button>
       )}
 
-      <div className="pagehead">
+      {/* the Profile tab carries its own header, photo included, when printed */}
+      <div className={`pagehead${tab === 'Profile' ? ' noprint' : ''}`}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
+          <div className="row" style={{ gap: 14, flexWrap: 'nowrap', minWidth: 0 }}>
+          {!readOnly && <Photo url={`/api/students/${id}/photo`} version={student.photo_version} name={student.name} size={56} />}
+          <div style={{ minWidth: 0 }}>
             <h1>{student.name}</h1>
             <p className="muted">
               {data.sport}
+              {student.ra_number ? ` · ${student.ra_number}` : ''}
               {student.email ? ` · ${student.email}` : ''}
               {student.age ? ` · ${student.age} yrs` : ''}
               {student.height_cm ? ` · ${student.height_cm} cm` : ''}
@@ -70,20 +94,33 @@ export default function Report({ id, readOnly = false, onBack, onDeleted, onChan
               {student.blood_group ? ` · ${student.blood_group}` : ''}
             </p>
           </div>
-          {!readOnly && <button className="linkbtn danger" onClick={remove}>Delete student</button>}
+          </div>
+          {!readOnly && (
+            <div className="row noprint">
+              <button className="btn sec sm" disabled={saving} onClick={saveExcel}>
+                {saving ? 'Preparing…' : 'Download Excel'}
+              </button>
+              <button className="linkbtn danger" onClick={remove}>Delete student</button>
+            </div>
+          )}
         </div>
       </div>
 
       <VerifyCard student={student} positions={positions} recommended={recommended} readOnly={readOnly}
                   onChange={s => { setData(d => ({ ...d, student: s })); onChanged?.() }} />
 
-      <div className="seg" role="tablist" style={{ maxWidth: 620 }}>
+      <div className="seg noprint" role="tablist" style={{ maxWidth: 700 }}>
         {tabs.map(t => (
           <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{t}</button>
         ))}
       </div>
 
       {tab === 'Overview' && <Overview data={data} />}
+
+      {tab === 'Profile' && (
+        <ProfileTab student={student} isAdmin={isAdmin} sports={sports} onStudent={setStudent}
+                    onMoved={onDeleted} />
+      )}
 
       {tab === 'Measurements' && (
         <div className="card">
@@ -133,6 +170,102 @@ export default function Report({ id, readOnly = false, onBack, onDeleted, onChan
   )
 }
 
+/* Who the student is — their details, photo and achievements. Coaches verify or reject
+   achievements here; admins can also edit the details, change the photo and add
+   certificates for students who have no portal of their own. */
+function ProfileTab({ student, isAdmin, sports, onStudent, onMoved }) {
+  const [list, setList] = useState(null)
+  const [editing, setEditing] = useState(false)
+  const [aiOn, setAiOn] = useState(false)
+
+  useEffect(() => {
+    api.studentAchievements(student.id).then(setList).catch(() => setList([]))
+    if (isAdmin) api.health().then(h => setAiOn(!!h.documentAI)).catch(() => {})
+  }, [student.id, isAdmin])
+
+  // a verdict can change their highest verified level, so the details are fetched again
+  const changed = async item => {
+    setList(l => l.map(a => (a.id === item.id ? item : a)))
+    onStudent(await api.student(student.id))
+  }
+
+  if (editing) {
+    return (
+      <DetailsForm mode="admin" student={student} sports={sports} submitLabel="Save changes"
+                   onCancel={() => setEditing(false)}
+                   onSubmit={async body => {
+                     const saved = await api.updateStudent(student.id, body)
+                     setEditing(false)
+                     if (saved.sport !== student.sport) {
+                       alert(`${saved.name} moved to ${saved.sport}. Switch sport to see them there.`)
+                       onMoved()
+                       return null
+                     }
+                     onStudent(saved)
+                     return null
+                   }} />
+    )
+  }
+
+  return (
+    <>
+      <div className="card printable">
+        <div className="card-head">
+          <div className="row" style={{ gap: 16, flexWrap: 'nowrap' }}>
+            <Photo url={`/api/students/${student.id}/photo`} version={student.photo_version}
+                   name={student.name} size={96} />
+            <div>
+              <h2>{student.name}</h2>
+              <p className="muted">{student.sport}{student.ra_number ? ` · ${student.ra_number}` : ''}</p>
+            </div>
+          </div>
+          <div className="row noprint">
+            {isAdmin && (
+              <PhotoButton label={student.photo_version ? 'Change photo' : 'Add photo'}
+                           onPhoto={async blob => onStudent({ ...student, ...(await api.setStudentPhoto(student.id, blob)) })} />
+            )}
+            {isAdmin && <button className="btn sec sm" onClick={() => setEditing(true)}>Edit details</button>}
+            <button className="btn sec sm" onClick={() => window.print()}>Print / save as PDF</button>
+          </div>
+        </div>
+        <DetailsView student={student} />
+        {!isAdmin && (
+          <p className="muted noprint" style={{ marginTop: 12 }}>
+            Personal details are the university&apos;s record — the student corrects their own from
+            their portal, and admins can change anything.
+          </p>
+        )}
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h2>Achievements</h2>
+            <p className="muted">
+              Open each certificate before verifying it. Rejecting asks for a reason, which the
+              student sees so they can fix it.
+            </p>
+          </div>
+          {isAdmin && (
+            <div className="noprint">
+              <CertificateUpload aiOn={aiOn} label="Add a certificate"
+                                 upload={(blob, name) => api.addStudentAchievement(student.id, blob, name)}
+                                 onUploaded={a => setList(l => [a, ...(l ?? [])])} />
+            </div>
+          )}
+        </div>
+        {!list ? <div className="skeleton">Loading…</div>
+          : list.length === 0 ? <p className="muted">Nothing sent yet.</p>
+            : list.map(a => (
+              <Achievement key={a.id} item={a} as={isAdmin ? 'admin' : 'coach'} studentName={student.name}
+                           certUrl={`/api/achievements/${a.id}/certificate`} onChange={changed}
+                           onDelete={() => setList(l => l.filter(x => x.id !== a.id))} />
+            ))}
+      </div>
+    </>
+  )
+}
+
 /* The coach's confirmation of where this student plays. It moves them to the Verified
    tab of the squad sheet and becomes a training example for the model. */
 function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
@@ -155,7 +288,7 @@ function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
   if (student.status === 'verified') {
     const agrees = recommended?.position === student.verified_position
     return (
-      <div className="card">
+      <div className="card noprint">
         <div className="verify">
           <span className="pill good"><i className="dot" />Verified</span>
           <span>
@@ -179,7 +312,7 @@ function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
   }
 
   return (
-    <div className="card">
+    <div className="card noprint">
       <div className="verify">
         <span className="pill warn"><i className="dot" />Pending</span>
         <label htmlFor="vpos">Confirm the position they play:</label>

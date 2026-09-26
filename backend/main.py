@@ -5,16 +5,19 @@ Run from this folder:  uvicorn main:app --reload
 Interactive docs:      http://127.0.0.1:8000/docs
 
 Access model: students sign in with their university email (proved by an emailed
-code) and enrol with an enrolment code their coach hands out. They see their own report,
-read-only, once a coach has verified them. Everything else is coach-only, and a coach is
-locked to one sport — a football coach never sees basketball students, their weights,
-or their videos.
+code) and enrol with an enrolment code their coach hands out. Their portal holds their
+details, photo and achievements, and their report once a coach has verified them.
+Everything else is coach-only, and a coach is locked to one sport — a football coach
+never sees basketball students, their weights, or their videos. Admins (ADMIN_EMAILS)
+are coaches who can switch sport, add students by hand, change anyone's personal
+details and open the Google Sheets.
 
 This process never runs a vision model. Uploaded videos are queued, and the worker
 (worker.py, on the laptop or the lab iMac) analyses them whenever it is switched on.
 That is what lets this API run on a free serverless host.
 """
 
+import hashlib
 import hmac
 import logging
 import os
@@ -24,6 +27,7 @@ from collections import Counter
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.parse import quote, unquote
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
@@ -33,6 +37,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 import auth
+import docreader
+import export
 import mailer
 import match_metrics
 import migrate
@@ -43,13 +49,17 @@ import sports_config as sc
 import storage
 import trainer
 from db import Base, SessionLocal, engine, get_db
-from models import (AppState, Coach, MatchAssignment, MatchClip, ModelVersion, PositionWeight,
-                    Student, StudentAccount, StudentSession, TestResult, VideoAnalysis)
+from models import (LEVELS, Achievement, AppState, Coach, MatchAssignment, MatchClip,
+                    ModelVersion, PositionWeight, Student, StudentAccount, StudentSession,
+                    TestResult, VideoAnalysis)
 from models import _now as utcnow
-from schemas import (CalibrationIn, CoachLogin, CoachOut, CoachSignup, MatchAssignIn,
-                     MatchClipOut, MatchUploadIn, ResultsIn, StudentCodeIn, StudentCreate,
-                     StudentEnrol, StudentListItem, StudentLogin, StudentOut, StudentUpdate,
-                     StudentVerifyIn, TokenOut, UploadIn, VerifyIn, VideoOut, WeightsIn)
+from models import admin_emails
+from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CoachDetails,
+                     CoachLogin, CoachOut, CoachSignup, MatchAssignIn, MatchClipOut,
+                     MatchUploadIn, ResultsIn, ReviewIn, SportIn, StudentCodeIn, StudentCreate,
+                     StudentEnrol, StudentListItem, StudentLogin, StudentOut, StudentSelfUpdate,
+                     StudentUpdate, StudentVerifyIn, TokenOut, UploadIn, VerifyIn, VideoOut,
+                     WeightsIn)
 
 log = logging.getLogger("stridian")
 
@@ -163,11 +173,23 @@ def metric_rows(db: Session, student: Student) -> list:
 
 
 def coach_student(student_id: int, coach: Coach, db: Session) -> Student:
-    """Fetch a student, 404ing for anyone outside the coach's own sport."""
+    """Fetch a student, 404ing for anyone outside the coach's own sport (for an admin,
+    the sport they have switched to)."""
     student = db.get(Student, student_id)
     if student is None or student.sport != coach.sport:
         raise HTTPException(404, "Student not found")
     return student
+
+
+def require_admin(coach: Coach) -> None:
+    if not coach.is_admin:
+        raise HTTPException(403, "Only an admin can do that.")
+
+
+def check_ra_free(db: Session, ra_number: str | None, student_id: int | None = None) -> None:
+    if ra_number and db.scalar(select(Student.id).where(Student.ra_number == ra_number,
+                                                        Student.id != (student_id or 0))):
+        raise HTTPException(409, "That RA number is already registered — if it's yours, tell your coach.")
 
 
 def summarise(report: dict) -> dict:
@@ -330,6 +352,50 @@ def sync_sheet(db: Session, students=()):
         log.exception("sheet sync failed")
 
 
+def sync_people(db: Session, *keys):
+    """Rewrite the admin's people spreadsheets (all of them, or just `keys`), creating any
+    that don't exist yet. Never raises, like sync_sheet, and the worker repeats it."""
+    if not sheets.gapi.configured():
+        return
+    rows = {
+        "profiles": lambda: [sheets.profile_row(s) for s in
+                             db.scalars(select(Student).order_by(Student.sport, Student.name))],
+        "achievements": lambda: [sheets.achievement_row(a) for a in
+                                 db.scalars(select(Achievement).where(Achievement.status != "draft")
+                                            .order_by(Achievement.id.desc()))],
+        "coaches": lambda: [sheets.coach_row(c) for c in db.scalars(select(Coach).order_by(Coach.id))],
+    }
+    for key in keys or sheets.PEOPLE:
+        title, tab, header = sheets.PEOPLE[key]
+        registry = get_state(db, "people_sheets")
+        entry = dict(registry.get(key) or {})
+        try:
+            if not entry.get("id"):
+                # ponytail: two first-ever pushes at the same moment could each make one;
+                # the spare is simply never written to again
+                entry["id"] = sheets.create(title, tab, header)
+                set_state(db, "people_sheets", {**registry, key: entry})
+            sheets.write(entry["id"], {tab: [header] + rows[key]()})
+            entry.update(ok=True, error=None)
+        except Exception as exc:  # noqa: BLE001
+            db.rollback()
+            log.exception("people sheet %s failed", key)
+            entry.update(ok=False, error=str(exc)[:300])
+        entry["at"] = utcnow().isoformat()
+        set_state(db, "people_sheets", {**get_state(db, "people_sheets"), key: entry})
+
+
+def people_sheets(db: Session) -> list:
+    """Links to the admin's people spreadsheets, and how their last push went."""
+    registry = get_state(db, "people_sheets")
+    return [
+        {"key": key, "title": title, **(registry.get(key) or {}),
+         "url": f"https://docs.google.com/spreadsheets/d/{registry[key]['id']}"
+                if (registry.get(key) or {}).get("id") else None}
+        for key, (title, _tab, _header) in sheets.PEOPLE.items()
+    ]
+
+
 def sport_students(db: Session, sport_name: str):
     return db.scalars(select(Student).where(Student.sport == sport_name)).all()
 
@@ -345,6 +411,14 @@ def init_db():
     # column was added keeps working until something writes that field. Close the gap
     # here rather than making anyone delete their data to pick up a new feature.
     migrate.run(engine, Base.metadata)
+    try:
+        # one student per RA number, even if two enrolments race (the app checks first,
+        # for a friendly message); partial, because most rows predate RA numbers
+        with engine.begin() as conn:
+            conn.exec_driver_sql("CREATE UNIQUE INDEX IF NOT EXISTS uq_students_ra_number "
+                                 "ON students (ra_number) WHERE ra_number IS NOT NULL")
+    except Exception:  # noqa: BLE001 — a duplicate already in the data; the app check still runs
+        log.warning("could not add the RA number index", exc_info=True)
     db = SessionLocal()
     try:
         for sport_name in sc.sport_names():
@@ -380,6 +454,7 @@ def health(db: Session = Depends(get_db)):
         "worker": worker_status(db),
         "chunkSize": storage.CHUNK,
         "studentDomain": student_domain(),
+        "documentAI": docreader.configured(),
     }
 
 
@@ -398,12 +473,51 @@ def signup(payload: CoachSignup, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     if db.scalar(select(Coach).where(func.lower(Coach.email) == email)):
         raise HTTPException(409, "An account already uses that email")
-    coach = Coach(name=payload.name.strip(), email=email, sport=sport,
+    if email in admin_emails():
+        prove_admin_email(db, email, payload.email_code)
+    coach = Coach(name=payload.name, email=email, sport=sport, employee_id=payload.employee_id,
+                  phone=payload.phone, designation=payload.designation,
                   password_hash=auth.hash_password(payload.password))
     db.add(coach)
     db.commit()
     db.refresh(coach)
-    return TokenOut(token=auth.issue_token(db, coach), coach=CoachOut.model_validate(coach))
+    token = auth.issue_token(db, coach)
+    sync_people(db, "coaches")
+    return TokenOut(token=token, coach=CoachOut.model_validate(coach))
+
+
+def prove_admin_email(db: Session, email: str, typed: str | None) -> None:
+    """An ADMIN_EMAILS address gets an account only once its owner has typed a code
+    emailed to it — otherwise whoever typed a listed address first would be an admin.
+    Without a code this sends one and answers 428; with one it checks it."""
+    key = "admincode:" + hashlib.sha256(email.encode()).hexdigest()[:24]
+    row = db.scalar(select(AppState).where(AppState.key == key).with_for_update())
+    state = dict(row.value or {}) if row else {}
+    sent = datetime.fromisoformat(state["sentAt"]) if state.get("sentAt") else None
+    age = (utcnow() - sent).total_seconds() if sent else None
+
+    if typed and typed.strip():
+        tries = state.get("tries", 0)
+        if (age is not None and age <= auth.CODE_MINUTES * 60 and tries < auth.CODE_TRIES
+                and hmac.compare_digest(state.get("hash", ""), auth.code_hash(email, typed.strip()))):
+            set_state(db, key, {})        # used up
+            return
+        set_state(db, key, {**state, "tries": tries + 1})
+        raise HTTPException(400, "That code is wrong or has expired — clear it and create the "
+                                 "account again for a new one.")
+    if age is None or age >= auth.CODE_RESEND_SECONDS:
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        try:
+            mailer.send_code(email, code)
+        except mailer.MailError as exc:
+            db.rollback()
+            raise HTTPException(503, str(exc)) from exc
+        set_state(db, key, {"hash": auth.code_hash(email, code), "sentAt": utcnow().isoformat(),
+                            "tries": 0})
+    else:
+        db.rollback()                     # release the lock; the last code still stands
+    raise HTTPException(428, f"This is an admin address, so a 6-digit code has been emailed to "
+                             f"{email}. Type it in to finish creating the account.")
 
 
 @app.post("/api/auth/login", response_model=TokenOut)
@@ -421,6 +535,39 @@ def login(payload: CoachLogin, db: Session = Depends(get_db)):
 @app.get("/api/auth/me", response_model=CoachOut)
 def me(coach: Coach = Depends(auth.current_coach)):
     return coach
+
+
+@app.patch("/api/auth/me", response_model=CoachOut)
+def update_me(payload: CoachDetails, db: Session = Depends(get_db),
+              coach: Coach = Depends(auth.current_coach)):
+    """A coach's own details — how accounts from before sign-up asked for them catch up."""
+    data = payload.model_dump(exclude_unset=True)
+    emptied = [k for k in ("name", "employee_id", "phone") if k in data and data[k] is None]
+    if emptied:
+        raise HTTPException(400, f"These can't be left empty: {', '.join(emptied)}")
+    for field, value in data.items():
+        setattr(coach, field, value)
+    db.commit()
+    db.refresh(coach)
+    sync_people(db, "coaches")
+    return coach
+
+
+@app.patch("/api/auth/sport", response_model=CoachOut)
+def switch_sport(payload: SportIn, db: Session = Depends(get_db),
+                 coach: Coach = Depends(auth.current_coach)):
+    """An admin looks at one sport at a time, and can switch between them."""
+    require_admin(coach)
+    coach.sport = require_sport(payload.sport)
+    db.commit()
+    db.refresh(coach)
+    return coach
+
+
+@app.get("/api/coaches", response_model=list[CoachOut])
+def list_coaches(db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    require_admin(coach)
+    return db.scalars(select(Coach).order_by(Coach.sport, Coach.name)).all()
 
 
 @app.post("/api/auth/logout", status_code=204)
@@ -534,6 +681,7 @@ def student_enrol(payload: StudentEnrol, db: Session = Depends(get_db),
     typed = re.sub(r"[\s-]", "", payload.enrol_code).upper()
     if not code or not hmac.compare_digest(typed.encode(), code.encode()):
         raise HTTPException(403, f"That enrolment code isn't right for {sport} — ask your coach for it.")
+    check_ra_free(db, payload.ra_number)
     data = payload.model_dump(exclude={"enrol_code"})
     data["sport"] = sport
     student = Student(**data)
@@ -541,6 +689,38 @@ def student_enrol(payload: StudentEnrol, db: Session = Depends(get_db),
     db.add(student)
     db.commit()
     sync_sheet(db, [student])
+    sync_people(db, "profiles")
+    db.refresh(account)
+    return student_view(account)
+
+
+def my_student(account: StudentAccount) -> Student:
+    if account.student is None:
+        raise HTTPException(409, "Enrol in your sport first.")
+    return account.student
+
+
+@app.patch("/api/student/profile")
+def student_update_profile(payload: StudentSelfUpdate, db: Session = Depends(get_db),
+                           account: StudentAccount = Depends(auth.current_student)):
+    """A student correcting their own details. Their sport stays as enrolled, and their RA
+    number and date of birth can be filled in once (students from before these existed)
+    but only an admin changes them after that."""
+    student = my_student(account)
+    data = payload.model_dump(exclude_unset=True)
+    for field in STUDENT_ONCE & set(data):
+        if getattr(student, field) is not None and data[field] != getattr(student, field):
+            raise HTTPException(403, "Your RA number and date of birth can only be changed by an "
+                                     "admin — ask your coach.")
+    check_ra_free(db, data.get("ra_number"), student.id)
+    for field, value in data.items():
+        setattr(student, field, value)
+    if not (student.father_phone or student.mother_phone):
+        db.rollback()
+        raise HTTPException(400, "Add at least one parent's mobile number.")
+    db.commit()
+    sync_sheet(db, [student])
+    sync_people(db, "profiles")
     db.refresh(account)
     return student_view(account)
 
@@ -656,16 +836,18 @@ def reset_weights(sport: str, db: Session = Depends(get_db),
 @app.post("/api/students", response_model=StudentOut, status_code=201)
 def create_student(payload: StudentCreate, db: Session = Depends(get_db),
                    coach: Coach = Depends(auth.current_coach)):
-    """A coach adding a student by hand, in their own sport. Students enrol themselves
-    through /api/student/enrol instead."""
+    """An admin adding a student by hand, in any sport. Students enrol themselves through
+    /api/student/enrol instead."""
+    require_admin(coach)
     data = payload.model_dump()
     data["sport"] = require_sport(payload.sport)
-    auth.require_own_sport(coach, data["sport"])
+    check_ra_free(db, payload.ra_number)
     student = Student(**data)
     db.add(student)
     db.commit()
     db.refresh(student)
     sync_sheet(db, [student])
+    sync_people(db, "profiles")
     return student
 
 
@@ -678,7 +860,9 @@ def list_students(db: Session = Depends(get_db), coach: Coach = Depends(auth.cur
     return [
         StudentListItem(**StudentOut.model_validate(s).model_dump(),
                         has_results=len(s.results) > 0,
-                        video_count=sum(v.status == "done" for v in s.videos))
+                        video_count=sum(v.status == "done" for v in s.videos),
+                        achievements_verified=len(s.verified_achievements),
+                        achievements_pending=sum(a.status == "pending" for a in s.achievements))
         for s in students
     ]
 
@@ -692,12 +876,30 @@ def get_student(student_id: int, db: Session = Depends(get_db),
 @app.patch("/api/students/{student_id}", response_model=StudentOut)
 def update_student(student_id: int, payload: StudentUpdate, db: Session = Depends(get_db),
                    coach: Coach = Depends(auth.current_coach)):
+    """Coaches edit what they always could (name, notes, measurements); the university's
+    record of a student — RA number, date of birth, family, IDs, sport — is admin-only."""
     student = coach_student(student_id, coach, db)
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    data = payload.model_dump(exclude_unset=True)
+    if ADMIN_ONLY & set(data):
+        require_admin(coach)
+    check_ra_free(db, data.get("ra_number"), student.id)
+    if "sport" in data:
+        sport = require_sport(data.pop("sport") or "")
+        if sport != student.sport:
+            # positions differ between sports, so the old verification means nothing now
+            student.sport = sport
+            student.status, student.verified_position = "pending", None
+            student.verified_by_id, student.verified_at = None, None
+    for field, value in data.items():
         setattr(student, field, value)
+    if not (student.father_phone or student.mother_phone) and \
+            {"father_phone", "mother_phone"} & set(data):
+        db.rollback()
+        raise HTTPException(400, "Add at least one parent's mobile number.")
     db.commit()
     db.refresh(student)
     sync_sheet(db, [student])
+    sync_people(db, "profiles")
     return student
 
 
@@ -707,9 +909,11 @@ def delete_student(student_id: int, db: Session = Depends(get_db),
     student = coach_student(student_id, coach, db)
     for v in student.videos:
         forget_files(v.stored_name, thumb_of(v))
+    forget_files(student.photo_key, *(a.cert_key for a in student.achievements))
     db.delete(student)
     db.commit()
     sync_sheet(db)
+    sync_people(db, "profiles", "achievements")
 
 
 @app.post("/api/students/{student_id}/verify", response_model=StudentOut)
@@ -910,12 +1114,13 @@ def keyframe_of(clip: MatchClip):
     return None
 
 
-def stored_image(key: str | None, missing: str) -> Response:
+def stored_image(key: str | None, missing: str, mime: str = "image/jpeg") -> Response:
     if not key:
         raise HTTPException(404, missing)
     try:
-        return Response(storage.read_bytes(key), media_type="image/jpeg",
-                        headers={"Cache-Control": "private, max-age=86400"})
+        return Response(storage.read_bytes(key), media_type=mime,
+                        headers={"Cache-Control": "private, max-age=86400",
+                                 "X-Content-Type-Options": "nosniff"})
     except FileNotFoundError as exc:
         raise HTTPException(404, missing) from exc
     except storage.StorageError as exc:
@@ -1251,6 +1456,349 @@ def delete_match(clip_id: int, db: Session = Depends(get_db),
     sync_sheet(db, touched)
 
 
+# ------------------------------ photos & documents -------------------------- #
+#
+# Small files come up as the raw request body (the browser shrinks photos first), which
+# keeps them under the hosted API's 4.5 MB request cap. What a file is gets decided by
+# its first bytes, never by the name or type the browser claims.
+
+MAX_PHOTO_BYTES = 2 * 1024 * 1024
+MAX_OPEN_ACHIEVEMENTS = 20     # a student's certificates not yet verified
+UPLOADS_PER_HOUR = 30          # per student
+MAX_DOC_BYTES = 4 * 1024 * 1024
+EXTENSION = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+             "application/pdf": ".pdf"}
+
+
+def sniff(data: bytes) -> str | None:
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data[:5] == b"%PDF-":
+        return "application/pdf"
+    return None
+
+
+async def read_upload(request: Request, limit: int, allowed: set) -> tuple[bytes, str]:
+    data = await request.body()
+    if not data:
+        raise HTTPException(400, "The file was empty.")
+    if len(data) > limit:
+        raise HTTPException(413, f"That file is over {limit // (1024 * 1024)} MB — take a "
+                                 f"photo of it instead, or shrink it.")
+    mime = sniff(data)
+    if mime not in allowed:
+        raise HTTPException(415, "Upload a photo (JPEG or PNG) or a PDF.")
+    if os.environ.get("VERCEL") and storage.backend() == "local":
+        raise HTTPException(503, "File storage isn't set up yet: add STORAGE=drive and the "
+                                 "Google settings in Vercel, then redeploy.")
+    return data, mime
+
+
+async def set_photo(student: Student, request: Request, db: Session):
+    data, mime = await read_upload(request, MAX_PHOTO_BYTES, {"image/jpeg"})
+    try:
+        key = await run_in_threadpool(storage.save_bytes, f"photo-{student.id}.jpg", data, mime)
+    except storage.StorageError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    old, student.photo_key = student.photo_key, key
+    db.commit()
+    forget_files(old)
+    return {"photo_version": student.photo_version}
+
+
+@app.put("/api/student/photo")
+async def student_put_photo(request: Request, db: Session = Depends(get_db),
+                            account: StudentAccount = Depends(auth.current_student)):
+    return await set_photo(my_student(account), request, db)
+
+
+@app.get("/api/student/photo")
+def student_get_photo(account: StudentAccount = Depends(auth.current_student)):
+    return stored_image(my_student(account).photo_key, "No photo yet")
+
+
+@app.put("/api/students/{student_id}/photo")
+async def admin_put_photo(student_id: int, request: Request, db: Session = Depends(get_db),
+                          coach: Coach = Depends(auth.current_coach)):
+    require_admin(coach)
+    return await set_photo(coach_student(student_id, coach, db), request, db)
+
+
+@app.get("/api/students/{student_id}/photo")
+def student_photo(student_id: int, db: Session = Depends(get_db),
+                  coach: Coach = Depends(auth.current_coach)):
+    return stored_image(coach_student(student_id, coach, db).photo_key, "No photo yet")
+
+
+# ------------------------------- achievements ------------------------------- #
+
+def achievement_list(student: Student) -> list:
+    return [AchievementOut.model_validate(a).model_dump()
+            for a in sorted(student.achievements, key=lambda a: a.id, reverse=True)]
+
+
+def prefill(achievement: Achievement, found: dict | None):
+    """Copy what the AI read into the editable fields; the student corrects the rest."""
+    achievement.ai_read = found
+    if not found:
+        return
+    year = found.get("year")
+    extra = [found.get("details"), found.get("issued_by") and f"Issued by {found['issued_by']}"]
+    achievement.title = (found.get("title") or "")[:200] or None
+    achievement.level = found.get("level") if found.get("level") in LEVELS else None
+    achievement.year = year if isinstance(year, int) and 1990 <= year <= 2100 else None
+    achievement.result = (found.get("result") or "")[:80] or None
+    achievement.details = " ".join(x for x in extra if x)[:2000] or None
+
+
+async def add_achievement(student: Student, request: Request, filename: str | None,
+                          db: Session, status: str) -> Achievement:
+    data, mime = await read_upload(request, MAX_DOC_BYTES, set(EXTENSION))
+    try:
+        key = await run_in_threadpool(storage.save_bytes, f"cert-{student.id}{EXTENSION[mime]}",
+                                      data, mime)
+    except storage.StorageError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    name = Path(unquote(filename or "")).name[:255] or f"certificate{EXTENSION[mime]}"
+    achievement = Achievement(student_id=student.id, cert_key=key, cert_name=name,
+                              cert_mime=mime, status=status)
+    prefill(achievement, await run_in_threadpool(docreader.read_certificate, data, mime))
+    db.add(achievement)
+    db.commit()
+    db.refresh(achievement)
+    return achievement
+
+
+def my_achievement(achievement_id: int, account: StudentAccount, db: Session) -> Achievement:
+    achievement = db.get(Achievement, achievement_id)
+    if achievement is None or achievement.student_id != my_student(account).id:
+        raise HTTPException(404, "Achievement not found")
+    return achievement
+
+
+def coach_achievement(achievement_id: int, coach: Coach, db: Session,
+                      drafts: bool = False) -> Achievement:
+    """One of the sport's achievements. Drafts — not yet sent — stay the student's own."""
+    achievement = db.get(Achievement, achievement_id)
+    if (achievement is None or achievement.student.sport != coach.sport
+            or (achievement.status == "draft" and not drafts)):
+        raise HTTPException(404, "Achievement not found")
+    return achievement
+
+
+def disposition(kind: str, name: str) -> str:
+    """A filename header that survives any name: an ASCII stand-in for old browsers and
+    the real name percent-encoded (headers can only carry latin-1)."""
+    plain = re.sub(r"[^\w .-]+", "_", name, flags=re.ASCII).strip() or "file"
+    return f"{kind}; filename=\"{plain}\"; filename*=UTF-8''{quote(name, safe='')}"
+
+
+def certificate(achievement: Achievement) -> Response:
+    response = stored_image(achievement.cert_key, "Certificate missing",
+                            achievement.cert_mime or "image/jpeg")
+    response.headers["Content-Disposition"] = disposition("inline", achievement.cert_name or "certificate")
+    return response
+
+
+def edit_achievement(achievement: Achievement, payload: AchievementIn, submit_as: str | None):
+    """Apply edited fields; `submit_as` is the status sending it moves it to."""
+    changes = payload.model_dump(exclude_unset=True, exclude={"submit"})
+    for field, value in changes.items():
+        setattr(achievement, field, value)
+    if submit_as and changes and not payload.submit:
+        # a student changing one that is with the coach (or was sent back) takes it back:
+        # nobody should verify details they haven't seen
+        achievement.status = "draft"
+    if payload.submit and submit_as:
+        if not (achievement.title and achievement.level):
+            raise HTTPException(400, "Fill in at least the event and its level before sending it.")
+        achievement.status = submit_as
+        achievement.review_note = achievement.reviewed_by_id = achievement.reviewed_at = None
+
+
+@app.get("/api/student/achievements")
+def student_achievements(account: StudentAccount = Depends(auth.current_student)):
+    return achievement_list(my_student(account))
+
+
+@app.post("/api/student/achievements", status_code=201)
+async def student_add_achievement(request: Request, x_filename: str | None = Header(default=None),
+                                  db: Session = Depends(get_db),
+                                  account: StudentAccount = Depends(auth.current_student)):
+    """Upload a certificate. It comes back as a draft with whatever the AI could read off
+    it, for the student to check and send."""
+    student = my_student(account)
+    if sum(a.status != "verified" for a in student.achievements) >= MAX_OPEN_ACHIEVEMENTS:
+        raise HTTPException(409, f"You have {MAX_OPEN_ACHIEVEMENTS} certificates not verified yet "
+                                 f"— send or delete some before adding more.")
+    # each upload costs Drive space and an AI read, so an hour's worth is capped too
+    key = f"uploads:{student.id}"
+    hour = utcnow().strftime("%Y-%m-%dT%H")
+    used = get_state(db, key)
+    count = used.get("n", 0) if used.get("hour") == hour else 0
+    if count >= UPLOADS_PER_HOUR:
+        raise HTTPException(429, "That's a lot of uploads for one hour — try again later.")
+    set_state(db, key, {"hour": hour, "n": count + 1})
+    achievement = await add_achievement(student, request, x_filename, db, "draft")
+    return AchievementOut.model_validate(achievement)
+
+
+@app.patch("/api/student/achievements/{achievement_id}")
+def student_edit_achievement(achievement_id: int, payload: AchievementIn,
+                             db: Session = Depends(get_db),
+                             account: StudentAccount = Depends(auth.current_student)):
+    achievement = my_achievement(achievement_id, account, db)
+    if achievement.status == "verified":
+        raise HTTPException(409, "This one is already verified — ask your coach if it needs changing.")
+    edit_achievement(achievement, payload, "pending")
+    db.commit()
+    sync_people(db, "achievements")
+    db.refresh(achievement)
+    return AchievementOut.model_validate(achievement)
+
+
+@app.delete("/api/student/achievements/{achievement_id}", status_code=204)
+def student_delete_achievement(achievement_id: int, db: Session = Depends(get_db),
+                               account: StudentAccount = Depends(auth.current_student)):
+    achievement = my_achievement(achievement_id, account, db)
+    if achievement.status == "verified":
+        raise HTTPException(409, "A verified achievement stays on your record.")
+    forget_files(achievement.cert_key)
+    db.delete(achievement)
+    db.commit()
+    sync_people(db, "achievements")
+
+
+@app.get("/api/student/achievements/{achievement_id}/certificate")
+def student_certificate(achievement_id: int, db: Session = Depends(get_db),
+                        account: StudentAccount = Depends(auth.current_student)):
+    return certificate(my_achievement(achievement_id, account, db))
+
+
+@app.get("/api/achievements")
+def squad_achievements(status: str | None = None, db: Session = Depends(get_db),
+                       coach: Coach = Depends(auth.current_coach)):
+    """The sport's achievements (drafts stay private to the student), newest first."""
+    query = (select(Achievement).join(Student).where(Student.sport == coach.sport,
+                                                     Achievement.status != "draft")
+             .order_by(Achievement.id.desc()))
+    if status:
+        query = query.where(Achievement.status == status)
+    return [{**AchievementOut.model_validate(a).model_dump(), "student_name": a.student.name,
+             "ra_number": a.student.ra_number}
+            for a in db.scalars(query)]
+
+
+@app.get("/api/students/{student_id}/achievements")
+def student_achievements_for_coach(student_id: int, db: Session = Depends(get_db),
+                                   coach: Coach = Depends(auth.current_coach)):
+    student = coach_student(student_id, coach, db)
+    return [a for a in achievement_list(student) if a["status"] != "draft"]
+
+
+@app.post("/api/students/{student_id}/achievements", status_code=201)
+async def admin_add_achievement(student_id: int, request: Request,
+                                x_filename: str | None = Header(default=None),
+                                db: Session = Depends(get_db),
+                                coach: Coach = Depends(auth.current_coach)):
+    """An admin adding one for a student (one added by hand has no portal). It lands as
+    pending, to be checked and verified like any other."""
+    require_admin(coach)
+    student = coach_student(student_id, coach, db)
+    achievement = await add_achievement(student, request, x_filename, db, "pending")
+    sync_people(db, "achievements")
+    return AchievementOut.model_validate(achievement)
+
+
+@app.patch("/api/achievements/{achievement_id}")
+def admin_edit_achievement(achievement_id: int, payload: AchievementIn,
+                           db: Session = Depends(get_db),
+                           coach: Coach = Depends(auth.current_coach)):
+    require_admin(coach)
+    achievement = coach_achievement(achievement_id, coach, db)
+    edit_achievement(achievement, payload, None)
+    db.commit()
+    sync_people(db, "achievements", "profiles")
+    db.refresh(achievement)
+    return AchievementOut.model_validate(achievement)
+
+
+@app.post("/api/achievements/{achievement_id}/review")
+def review_achievement(achievement_id: int, payload: ReviewIn, db: Session = Depends(get_db),
+                       coach: Coach = Depends(auth.current_coach)):
+    """A coach or admin has looked at the certificate: verified, or rejected with a reason."""
+    achievement = coach_achievement(achievement_id, coach, db, drafts=True)
+    if achievement.status == "draft":
+        raise HTTPException(409, "The student has taken this back to change it — it comes "
+                                 "back to you when they send it again.")
+    if payload.version and payload.version != achievement.version:
+        raise HTTPException(409, "The student changed this after you opened it — have another look.")
+    if payload.decision == "verified" and not (achievement.title and achievement.level):
+        raise HTTPException(400, "It needs an event and a level before it can be verified.")
+    achievement.status = payload.decision
+    achievement.review_note = payload.note
+    achievement.reviewed_by_id = coach.id
+    achievement.reviewed_at = utcnow()
+    db.commit()
+    sync_people(db, "achievements", "profiles")
+    db.refresh(achievement)
+    return AchievementOut.model_validate(achievement)
+
+
+@app.get("/api/achievements/{achievement_id}/certificate")
+def coach_certificate(achievement_id: int, db: Session = Depends(get_db),
+                      coach: Coach = Depends(auth.current_coach)):
+    return certificate(coach_achievement(achievement_id, coach, db))
+
+
+# ------------------------------ Excel downloads ----------------------------- #
+
+def histories(db: Session, student_ids) -> dict:
+    out: dict[int, list] = {}
+    for r in db.scalars(select(TestResult).where(TestResult.student_id.in_(list(student_ids)))
+                        .order_by(TestResult.recorded_at.asc(), TestResult.id.asc())):
+        out.setdefault(r.student_id, []).append(
+            {"metric_key": r.metric_key, "value": r.value, "recorded_at": r.recorded_at})
+    return out
+
+
+def xlsx(data: bytes, name: str) -> Response:
+    return Response(data, media_type=export.XLSX,
+                    headers={"Content-Disposition": disposition("attachment", name.replace(" ", "-"))})
+
+
+@app.get("/api/export/squad")
+def export_squad(scope: str = "sport", db: Session = Depends(get_db),
+                 coach: Coach = Depends(auth.current_coach)):
+    """The whole squad as an Excel file; an admin can ask for every sport at once."""
+    everyone = scope == "all"
+    if everyone:
+        require_admin(coach)
+    query = select(Student).order_by(Student.sport, Student.name)
+    students = db.scalars(query if everyone else query.where(Student.sport == coach.sport)).all()
+    stale = [s for s in students if not s.sheet_row or len(s.sheet_row) != len(sheets.HEADER)]
+    for s in stale:     # rows cached before a sheet column was added (the worker also does this)
+        s.sheet_row = sheets.row_for(build_report(db, s), s)
+    if stale:
+        db.commit()
+    coaches = db.scalars(select(Coach).order_by(Coach.sport, Coach.name)).all() if everyone else None
+    data = export.squad(students, histories(db, [s.id for s in students]), coaches)
+    what = "all-sports" if everyone else coach.sport
+    return xlsx(data, f"Stridian-{what}-{utcnow():%Y-%m-%d}.xlsx")
+
+
+@app.get("/api/students/{student_id}/export")
+def export_student(student_id: int, db: Session = Depends(get_db),
+                   coach: Coach = Depends(auth.current_coach)):
+    student = coach_student(student_id, coach, db)
+    data = export.student(student, build_report(db, student), history_rows(db, student.id))
+    return xlsx(data, f"Stridian-{student.ra_number or student.id}-{student.name}.xlsx")
+
+
 # ------------------------------- AI training ------------------------------- #
 
 AGREES_COLUMN = sheets.HEADER.index("Coach agrees with system")
@@ -1312,7 +1860,10 @@ def training_overview(db: Session = Depends(get_db), coach: Coach = Depends(auth
         },
         "worker": worker_status(db),
         "storage": storage.backend(),
-        "sheet": {"configured": sheets.configured(), "url": sheets.sheet_url(), **sheet},
+        # the Google Sheets belong to the admins; coaches download Excel files instead
+        "sheet": {"configured": sheets.configured(),
+                  "url": sheets.sheet_url() if coach.is_admin else None, **sheet},
+        "peopleSheets": people_sheets(db) if coach.is_admin else None,
     }
 
 

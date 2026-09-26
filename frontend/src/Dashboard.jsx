@@ -1,17 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, initials } from './api'
+import { api, download, initials } from './api'
+import { levelWord } from './people'
 import Report from './Report'
 
-export default function Dashboard({ coach, version, onChanged }) {
+export default function Dashboard({ coach, sports, version, onChanged, onCoach }) {
   const [students, setStudents] = useState(null)
-  const [openId, setOpenId] = useState(null)
+  const [waiting, setWaiting] = useState([])
+  const [open, setOpen] = useState(null)          // { id, tab }
   const [search, setSearch] = useState('')
   const [show, setShow] = useState('all')
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState('')
 
   useEffect(() => {
     api.students().then(setStudents).catch(e => setError(e.message))
+    api.achievements('pending').then(setWaiting).catch(() => {})
   }, [version])
+
+  async function save(scope) {
+    setBusy(scope)
+    try {
+      await download(`/api/export/squad${scope === 'all' ? '?scope=all' : ''}`)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy('')
+    }
+  }
 
   const stats = useMemo(() => {
     if (!students) return null
@@ -29,15 +44,16 @@ export default function Dashboard({ coach, version, onChanged }) {
     const q = search.trim().toLowerCase()
     return students
       .filter(s => show === 'all' || (show === 'verified') === (s.status === 'verified'))
-      .filter(s => !q || s.name.toLowerCase().includes(q))
+      .filter(s => !q || s.name.toLowerCase().includes(q) || (s.ra_number ?? '').toLowerCase().includes(q))
   }, [students, search, show])
 
   if (error) return <div className="banner bad">{error}</div>
 
-  if (openId) {
+  if (open) {
     return (
-      <Report id={openId} onBack={() => setOpenId(null)} onChanged={onChanged}
-              onDeleted={() => { setOpenId(null); onChanged() }} />
+      <Report id={open.id} initialTab={open.tab} isAdmin={coach.is_admin} sports={sports}
+              onBack={() => { setOpen(null); onChanged() }} onChanged={onChanged}
+              onDeleted={() => { setOpen(null); onChanged() }} />
     )
   }
 
@@ -45,13 +61,27 @@ export default function Dashboard({ coach, version, onChanged }) {
 
   return (
     <>
-      <div className="pagehead">
-        <h1>{coach.sport} squad</h1>
-        <p className="lede">
-          Everyone who registered for {coach.sport}. Open a student for their position
-          prediction, training priorities and diet plan.
-        </p>
+      <div className="pagehead row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1>{coach.sport} squad</h1>
+          <p className="lede" style={{ marginBottom: 0 }}>
+            Everyone who registered for {coach.sport}. Open a student for their details and
+            achievements, position prediction, training priorities and diet plan.
+          </p>
+        </div>
+        <div className="row">
+          <button className="btn sec sm" disabled={!!busy} onClick={() => save('sport')}>
+            {busy === 'sport' ? 'Preparing…' : 'Download Excel'}
+          </button>
+          {coach.is_admin && (
+            <button className="btn sec sm" disabled={!!busy} onClick={() => save('all')}>
+              {busy === 'all' ? 'Preparing…' : 'All sports (Excel)'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {(!coach.employee_id || !coach.phone) && <MyDetails coach={coach} onSaved={onCoach} missing />}
 
       <div className="tiles">
         <div className="tile">
@@ -76,11 +106,31 @@ export default function Dashboard({ coach, version, onChanged }) {
         </div>
       </div>
 
+      {waiting.length > 0 && (
+        <div className="card flush">
+          <div style={{ padding: '16px 18px 4px' }}>
+            <h2>Achievements to check</h2>
+            <p className="muted">Look at each certificate, then verify it or say what&apos;s wrong.</p>
+          </div>
+          <div className="rows">
+            {waiting.map(a => (
+              <button key={a.id} className="rowitem" onClick={() => setOpen({ id: a.student_id, tab: 'Profile' })}>
+                <span className="who">
+                  <b>{a.title}</b>
+                  <span>{a.student_name} · {[levelWord(a.level), a.year, a.result].filter(Boolean).join(' · ')}</span>
+                </span>
+                <span className="pill warn"><i className="dot" />Check</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <EnrolCode sport={coach.sport} />
 
       <div className="card flush">
         <div className="row" style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', gap: 10 }}>
-          <input placeholder="Search by name…" aria-label="Search students" style={{ flex: '1 1 200px' }}
+          <input placeholder="Search by name or RA number…" aria-label="Search students" style={{ flex: '1 1 200px' }}
                  value={search} onChange={e => setSearch(e.target.value)} />
           <div className="toggles" role="group" aria-label="Show">
             {['all', 'pending', 'verified'].map(k => (
@@ -101,15 +151,24 @@ export default function Dashboard({ coach, version, onChanged }) {
         ) : (
           <div className="rows">
             {visible.map(s => (
-              <button key={s.id} className="rowitem" onClick={() => setOpenId(s.id)}>
+              <button key={s.id} className="rowitem" onClick={() => setOpen({ id: s.id })}>
                 <span className="avatar" aria-hidden="true">{initials(s.name)}</span>
                 <span className="who">
                   <b>{s.name}</b>
                   <span>
+                    {s.ra_number ? `${s.ra_number} · ` : ''}
                     {s.age ? `${s.age} yrs` : 'age not set'} · {s.declared_position || 'role not set'}
+                    {s.achievements_verified
+                      ? ` · ${s.achievements_verified} achievement${s.achievements_verified > 1 ? 's' : ''} (best: ${levelWord(s.top_verified_level)})`
+                      : ''}
                     {s.video_count ? ` · ${s.video_count} clip${s.video_count > 1 ? 's' : ''}` : ''}
                   </span>
                 </span>
+                {s.achievements_pending > 0 && (
+                  <span className="pill accent" title="Achievements waiting for you to check">
+                    {s.achievements_pending} to check
+                  </span>
+                )}
                 {s.status === 'verified' ? (
                   <span className="pill good"><i className="dot" />{s.verified_position}</span>
                 ) : (
@@ -122,6 +181,108 @@ export default function Dashboard({ coach, version, onChanged }) {
           </div>
         )}
       </div>
+    </>
+  )
+}
+
+/* A coach's own details. Accounts from before sign-up asked for them see this on the
+   dashboard until they are filled in; anyone can open it from their name in the menu. */
+export function MyDetails({ coach, onSaved, missing = false }) {
+  const [f, setF] = useState({
+    name: coach.name ?? '', employee_id: coach.employee_id ?? '', phone: coach.phone ?? '',
+    designation: coach.designation ?? '',
+  })
+  const [status, setStatus] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [coaches, setCoaches] = useState(null)
+  const set = (k, v) => setF(x => ({ ...x, [k]: v }))
+
+  useEffect(() => {
+    if (coach.is_admin && !missing) api.coaches().then(setCoaches).catch(() => {})
+  }, [coach.is_admin, missing])
+
+  async function submit(e) {
+    e.preventDefault()
+    setBusy(true)
+    setStatus(null)
+    try {
+      const saved = await api.updateMe(f)
+      setStatus({ ok: true, text: 'Saved.' })
+      onSaved(saved)
+    } catch (err) {
+      setStatus({ ok: false, text: err.message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      {!missing && (
+        <div className="pagehead">
+          <h1>Your details</h1>
+          <p className="lede">{coach.email} · {coach.is_admin ? 'Admin' : `${coach.sport} coach`}</p>
+        </div>
+      )}
+      <form className="card" onSubmit={submit}>
+        {missing && (
+          <div className="card-head">
+            <div>
+              <h2>Add your employee ID and mobile</h2>
+              <p className="muted">The sports directorate keeps these for every coach.</p>
+            </div>
+          </div>
+        )}
+        <div className="grid2">
+          <div className="field">
+            <label htmlFor="md-name">Name *</label>
+            <input id="md-name" required value={f.name} onChange={e => set('name', e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="md-emp">Employee ID *</label>
+            <input id="md-emp" required value={f.employee_id} onChange={e => set('employee_id', e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="md-phone">Mobile *</label>
+            <input id="md-phone" type="tel" inputMode="tel" required value={f.phone}
+                   onChange={e => set('phone', e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="md-des">Designation</label>
+            <input id="md-des" value={f.designation} placeholder="e.g. Assistant Professor, Physical Education"
+                   onChange={e => set('designation', e.target.value)} />
+          </div>
+        </div>
+        <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+        {status && <div className={`note ${status.ok ? 'ok' : 'err'}`}>{status.text}</div>}
+      </form>
+
+      {coaches && (
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h2>Every coach</h2>
+              <p className="muted">Only admins see this list. Admins are set on the server (ADMIN_EMAILS).</p>
+            </div>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data">
+              <thead>
+                <tr><th>Name</th><th>Sport</th><th>Employee ID</th><th>Mobile</th><th>Email</th><th>Designation</th></tr>
+              </thead>
+              <tbody>
+                {coaches.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.name}{c.is_admin ? ' (admin)' : ''}</td><td>{c.sport}</td>
+                    <td>{c.employee_id || '—'}</td><td>{c.phone || '—'}</td><td>{c.email}</td>
+                    <td>{c.designation || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   )
 }

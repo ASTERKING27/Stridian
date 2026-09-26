@@ -153,6 +153,9 @@ body {
   background: var(--accent); color: var(--accent-ink);
   display: grid; place-items: center; font-size: 12px; font-weight: 700;
 }
+button.whoami { width: 100%; border: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+button.whoami:hover:not(:disabled) { background: var(--surface-3); }
+button.whoami:disabled { cursor: default; }
 .whoami b { display: block; font-size: 13px; }
 .whoami small { color: var(--ink-3); font-size: 11px; }
 /* a student's university email is longer than the rail */
@@ -213,7 +216,7 @@ h3 { font-size: .9rem; margin: 0 0 8px; }
   margin-bottom: 16px;
 }
 .card.flush { padding: 0; overflow: hidden; }
-.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
 .card-head p { margin: 2px 0 0; }
 
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -423,9 +426,9 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .authpage { min-height: 100%; display: grid; place-items: center; padding: 24px 16px; }
 .authcard { width: 100%; max-width: 400px; }
 .authcard .brand { justify-content: center; padding-top: 0; }
-.seg { display: grid; grid-auto-flow: column; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: var(--r-sm); margin-bottom: 18px; }
+.seg { display: grid; grid-auto-flow: column; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: var(--r-sm); margin-bottom: 18px; overflow-x: auto; scrollbar-width: none; }
 .seg button {
-  padding: 8px; border: none; border-radius: 6px; background: none;
+  padding: 8px; border: none; border-radius: 6px; background: none; white-space: nowrap;
   color: var(--ink-2); font: inherit; font-size: .86rem; font-weight: 500; cursor: pointer;
 }
 .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); font-weight: 600; }
@@ -512,6 +515,70 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .toggles button:hover { border-color: var(--ink-3); }
 .toggles button[aria-pressed='true'] {
   background: var(--accent-wash); border-color: var(--accent); color: var(--accent); font-weight: 600;
+}
+
+/* ============================== people ============================== */
+
+.photo { object-fit: cover; border-radius: 12px; flex: none; border: 1px solid var(--line); }
+.avatar.photo { border: none; }
+.btn.disabled { opacity: .5; pointer-events: none; }
+.sportpick { margin-bottom: 8px; padding: 8px 10px; font-size: .86rem; }
+.topbar .sportpick { margin: 0; width: auto; max-width: 108px; padding: 6px 8px; }
+.topbar .btn.sm { padding: 6px 10px; white-space: nowrap; }
+@media (max-width: 480px) {
+  .topbar .brand b { display: none; }
+  .seg button { padding: 8px 7px; font-size: .8rem; }
+}
+
+.detailgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 24px; }
+.detailgrid h3 { margin: 14px 0 4px; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
+table.details td:first-child { width: 42%; }
+table.details td { vertical-align: top; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .detailgrid { grid-template-columns: minmax(0, 1fr); } }
+
+.ach { padding: 14px 0; }
+.ach + .ach { border-top: 1px solid var(--line); }
+.ach:first-child { padding-top: 0; }
+.achhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.achhead b { display: block; font-size: .94rem; }
+.achdetails { margin: 6px 0 0; font-size: .86rem; color: var(--ink-2); }
+.achactions { margin-top: 8px; gap: 14px; }
+.achform { margin-top: 10px; padding: 14px; border-radius: var(--r-sm); background: var(--surface-2); }
+
+.checklist { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.checklist li { padding: 6px 0 6px 26px; position: relative; }
+.checklist li::before {
+  content: ''; position: absolute; left: 2px; top: 10px; width: 12px; height: 12px;
+  border-radius: 50%; border: 1.5px solid var(--line-2);
+}
+.checklist li.done { color: var(--ink-3); }
+.checklist li.done::before { content: '✓'; border: none; background: var(--good); color: #fff; font-size: 9px; line-height: 12px; text-align: center; font-weight: 700; }
+
+.updates { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.updates li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; }
+.updates li + li { border-top: 1px solid var(--line); }
+.updates .pill { padding: 3px 4px; margin-top: 2px; }
+.updates small { display: block; }
+
+/* ============================== printing ============================== */
+/* A profile prints (or saves as PDF) on its own: no menus, no buttons, light colours. */
+@page { margin: 14mm; }
+@media print {
+  :root, :root[data-theme='dark'] {
+    color-scheme: light;
+    --plane: #fff; --surface: #fff; --surface-2: #f3f3f3; --surface-3: #e6e6e6;
+    --ink: #000; --ink-2: #333; --ink-3: #666; --line: #d6d6d6; --line-2: #bbb;
+  }
+  .rail, .topbar, .tabbar, .sitefoot, .noprint, .banner { display: none !important; }
+  .shell { display: block; }
+  main { padding: 0; max-width: none; }
+  .card { box-shadow: none; border-color: var(--line); }
+  .detailgrid > div, tr, .ach { break-inside: avoid; }
+  .achactions, .achform { display: none !important; }
+  table.data th, table.data td { padding: 4px 6px; }
+  .detailgrid h3 { margin-top: 8px; }
+  body { font-size: 13px; }
+  .photo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 
 @media (prefers-reduced-motion: reduce) {

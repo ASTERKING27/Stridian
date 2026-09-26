@@ -6,8 +6,8 @@ import StudentAuth from './StudentAuth'
 import StudentForm from './StudentForm'
 import CoachEntry from './CoachEntry'
 import Matches from './Matches'
-import Dashboard from './Dashboard'
-import Report from './Report'
+import Dashboard, { MyDetails } from './Dashboard'
+import Portal from './Portal'
 import Weights from './Weights'
 import Training from './Training'
 
@@ -43,66 +43,6 @@ const Brand = () => (
     <b>Stridian<span>Sports talent intelligence</span></b>
   </div>
 )
-
-const DIET_WORDS = { nonveg: 'Non-veg', egg: 'Eggetarian', veg: 'Vegetarian', vegan: 'Vegan' }
-
-/* A signed-in student's one page: enrol, then wait for the coach, then their report. */
-function StudentHome({ me, sports, onChange }) {
-  const [busy, setBusy] = useState(false)
-  const s = me.student
-
-  if (!s) return <StudentForm sports={sports} onSaved={onChange} />
-  if (s.status === 'verified') return <Report readOnly />
-
-  async function refresh() {
-    setBusy(true)
-    try { onChange(await api.studentMe()) } catch { /* the banner stays as it was */ }
-    setBusy(false)
-  }
-
-  const details = [
-    ['Sport', s.sport], ['Age', s.age && `${s.age} yrs`], ['Height', s.height_cm && `${s.height_cm} cm`],
-    ['Weight', s.weight_kg && `${s.weight_kg} kg`], ['Blood group', s.blood_group],
-    ['Position you play', s.declared_position], ['Diet', DIET_WORDS[s.diet_preference]],
-    ['Allergies', s.allergies?.replaceAll(',', ', ')], ['Training per day', s.training_hours_per_day && `${s.training_hours_per_day} h`],
-    ['Notes for your coach', s.student_notes],
-  ]
-  return (
-    <>
-      <div className="pagehead">
-        <h1>Hi, {s.name.split(' ')[0]}</h1>
-        <p className="lede">You&apos;re enrolled in {s.sport}.</p>
-      </div>
-      <div className="card">
-        <div className="verify">
-          <span className="pill warn"><i className="dot" />Waiting for your coach</span>
-          <span>
-            Your best position, the reasons for it, your training plan and your diet plan appear
-            here once your coach has recorded your tests and verified you.
-          </span>
-          <button className="btn sec sm" disabled={busy} onClick={refresh}>
-            {busy ? 'Checking…' : 'Check again'}
-          </button>
-        </div>
-      </div>
-      <div className="card">
-        <div className="card-head">
-          <div>
-            <h2>What you sent</h2>
-            <p className="muted">If something is wrong, tell your coach.</p>
-          </div>
-        </div>
-        <table className="data">
-          <tbody>
-            {details.map(([k, v]) => (
-              <tr key={k}><td className="muted">{k}</td><td>{v || '—'}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  )
-}
 
 export default function App() {
   const [coach, setCoach] = useState(null)
@@ -162,23 +102,41 @@ export default function App() {
   }
 
   const nav = coach ? [
-    { key: 'student', label: 'Add Student', short: 'Add', icon: 'student' },
+    // adding students by hand is for admins; everyone else enrols themselves
+    ...(coach.is_admin ? [{ key: 'student', label: 'Add Student', short: 'Add', icon: 'student' }] : []),
     { key: 'coach', label: 'Coach Entry', short: 'Entry', icon: 'clipboard' },
     { key: 'matches', label: 'Match Footage', short: 'Match', icon: 'film' },
     { key: 'dashboard', label: 'Dashboard', short: 'Squad', icon: 'chart' },
     { key: 'weights', label: 'Weights', short: 'Weights', icon: 'sliders' },
     { key: 'training', label: 'AI Training', short: 'AI', icon: 'cpu' },
   ] : [
-    { key: 'mine', label: 'My profile', short: 'Me', icon: 'student' },
+    { key: 'mine', label: 'My space', short: 'Me', icon: 'student' },
   ]
   const who = coach
-    ? { name: coach.name, sub: `${coach.sport} coach` }
+    ? { name: coach.name, sub: coach.is_admin ? `Admin · viewing ${coach.sport}` : `${coach.sport} coach` }
     : { name: me.student?.name ?? me.email, sub: me.student ? `${me.student.sport} · student` : 'Student' }
 
+  async function switchSport(sport) {
+    try {
+      setCoach(await api.switchSport(sport))
+      bump()
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+  const sportPicker = coach?.is_admin && (
+    <select className="sportpick" aria-label="Sport you are viewing" value={coach.sport}
+            onChange={e => switchSport(e.target.value)}>
+      {sports.map(s => <option key={s.slug} value={s.name}>{s.name}</option>)}
+    </select>
+  )
+
+  // keyed by sport: an admin switching sport gets every page fresh
   const body = (
-    <>
-      {view === 'mine' && me && <StudentHome me={me} sports={sports} onChange={setMe} />}
-      {view === 'student' && coach && <StudentForm sports={sports} coach={coach} onSaved={bump} />}
+    <div key={coach?.sport ?? 'student'}>
+      {view === 'mine' && me && <Portal me={me} sports={sports} onChange={setMe} />}
+      {view === 'me' && coach && <MyDetails coach={coach} onSaved={setCoach} />}
+      {view === 'student' && coach?.is_admin && <StudentForm sports={sports} coach={coach} onSaved={bump} />}
       {view === 'coach' && coach && (
         <CoachEntry coach={coach} sports={sports} version={version} onSaved={bump} />
       )}
@@ -186,11 +144,11 @@ export default function App() {
         <Matches version={version} onChanged={bump} />
       )}
       {view === 'dashboard' && coach && (
-        <Dashboard coach={coach} sports={sports} version={version} onChanged={bump} />
+        <Dashboard coach={coach} sports={sports} version={version} onChanged={bump} onCoach={setCoach} />
       )}
       {view === 'weights' && coach && <Weights coach={coach} onSaved={bump} />}
       {view === 'training' && coach && <Training coach={coach} />}
-    </>
+    </div>
   )
 
   return (
@@ -207,13 +165,15 @@ export default function App() {
 
         <div className="spacer" />
 
-        <div className="whoami">
+        {sportPicker}
+        <button className="whoami" disabled={!coach} onClick={() => setView('me')}
+                title={coach ? 'Your details' : undefined}>
           <span className="avatar" aria-hidden="true">{initials(who.name)}</span>
           <span style={{ minWidth: 0 }}>
             <b>{who.name}</b>
             <small>{who.sub}</small>
           </span>
-        </div>
+        </button>
         <div className="row" style={{ gap: 8 }}>
           <button className="navitem" onClick={signOut} style={{ flex: 1 }}>
             <Icon name="logout" /> Sign out
@@ -225,7 +185,9 @@ export default function App() {
       <div>
         <header className="topbar">
           <Brand />
-          <div className="row" style={{ gap: 8 }}>
+          <div className="row" style={{ gap: 8, flexWrap: 'nowrap' }}>
+            {sportPicker}
+            {coach && <button className="btn sec sm" onClick={() => setView('me')}>Me</button>}
             <button className="btn sec sm" onClick={signOut}>Sign out</button>
             <ThemeButton theme={theme} onClick={cycleTheme} />
           </div>

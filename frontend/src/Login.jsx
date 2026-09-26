@@ -4,8 +4,12 @@ import Icon from './Icon'
 
 export default function Login({ sports, onAuthed, onCancel, theme, onTheme }) {
   const [mode, setMode] = useState('login')
-  const [form, setForm] = useState({ name: '', email: '', password: '', sport: sports[0].name, signup_code: '' })
+  const [form, setForm] = useState({
+    name: '', email: '', password: '', sport: sports[0].name, signup_code: '',
+    employee_id: '', phone: '', designation: '', email_code: '',
+  })
   const [error, setError] = useState('')
+  const [codeSent, setCodeSent] = useState('')   // an admin address: the code has gone out
   const [busy, setBusy] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -22,7 +26,11 @@ export default function Login({ sports, onAuthed, onCancel, theme, onTheme }) {
       token.set(res.token)
       onAuthed(res.coach)
     } catch (err) {
-      setError(err.message)
+      if (err.status === 428) {
+        setCodeSent(err.message)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setBusy(false)
     }
@@ -61,6 +69,23 @@ export default function Login({ sports, onAuthed, onCancel, theme, onTheme }) {
                   <input id="cname" required value={form.name} onChange={e => set('name', e.target.value)}
                          autoComplete="name" />
                 </div>
+                <div className="grid2" style={{ gap: 10 }}>
+                  <div className="field">
+                    <label htmlFor="cemp">Employee ID</label>
+                    <input id="cemp" required value={form.employee_id} autoComplete="off"
+                           onChange={e => set('employee_id', e.target.value)} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="cphone">Mobile</label>
+                    <input id="cphone" type="tel" inputMode="tel" required value={form.phone}
+                           autoComplete="tel" onChange={e => set('phone', e.target.value)} />
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="cdes">Designation <span className="muted">(optional)</span></label>
+                  <input id="cdes" value={form.designation} placeholder="e.g. Assistant Professor, Physical Education"
+                         onChange={e => set('designation', e.target.value)} />
+                </div>
                 <div className="field">
                   <label htmlFor="csport">Sport you coach</label>
                   <select id="csport" value={form.sport} onChange={e => set('sport', e.target.value)}>
@@ -94,6 +119,15 @@ export default function Login({ sports, onAuthed, onCancel, theme, onTheme }) {
                      autoComplete={signup ? 'new-password' : 'current-password'} />
               {signup && <p className="muted" style={{ marginTop: 6 }}>At least 8 characters.</p>}
             </div>
+
+            {signup && codeSent && (
+              <div className="field">
+                <p className="note ok" style={{ marginTop: 0 }}>{codeSent}</p>
+                <label htmlFor="cecode">Code from the email</label>
+                <input id="cecode" inputMode="numeric" autoComplete="one-time-code" value={form.email_code}
+                       onChange={e => set('email_code', e.target.value.replace(/\D/g, '').slice(0, 6))} />
+              </div>
+            )}
 
             <button className="btn wide" disabled={busy}>
               {busy ? 'Working…' : signup ? 'Create account' : 'Sign in'}
