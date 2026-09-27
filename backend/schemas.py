@@ -295,6 +295,7 @@ class StudentUpdate(StudentSelfUpdate):
     age: int | None = Field(default=None, ge=8, le=60)
     coach_notes: str | None = None
     sessions_observed: int | None = Field(default=None, ge=0, le=10000)
+    jersey_number: int | None = Field(default=None, ge=0, le=999)
 
     @model_validator(mode="before")
     @classmethod
@@ -326,6 +327,7 @@ class StudentOut(BaseModel):
     highest_level_details: str | None = None
     photo_version: str | None = None
     top_verified_level: str | None = None
+    jersey_number: int | None = None
     height_cm: float | None
     weight_kg: float | None
     blood_group: str | None
@@ -400,6 +402,38 @@ class AchievementOut(BaseModel):
     ai_read: dict | None
     version: str
     created_at: datetime
+
+
+# -------------------------------- match cards ------------------------------- #
+
+class CardNew(Form):
+    category: Literal["W", "M"] = "W"
+    format: str | None = Field(default=None, max_length=20)
+    header: dict = Field(default_factory=dict)
+
+
+class CardLineIn(Form):
+    """One player's row. The skill tallies, extra numbers and player-card zones are
+    checked against the sport's card in match_cards.clean_line."""
+
+    student_id: int | None = None
+    jersey: int | None = Field(default=None, ge=0, le=999)
+    name: str | None = Field(default=None, max_length=120)
+    position: str | None = Field(default=None, max_length=60)
+    tallies: dict = Field(default_factory=dict)
+    fields: dict = Field(default_factory=dict)
+    zones: dict = Field(default_factory=dict)
+    coord: int | None = Field(default=None, ge=1, le=5)
+    overall: int | None = Field(default=None, ge=1, le=5)
+    strength: str | None = Field(default=None, max_length=300)
+    improve: str | None = Field(default=None, max_length=300)
+    remarks: str | None = Field(default=None, max_length=300)
+
+
+class CardIn(CardNew):
+    team: dict = Field(default_factory=dict)
+    lines: list[CardLineIn] = Field(default_factory=list, max_length=40)
+    final: bool = False       # true: it counts towards reports, sheets and exports
 
 
 # ---------------------------- results & weights ---------------------------- #

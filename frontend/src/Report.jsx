@@ -8,7 +8,9 @@ import {
   Achievement, CertificateUpload, DetailsForm, DetailsView, Photo, PhotoButton,
 } from './people'
 
-const TABS = ['Overview', 'Profile', 'Measurements', 'Positions', 'Match', 'Training', 'Diet', 'Video']
+const TABS = ['Overview', 'Profile', 'Measurements', 'Positions', 'Footage', 'Match cards', 'Training', 'Diet', 'Video']
+// tests and physique — footage and match cards have tabs of their own
+const physical = m => m.source === 'test' || m.source === 'profile'
 
 /* A coach's view of one student, or — with `readOnly` — a verified student's view of
    their own report: no verifying, no deleting, no profile or video tab (their portal
@@ -47,7 +49,8 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
   const tabs = TABS.filter(t =>
     (t !== 'Profile' || !readOnly) &&
     (t !== 'Video' || (!readOnly && videos && videos.length > 0)) &&
-    (t !== 'Match' || (data.matchClips && data.matchClips.length > 0))
+    (t !== 'Footage' || (data.matchClips && data.matchClips.length > 0)) &&
+    (t !== 'Match cards' || (data.matchCards?.partD ?? []).length > 0)
   )
 
   async function remove() {
@@ -129,11 +132,11 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
               <h2>Measurements</h2>
               <p className="muted">
                 Test battery and physique, each scored 0–100 against the poor → elite range
-                for {data.sport}. Match-derived metrics live on the Match tab.
+                for {data.sport}. Match footage and match cards have tabs of their own.
               </p>
             </div>
           </div>
-          {metrics.filter(m => m.source !== 'match').map(m => (
+          {metrics.filter(physical).map(m => (
             <MetricRow key={m.key} metric={m} series={byMetric[m.key]} />
           ))}
         </div>
@@ -151,7 +154,9 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
         </div>
       )}
 
-      {tab === 'Match' && <MatchTab data={data} />}
+      {tab === 'Footage' && <MatchTab data={data} />}
+
+      {tab === 'Match cards' && <CardsTab data={data} />}
 
       {tab === 'Training' && (
         <Training plan={developmentPlan} drills={videoDrills}
@@ -228,6 +233,7 @@ function ProfileTab({ student, isAdmin, sports, onStudent, onMoved }) {
             <button className="btn sec sm" onClick={() => window.print()}>Print / save as PDF</button>
           </div>
         </div>
+        <JerseyNumber student={student} onStudent={onStudent} />
         <DetailsView student={student} />
         {!isAdmin && (
           <p className="muted noprint" style={{ marginTop: 12 }}>
@@ -263,6 +269,38 @@ function ProfileTab({ student, isAdmin, sports, onStudent, onMoved }) {
             ))}
       </div>
     </>
+  )
+}
+
+/* The number on their shirt — how a match card names them. Coaches set it. */
+function JerseyNumber({ student, onStudent }) {
+  const [value, setValue] = useState(student.jersey_number ?? '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const changed = String(value) !== String(student.jersey_number ?? '')
+
+  async function save(e) {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      onStudent(await api.updateStudent(student.id, { jersey_number: value === '' ? null : Number(value) }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="row noprint" onSubmit={save} style={{ marginBottom: 14 }}>
+      <label htmlFor="jersey" style={{ margin: 0 }}>Jersey number</label>
+      <input id="jersey" inputMode="numeric" style={{ width: 80 }} value={value}
+             onChange={e => setValue(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} />
+      <button className="btn sec sm" disabled={busy || !changed}>{busy ? 'Saving…' : 'Save'}</button>
+      <span className="muted">Match cards name players by it.</span>
+      {error && <span className="note err">{error}</span>}
+    </form>
   )
 }
 
@@ -340,13 +378,13 @@ function VerifyCard({ student, positions, recommended, readOnly, onChange }) {
 function Overview({ data }) {
   const { recommended, metrics, student, positions } = data
   // the overview radar is the testing profile; match metrics get their own on the Match tab
-  const testMetrics = metrics.filter(m => m.source !== 'match')
+  const testMetrics = metrics.filter(physical)
   const radar = testMetrics.map(m => ({
     label: m.label, score: m.score, lines: wrapLabel(shortLabel(m.label)),
   }))
   const unmeasured = testMetrics.filter(m => m.score === null)
-  const strengths = data.strengths.filter(s => s.source !== 'match')
-  const weaknesses = data.weaknesses.filter(s => s.source !== 'match')
+  const strengths = data.strengths.filter(physical)
+  const weaknesses = data.weaknesses.filter(physical)
 
   if (!recommended) {
     return (
@@ -502,18 +540,20 @@ function Reconciliation({ data }) {
     <div className="card">
       <div className="card-head">
         <div>
-          <h2>Two sources, one verdict</h2>
+          <h2>Three sources, one verdict</h2>
           <p className="muted">
-            The test battery and the match footage are scored independently, then compared.
+            The test battery, the match footage and the match cards are scored independently, then compared.
           </p>
         </div>
       </div>
 
-      <div className="verdicts">
+      <div className="verdicts three">
         <VerdictPanel title="From the tests" summary={sources.test}
                       hint="Record the test battery in Coach Entry." />
         <VerdictPanel title="From match footage" summary={sources.match}
                       hint="Upload a clip and identify this student in it." />
+        <VerdictPanel title="From match cards" summary={sources.card}
+                      hint="Finish a match card with this student on it." />
       </div>
 
       <div className={`banner ${AGREEMENT_TONE[rec.agreement] ?? ''}`} style={{ marginTop: 14, marginBottom: 0 }}>
@@ -630,6 +670,133 @@ function MatchTab({ data }) {
   )
 }
 
+/* What the match cards say: the card-only verdict, Part D for each tournament with its
+   trend arrows, the card metrics, and the player card summed over matches. */
+function CardsTab({ data }) {
+  const [level, setLevel] = useState('University')
+  const { partD, zones, context } = data.matchCards
+  const cardMetrics = data.metrics.filter(m => m.source === 'card')
+  const quality = cardMetrics.filter(m => !m.role)
+  const roles = cardMetrics.filter(m => m.role)
+  const ranking = data.bySource?.card
+
+  return (
+    <>
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h2>What the match cards say on their own</h2>
+            <p className="muted">
+              {context
+                ? `From ${context.matches} finished card${context.matches === 1 ? '' : 's'} — ` +
+                  `${context.category === 'M' ? 'men' : 'women'}'s targets` +
+                  `${context.format ? `, ${context.format === 'odi' ? '50-over' : context.format === 't20' ? 'T20' : context.format}` : ''}.`
+                : 'From the finished match cards.'}
+              {' '}Rates count once there are enough attempts behind them.
+            </p>
+          </div>
+        </div>
+        {!ranking?.available
+          ? <p className="muted">Not enough on the cards yet to rank positions.</p>
+          : ranking.positions.slice(0, 5).map(p => (
+              <div className="metric" key={p.position}>
+                <div className="mtop">
+                  <span className="mname">{p.position}</span>
+                  <span className="mval"><b>{p.fit}</b>/100 · {p.confidence}</span>
+                </div>
+                <div className="track"><i style={{ width: `${p.fit ?? 0}%` }} /></div>
+              </div>
+            ))}
+      </div>
+
+      {partD.map(t => (
+        <div className="card" key={t.tournament}>
+          <div className="card-head">
+            <div>
+              <h2>Part D — {t.tournament}</h2>
+              <p className="muted">
+                {[t.jersey != null && `Jersey ${t.jersey}`, t.position].filter(Boolean).join(' · ')}
+                {' '}Trend compares each match&apos;s overall rating with the one before.
+              </p>
+            </div>
+            <div className="seg noprint" style={{ marginBottom: 0 }}>
+              {['University', 'Elite'].map(l => (
+                <button key={l} aria-pressed={level === l} onClick={() => setLevel(l)}>{l} targets</button>
+              ))}
+            </div>
+          </div>
+          <div className="sheetwrap">
+            <table className="data partd">
+              <thead><tr>{t.columns.map(c => <th key={c}>{c}</th>)}</tr></thead>
+              <tbody>
+                {t.rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>)}
+                <tr className="total">{t.total.map((cell, j) => <td key={j}>{cell}</td>)}</tr>
+                <tr className="targetrow">
+                  {t.targets[level].map((cell, j) => <td key={j}>{j === 0 ? `${level} target` : cell}</td>)}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+
+      {quality.length > 0 && (
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h2>Card metrics</h2>
+              <p className="muted">Scored 0–100: meeting the University target is 60, the Elite target is 100.</p>
+            </div>
+          </div>
+          {quality.map(m => <MetricRow key={m.key} metric={m} />)}
+        </div>
+      )}
+
+      {roles.some(m => m.value != null) && (
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h2>What they do in a match</h2>
+              <p className="muted">
+                The share of their actions of each kind. Not good or bad on its own — it is what
+                tells a setter from a libero, or a keeper from a striker.
+              </p>
+            </div>
+          </div>
+          <table className="data">
+            <tbody>
+              {roles.map(m => (
+                <tr key={m.key}><td>{m.label}</td><td className="num">{formatValue(m.value, m)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {zones.length > 0 && (
+        <div className="card">
+          <div className="card-head">
+            <div><h2>Player card, all matches</h2><p className="muted">Attempts, successes and errors by zone.</p></div>
+          </div>
+          {zones.map(z => (
+            <div key={z.key} className="sheetwrap" style={{ marginBottom: 12 }}>
+              <h3>{z.title}</h3>
+              <table className="data">
+                <thead><tr><th>{z.rowhead}</th>{z.cols.map(c => <th key={c} className="num">{c}</th>)}</tr></thead>
+                <tbody>
+                  {z.rows.map((r, i) => (
+                    <tr key={r}><td>{r}</td>{z.cells[i].map((v, j) => <td key={j} className="num">{v}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 function MetricRow({ metric: m, series }) {
   const points = (series ?? []).map(p => ({ t: p.t, v: p.v }))
   return (
@@ -725,7 +892,7 @@ function Training({ plan, drills, role, hasVideo }) {
         <div className="card-head">
           <div>
             <h2>What to work on</h2>
-            <p className="muted">From the test results, ordered by how much it matters for {role ?? 'the top role'}.</p>
+            <p className="muted">From the test results and match cards, ordered by how much it matters for {role ?? 'the top role'}.</p>
           </div>
         </div>
         {plan.length === 0

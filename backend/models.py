@@ -105,6 +105,8 @@ class Student(Base):
     highest_level: Mapped[str | None] = mapped_column(String(20))   # one of LEVELS
     highest_level_details: Mapped[str | None] = mapped_column(Text)
     photo_key: Mapped[str | None] = mapped_column(String(255))
+    # set by the coach; it is how a match card names a player
+    jersey_number: Mapped[int | None] = mapped_column(Integer)
 
     # nutrition inputs
     diet_preference: Mapped[str] = mapped_column(String(20), default="nonveg")
@@ -142,6 +144,9 @@ class Student(Base):
         back_populates="student", cascade="all, delete-orphan"
     )
     achievements: Mapped[list["Achievement"]] = relationship(
+        back_populates="student", cascade="all, delete-orphan"
+    )
+    card_lines: Mapped[list["MatchCardLine"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"
     )
 
@@ -414,6 +419,54 @@ class ModelVersion(Base):
     signature: Mapped[str | None] = mapped_column(String(40))          # hash of the data it saw
     note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class MatchCard(Base):
+    """One match's card (match_cards.py): the header, the team summary the coach typed in,
+    photos of the paper sheet, and a line per player. draft -> final; only final cards
+    count towards reports, sheets and exports."""
+
+    __tablename__ = "match_cards"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    sport: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    category: Mapped[str] = mapped_column(String(1), default="W")        # W | M
+    format: Mapped[str | None] = mapped_column(String(20))              # cricket and kho-kho only
+    header: Mapped[dict | None] = mapped_column(JSON)
+    team: Mapped[dict | None] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(10), default="draft", index=True)
+    photos: Mapped[list | None] = mapped_column(JSON)                   # [{"key", "mime"}]
+    ai_read: Mapped[dict | None] = mapped_column(JSON)                  # {photo index: what the AI saw}
+    coach_id: Mapped[int | None] = mapped_column(ForeignKey("coaches.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
+
+    lines: Mapped[list["MatchCardLine"]] = relationship(
+        back_populates="card", cascade="all, delete-orphan", order_by="MatchCardLine.id"
+    )
+
+
+class MatchCardLine(Base):
+    """One player's row on one card. The student is filled in once the coach has matched
+    the jersey number; a draft may still have rows nobody has matched."""
+
+    __tablename__ = "match_card_lines"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    card_id: Mapped[int] = mapped_column(ForeignKey("match_cards.id", ondelete="CASCADE"), index=True)
+    student_id: Mapped[int | None] = mapped_column(ForeignKey("students.id", ondelete="CASCADE"), index=True)
+    jersey: Mapped[int | None] = mapped_column(Integer)
+    name: Mapped[str | None] = mapped_column(String(120))              # as written, until matched
+    position: Mapped[str | None] = mapped_column(String(60))
+    data: Mapped[dict | None] = mapped_column(JSON)                     # {"tallies", "fields", "zones"}
+    coord: Mapped[int | None] = mapped_column(Integer)
+    overall: Mapped[int | None] = mapped_column(Integer)
+    strength: Mapped[str | None] = mapped_column(Text)
+    improve: Mapped[str | None] = mapped_column(Text)
+    remarks: Mapped[str | None] = mapped_column(Text)
+
+    card: Mapped["MatchCard"] = relationship(back_populates="lines")
+    student: Mapped["Student | None"] = relationship(back_populates="card_lines")
 
 
 class AppState(Base):

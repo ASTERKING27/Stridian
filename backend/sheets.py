@@ -3,6 +3,7 @@ The Google Sheets, all owned by the account that ran setup_google.py (the admin'
 all made by the app the first time there is something to put in them:
 
   <Sport> squad     one file per sport, Pending and Verified tabs — each student's analysis
+  <Sport> match cards  one file per sport: Matches (Part C) and Tournaments (Part D)
   Student profiles  the university's record of every student, a tab per sport
   Achievements      every achievement and whether it has been verified, a tab per sport
   Coaches           every coach account
@@ -24,6 +25,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 import gapi
+import match_cards
 
 SHEETS = "https://sheets.googleapis.com/v4/spreadsheets"
 TABS = ("Pending", "Verified")
@@ -32,7 +34,7 @@ HEADER = [
     "Student ID", "RA number", "Name", "Email", "Sport", "Status",
     "Verified position", "Verified by", "Verified on",
     "Recommended position", "Fit /100", "Confidence", "Coach agrees with system",
-    "Tests vs match footage", "Strengths", "Weak links",
+    "Sources agree", "Strengths", "Weak links",
     "Age", "Height (cm)", "Weight (kg)", "Blood group", "Position they gave",
     "Diet", "Allergies", "Daily kcal", "Protein (g)", "Carbs (g)", "Fat (g)",
     "Tests recorded", "Match clips", "Drill clips",
@@ -49,7 +51,7 @@ def url(spreadsheet: str | None):
 
 
 def tab_name(sport: str) -> str:
-    return sport.replace("/", "&")      # "Badminton / Tennis" -> "Badminton & Tennis"
+    return sport.replace("/", "&")      # a "/" isn't allowed in a tab name
 
 
 def _a1(tab: str) -> str:
@@ -145,7 +147,7 @@ LEVEL_WORDS = {"university": "University", "zonal": "Zonal", "state": "State",
                "national": "National", "international": "International"}
 
 PROFILE_HEADER = [
-    "Student ID", "RA number", "Name", "Sport", "University email", "Personal email",
+    "Student ID", "RA number", "Name", "Sport", "Jersey no.", "University email", "Personal email",
     "Mobile", "Date of birth", "Age", "Blood group", "Father's name", "Father's mobile",
     "Mother's name", "Mother's mobile", "Aadhaar", "Passport", "Identification mark",
     "Highest level (student says)", "Level details", "Highest verified level",
@@ -173,7 +175,8 @@ OLD_TABS = {"profiles": ["Profiles"], "achievements": ["Achievements"], "coaches
 
 def profile_row(s) -> list:
     return [
-        s.id, s.ra_number or "", s.name, s.sport, s.email or "", s.personal_email or "",
+        s.id, s.ra_number or "", s.name, s.sport, "" if s.jersey_number is None else s.jersey_number,
+        s.email or "", s.personal_email or "",
         s.phone or "", s.dob.isoformat() if s.dob else "", s.age_now or "", s.blood_group or "",
         s.father_name or "", s.father_phone or "", s.mother_name or "", s.mother_phone or "",
         s.aadhaar or "", s.passport or "", s.id_mark or "",
@@ -223,3 +226,52 @@ def retab(spreadsheet: str, tabs: list, old: list) -> None:
     if changes:
         http.post(f"{SHEETS}/{spreadsheet}:batchUpdate", timeout=30,
                   json={"requests": changes}).raise_for_status()
+
+
+# --------------------------------------------------------------------------- #
+# Match cards: one file per sport
+# --------------------------------------------------------------------------- #
+
+CARD_TABS = ("Matches", "Tournaments")
+MATCH_META = ["Card ID", "Match No.", "Date", "Tournament", "Round / Stage", "Level", "Category",
+              "Format", "Opponent", "Result", "Score", "Student ID", "RA number", "Player", "Jersey"]
+PLAYER_META = ["Tournament", "Student ID", "RA number", "Player", "Jersey", "Position"]
+
+
+def _score(sport, header):
+    parts = match_cards.SPORTS[sport]["score"]["parts"]
+    return "  ".join(f"{name} {match_cards.show(us, 'rate')}–{match_cards.show(them, 'rate')}"
+                     for name, (us, them) in zip(parts, header.get("score") or [])
+                     if us is not None or them is not None)
+
+
+def card_tabs(sport, cards) -> dict:
+    """A sport's card file as {tab: rows}, headers included. `cards` is [(card, lines)] of
+    its final cards, each line carrying the student's RA number as "ra"."""
+    cfg = match_cards.SPORTS[sport]
+    formats = cfg["formats"] or {}
+    columns = match_cards.public(sport)["partC"]["columns"]
+    matches = [MATCH_META + columns + ["Coach's remarks"]]
+    by_player = {}
+    for card, lines in sorted(cards, key=lambda pair: ((pair[0]["header"].get("date") or ""), pair[0]["id"])):
+        h = card["header"]
+        part = match_cards.part_c(sport, card, lines)
+        for line, cells in zip(lines, part["rows"]):
+            matches.append([card["id"], h.get("match_no") or "", h.get("date") or "", h.get("tournament") or "",
+                            h.get("round") or "", h.get("level") or "",
+                            match_cards.CATEGORIES.get(card["category"], ""), formats.get(card["format"], ""),
+                            h.get("opponent") or "", h.get("result") or "", _score(sport, h),
+                            line["student_id"] or "", line.get("ra") or "", line["name"] or "",
+                            "" if line["jersey"] is None else line["jersey"]]
+                           + cells[1:] + [line.get("remarks") or ""])
+            if line["student_id"]:
+                by_player.setdefault(line["student_id"], []).append({"card": card, "line": line})
+
+    tournaments = [PLAYER_META + match_cards.public(sport)["partD"]["columns"]]
+    for entries in by_player.values():
+        who = entries[-1]["line"]
+        for group in match_cards.part_d(sport, entries):
+            lead = [group["tournament"], who["student_id"], who.get("ra") or "", who["name"] or "",
+                    "" if group["jersey"] is None else group["jersey"], group["position"] or ""]
+            tournaments += [lead + row for row in group["rows"]] + [lead + group["total"]]
+    return {"Matches": matches, "Tournaments": tournaments}

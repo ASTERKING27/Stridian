@@ -33,13 +33,14 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.orm import Session
 
 import auth
 import docreader
 import export
 import mailer
+import match_cards
 import match_metrics
 import migrate
 import nutrition
@@ -49,13 +50,13 @@ import sports_config as sc
 import storage
 import trainer
 from db import Base, SessionLocal, engine, get_db
-from models import (LEVELS, Achievement, AppState, Coach, MatchAssignment, MatchClip,
-                    ModelVersion, PositionWeight, Student, StudentAccount, StudentSession,
-                    TestResult, VideoAnalysis)
+from models import (LEVELS, Achievement, AppState, Coach, MatchAssignment, MatchCard,
+                    MatchCardLine, MatchClip, ModelVersion, PositionWeight, Student,
+                    StudentAccount, StudentSession, TestResult, VideoAnalysis)
 from models import _now as utcnow
 from models import admin_emails
-from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CoachDetails,
-                     CoachLogin, CoachOut, CoachSignup, MatchAssignIn, MatchClipOut,
+from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CardIn,
+                     CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, MatchAssignIn, MatchClipOut,
                      MatchUploadIn, ResultsIn, ReviewIn, SportIn, StudentCodeIn, StudentCreate,
                      StudentEnrol, StudentListItem, StudentLogin, StudentOut, StudentSelfUpdate,
                      StudentUpdate, StudentVerifyIn, TokenOut, UploadIn, VerifyIn, VideoOut,
@@ -162,14 +163,37 @@ def latest_results(db: Session, student_id: int) -> dict:
     return {row.metric_key: row.value for row in rows}  # later rows win
 
 
+def card_dict(card: MatchCard) -> dict:
+    return {"id": card.id, "category": card.category, "format": card.format,
+            "header": card.header or {}, "team": card.team or {}}
+
+
+def line_dict(line: MatchCardLine) -> dict:
+    data = line.data or {}
+    return {"id": line.id, "student_id": line.student_id, "jersey": line.jersey,
+            "name": line.student.name if line.student else line.name, "position": line.position,
+            "tallies": data.get("tallies") or {}, "fields": data.get("fields") or {},
+            "zones": data.get("zones") or {}, "coord": line.coord, "overall": line.overall,
+            "strength": line.strength, "improve": line.improve, "remarks": line.remarks}
+
+
+def card_entries(student: Student) -> list:
+    """The student's rows on final cards of the sport they play now — what Part D, the
+    report and the position engine read."""
+    return [{"card": card_dict(line.card), "line": line_dict(line)}
+            for line in student.card_lines
+            if line.card.status == "final" and line.card.sport == student.sport]
+
+
 def metric_rows(db: Session, student: Student) -> list:
     """A student's 0-100 score on every metric — what the trainer learns from."""
     match_values = match_metrics.aggregate(
         [a.metrics for a in student.match_assignments if a.metrics])
+    card_values, ranges, _ = match_cards.player_values(student.sport, card_entries(student))
     values = scoring.build_metric_values(
         student.sport, {"height_cm": student.height_cm, "weight_kg": student.weight_kg},
-        latest_results(db, student.id), match_values)
-    return scoring.score_metrics(student.sport, values)
+        latest_results(db, student.id), match_values, card_values)
+    return scoring.score_metrics(student.sport, values, ranges=ranges)
 
 
 def coach_student(student_id: int, coach: Coach, db: Session) -> Student:
@@ -207,51 +231,55 @@ def summarise(report: dict) -> dict:
     }
 
 
-def reconcile(test_report: dict, match_report: dict) -> dict:
-    """Say plainly whether the testing data and the match footage tell the same story."""
-    t = test_report.get("recommended")
-    m = match_report.get("recommended")
+SOURCE_WORDS = {"test": "the tests", "match": "the match footage", "card": "the match cards"}
+ONLY = {
+    "test": ("tests-only", "Based on testing data alone. Assign this student in a match clip, or record "
+                           "them on a match card, to check whether {pos} holds up in a real game."),
+    "match": ("match-only", "Based on match footage alone. Record the test battery to confirm the "
+                            "physical profile behind {pos}."),
+    "card": ("cards-only", "Based on match cards alone. Record the test battery to confirm the physical "
+                           "profile behind {pos}."),
+}
 
-    if not t and not m:
+
+def _join(words):
+    return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
+
+
+def reconcile(reports: dict) -> dict:
+    """Say plainly whether the tests, the match footage and the match cards tell the
+    same story. `reports` is {source: that source's own analysis}."""
+    picks = {src: r["recommended"]["position"] for src, r in reports.items() if r.get("recommended")}
+    out = {f"{src}Position": pos for src, pos in picks.items()}
+    if not picks:
         return {"agreement": "none",
-                "text": "No test results and no match footage yet — nothing to compare."}
-    if not m:
-        return {"agreement": "tests-only", "testPosition": t["position"],
-                "text": f"Based on testing data alone. Assign this student in a match clip "
-                        f"to check whether {t['position']} holds up in a real game."}
-    if not t:
-        return {"agreement": "match-only", "matchPosition": m["position"],
-                "text": f"Based on match footage alone. Record the test battery to confirm "
-                        f"the physical profile behind {m['position']}."}
+                "text": "No test results, match footage or match cards yet — nothing to compare."}
+    if len(picks) == 1:
+        (src, pos), = picks.items()
+        agreement, text = ONLY[src]
+        return {**out, "agreement": agreement, "text": text.format(pos=pos)}
 
-    if t["position"] == m["position"]:
-        return {
-            "agreement": "agree", "testPosition": t["position"], "matchPosition": m["position"],
-            "text": f"Both agree on {t['position']} — the testing profile and what actually "
-                    f"happened on the pitch point the same way, which is the strongest signal "
-                    f"this report can give.",
-        }
+    words = [SOURCE_WORDS[src] for src in picks]
+    if len(set(picks.values())) == 1:
+        pos = next(iter(picks.values()))
+        said = _join(words)
+        return {**out, "agreement": "agree",
+                "text": f"{said[0].upper()}{said[1:]} {'both' if len(words) == 2 else 'all'} agree on "
+                        f"{pos} — separate kinds of evidence pointing the same way is the "
+                        f"strongest signal this report can give."}
 
-    match_rank = next((i for i, p in enumerate(match_report["positions"])
-                       if p["position"] == t["position"]), 99)
-    test_rank = next((i for i, p in enumerate(test_report["positions"])
-                      if p["position"] == m["position"]), 99)
+    def rank(src, pos):
+        return next((i for i, p in enumerate(reports[src]["positions"]) if p["position"] == pos), 99)
 
-    if match_rank <= 2 and test_rank <= 2:
-        return {
-            "agreement": "near", "testPosition": t["position"], "matchPosition": m["position"],
-            "text": f"Close but not identical: the tests favour {t['position']}, the footage "
-                    f"favours {m['position']}, and each one ranks the other's pick in its own "
-                    f"top three. Either role suits them; the choice is tactical, not physical.",
-        }
-
-    return {
-        "agreement": "disagree", "testPosition": t["position"], "matchPosition": m["position"],
-        "text": f"The two disagree: physically they test as a {t['position']}, but in the footage "
-                f"they played like a {m['position']}. That usually means they are being deployed "
-                f"out of position, or the clip caught an unusual game — worth a second clip before "
-                f"acting on it.",
-    }
+    views = "; ".join(f"{SOURCE_WORDS[src]} favour {pos}" for src, pos in picks.items())
+    if all(rank(a, picks[b]) <= 2 for a in picks for b in picks):
+        return {**out, "agreement": "near",
+                "text": f"Close but not identical: {views}. Each ranks the others' picks in its "
+                        f"own top three, so either role suits them; the choice is tactical, not physical."}
+    return {**out, "agreement": "disagree",
+            "text": f"They disagree: {views}. That usually means they are being deployed out of "
+                    f"position, or one source caught an unusual game — worth another match before "
+                    f"acting on it."}
 
 
 def build_report(db: Session, student: Student) -> dict:
@@ -261,17 +289,25 @@ def build_report(db: Session, student: Student) -> dict:
     match_values = match_metrics.aggregate(
         [a.metrics for a in student.match_assignments if a.metrics]
     )
+    entries = card_entries(student)
+    card_values, ranges, card_context = match_cards.player_values(student.sport, entries)
 
     def run(sources):
-        return scoring.analyse(student.sport, profile, tests, weights,
-                               match_values=match_values, sources=sources)
+        return scoring.analyse(student.sport, profile, tests, weights, match_values=match_values,
+                               sources=sources, card_values=card_values, ranges=ranges)
 
     report = run(None)                          # the headline, all evidence together
-    test_report = run({"test", "profile"})      # the battery, plus height/weight
-    match_report = run({"match"})               # what the footage alone says
+    by_source = {"test": run({"test", "profile"}),   # the battery, plus height/weight
+                 "match": run({"match"}),            # what the footage alone says
+                 "card": run({"card"})}              # what the match cards alone say
 
-    report["bySource"] = {"test": summarise(test_report), "match": summarise(match_report)}
-    report["reconciliation"] = reconcile(test_report, match_report)
+    report["bySource"] = {src: summarise(r) for src, r in by_source.items()}
+    report["reconciliation"] = reconcile(by_source)
+    report["matchCards"] = {
+        "partD": match_cards.part_d(student.sport, entries),
+        "zones": match_cards.zone_totals(student.sport, [e["line"] for e in entries]),
+        "context": card_context,
+    }
     report["matchValues"] = match_values
     report["matchClips"] = [
         {"clipId": a.clip_id, "trackId": a.track_id, "label": a.clip.label,
@@ -419,7 +455,9 @@ def sync_people(db: Session, *keys):
 def admin_sheets(db: Session) -> list:
     """Every spreadsheet the app keeps for the admin, with a link and how its last push went."""
     squads, people = get_state(db, "squad_sheets"), get_state(db, "people_sheets")
+    cards = get_state(db, "card_sheets")
     listed = [(f"{sport} squad", squads[sport]) for sport in sc.sport_names() if sport in squads]
+    listed += [(f"{sport} match cards", cards[sport]) for sport in sc.sport_names() if sport in cards]
     listed += [(title.replace("Stridian — ", ""), people.get(key) or {})
                for key, (title, _header, _tab) in sheets.PEOPLE.items()]
     return [{"title": title, "url": sheets.url(e.get("id")), "ok": e.get("ok"),
@@ -434,6 +472,41 @@ def sport_students(db: Session, sport_name: str):
 # App
 # --------------------------------------------------------------------------- #
 
+OLD_RACKET = "Badminton / Tennis"
+
+
+def split_racket_sports():
+    """Badminton and tennis were one sport until each got its own match card. Everything
+    filed under the old name becomes Badminton; an admin moves any tennis players across
+    (Edit details on their Profile tab). Does nothing once there is nothing to move."""
+    with engine.begin() as conn:
+        def run(sql, **params):
+            return conn.execute(text(sql), {"old": OLD_RACKET, "new": "Badminton", **params})
+
+        # a student's cached sheet row names their sport, so it is rebuilt (the worker
+        # builds every row that is missing)
+        run("UPDATE students SET sport = :new, sheet_row = NULL WHERE sport = :old")
+        for table in ("coaches", "match_clips", "model_versions"):
+            run(f"UPDATE {table} SET sport = :new WHERE sport = :old")
+        # (sport, position, metric) is unique: keep Badminton's rows if it already has some
+        if run("SELECT COUNT(*) FROM position_weights WHERE sport = :new").scalar():
+            run("DELETE FROM position_weights WHERE sport = :old")
+        else:
+            run("UPDATE position_weights SET sport = :new WHERE sport = :old")
+    db = SessionLocal()
+    try:
+        old_code = get_state(db, f"enrol:{OLD_RACKET}")
+        if old_code and not get_state(db, "enrol:Badminton"):
+            set_state(db, "enrol:Badminton", old_code)
+        for registry in ("squad_sheets", "card_sheets"):
+            entries = get_state(db, registry)
+            if OLD_RACKET in entries:
+                # its Drive file stays where it is; a fresh "Badminton squad" replaces it
+                set_state(db, registry, {k: v for k, v in entries.items() if k != OLD_RACKET})
+    finally:
+        db.close()
+
+
 def init_db():
     """Tables, missing columns, default weights. Safe to run on every start."""
     Base.metadata.create_all(bind=engine)
@@ -441,6 +514,10 @@ def init_db():
     # column was added keeps working until something writes that field. Close the gap
     # here rather than making anyone delete their data to pick up a new feature.
     migrate.run(engine, Base.metadata)
+    try:
+        split_racket_sports()
+    except Exception:  # noqa: BLE001 — never block start-up; it is retried on the next one
+        log.warning("could not move Badminton / Tennis data across", exc_info=True)
     try:
         # one student per RA number, even if two enrolments race (the app checks first,
         # for a friendly message); partial, because most rows predate RA numbers
@@ -942,10 +1019,13 @@ def delete_student(student_id: int, db: Session = Depends(get_db),
         forget_files(v.stored_name, thumb_of(v))
     forget_files(student.photo_key, *(a.cert_key for a in student.achievements))
     sport = student.sport
+    carded = {line.card.sport for line in student.card_lines if line.card.status == "final"}
     db.delete(student)
     db.commit()
     sync_sheet(db, sports=[sport])
     sync_people(db, "profiles", "achievements")
+    for card_sport in carded:       # their rows leave the match-card file too
+        sync_cards(db, card_sport)
 
 
 @app.post("/api/students/{student_id}/verify", response_model=StudentOut)
@@ -1290,11 +1370,13 @@ CALIBRATION_PRESETS = {
                      "Right of the batter's crease", "Left of the batter's crease"],
          "world": [[0, 0], [3.05, 0], [3.05, 20.12], [0, 20.12]]},
     ],
-    "Badminton / Tennis": [
+    "Badminton": [
         {"key": "badminton-doubles", "label": "Badminton court (13.4 × 6.1 m)",
          "corners": ["Near-left corner", "Near-right corner",
                      "Far-right corner", "Far-left corner"],
          "world": [[0, 0], [6.1, 0], [6.1, 13.4], [0, 13.4]]},
+    ],
+    "Tennis": [
         {"key": "tennis-doubles", "label": "Tennis court (23.77 × 10.97 m)",
          "corners": ["Near-left corner", "Near-right corner",
                      "Far-right corner", "Far-left corner"],
@@ -1787,6 +1869,287 @@ def coach_certificate(achievement_id: int, db: Session = Depends(get_db),
     return certificate(coach_achievement(achievement_id, coach, db))
 
 
+# -------------------------------- match cards ------------------------------- #
+
+MAX_CARD_PHOTOS = 4
+CARD_READS_PER_HOUR = 30      # per coach — every read is one call to the document AI
+
+
+def coach_card(card_id: int, coach: Coach, db: Session) -> MatchCard:
+    card = db.get(MatchCard, card_id)
+    if card is None or card.sport != coach.sport:
+        raise HTTPException(404, "Card not found")
+    return card
+
+
+def photo_version(photo: dict) -> str:
+    """Stable per photo, so a URL never shows a different photo from the browser's cache."""
+    return hashlib.sha256(photo["key"].encode()).hexdigest()[:12]
+
+
+def card_out(card: MatchCard) -> dict:
+    lines = [line_dict(line) for line in card.lines]
+    return {**card_dict(card), "sport": card.sport, "status": card.status,
+            "photos": [{"n": i, "v": photo_version(p), "mime": p.get("mime"),
+                        "read": p["key"] in (card.ai_read or {})} for i, p in enumerate(card.photos or [])],
+            # players on the card who have since moved to another sport
+            "formerPlayers": [{"id": line.student.id, "name": line.student.name,
+                               "jersey": line.student.jersey_number}
+                              for line in card.lines if line.student and line.student.sport != card.sport],
+            "lines": lines, "partC": match_cards.part_c(card.sport, card_dict(card), lines),
+            "createdAt": card.created_at, "updatedAt": card.updated_at}
+
+
+def card_summary(card: MatchCard) -> dict:
+    h = card.header or {}
+    return {"id": card.id, "status": card.status, "category": card.category, "format": card.format,
+            "tournament": h.get("tournament"), "round": h.get("round"), "date": h.get("date"),
+            "opponent": h.get("opponent"), "result": h.get("result"), "match_no": h.get("match_no"),
+            "players": len(card.lines), "photos": len(card.photos or []), "updatedAt": card.updated_at}
+
+
+def squad_list(db: Session, sport: str) -> list:
+    """Who can go on a card: every student in the sport, jersey numbers first."""
+    students = sport_students(db, sport)
+    return [{"id": s.id, "name": s.name, "jersey": s.jersey_number,
+             "position": s.verified_position or s.declared_position}
+            for s in sorted(students, key=lambda s: (s.jersey_number is None, s.jersey_number or 0, s.name))]
+
+
+def final_cards(db: Session, sport: str) -> list:
+    """[(card, lines)] for the sport's finished cards, each line with the student's RA number."""
+    cards = db.scalars(select(MatchCard).where(MatchCard.sport == sport, MatchCard.status == "final")).all()
+    return [(card_dict(c), [{**line_dict(line), "ra": line.student.ra_number if line.student else None}
+                            for line in c.lines]) for c in cards]
+
+
+def card_sports(db: Session) -> list:
+    """Every sport with a finished card or a card file already — what the worker repushes."""
+    have = db.scalars(select(MatchCard.sport).where(MatchCard.status == "final").distinct())
+    return sorted(set(have) | set(get_state(db, "card_sheets")))
+
+
+def sync_cards(db: Session, sport: str):
+    """Rewrite the sport's "match cards" spreadsheet: Matches and Tournaments. Never raises."""
+    if not sheets.configured():
+        return
+    try:
+        cards = final_cards(db, sport)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("card rows failed")
+        return
+    publish(db, "card_sheets", sport, f"Stridian — {sport} match cards", list(sheets.CARD_TABS),
+            list(sheets.CARD_TABS), lambda: sheets.card_tabs(sport, cards))
+
+
+def cards_changed(db: Session, sport: str, students):
+    """A final card was saved, changed or deleted: its players' reports move, and so does
+    the sport's card file."""
+    sync_sheet(db, [s for s in students if s is not None and s.sport == sport])
+    sync_cards(db, sport)
+
+
+@app.get("/api/cards/config")
+def cards_config(category: str = "W", format: str | None = None, db: Session = Depends(get_db),
+                 coach: Coach = Depends(auth.current_coach)):
+    """The coach's sport's card — for printing it blank, filling it in and reading it —
+    with the squad whose names and jersey numbers go on it."""
+    return {**match_cards.public(coach.sport, category, format), "squad": squad_list(db, coach.sport),
+            "aiOn": docreader.configured()}
+
+
+@app.get("/api/cards")
+def list_cards(db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    cards = db.scalars(select(MatchCard).where(MatchCard.sport == coach.sport)).all()
+    cards.sort(key=lambda c: ((c.header or {}).get("date") or "", c.id), reverse=True)
+    return [card_summary(c) for c in cards]
+
+
+@app.post("/api/cards", status_code=201)
+def create_card(payload: CardNew, db: Session = Depends(get_db),
+                coach: Coach = Depends(auth.current_coach)):
+    try:
+        header = match_cards.clean_header(coach.sport, payload.header)
+    except match_cards.CardError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    card = MatchCard(sport=coach.sport, category=payload.category,
+                     format=match_cards.pick_format(coach.sport, payload.format),
+                     header=header, team={}, photos=[], coach_id=coach.id)
+    db.add(card)
+    db.commit()
+    db.refresh(card)
+    return card_out(card)
+
+
+@app.get("/api/cards/{card_id}")
+def get_card(card_id: int, db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    return card_out(coach_card(card_id, coach, db))
+
+
+@app.put("/api/cards/{card_id}")
+def save_card(card_id: int, payload: CardIn, db: Session = Depends(get_db),
+              coach: Coach = Depends(auth.current_coach)):
+    """Save the whole card. `final` makes it count: reports, the sheets, the downloads.
+    A final card can still be corrected, and saving it as a draft takes it back out."""
+    card = coach_card(card_id, coach, db)
+    sport = card.sport
+    try:
+        header = match_cards.clean_header(sport, payload.header)
+        team = match_cards.clean_team(sport, payload.team)
+        rows = [(line, match_cards.clean_line(sport, line.model_dump())) for line in payload.lines]
+    except match_cards.CardError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    ids = [line.student_id for line, _ in rows if line.student_id is not None]
+    if len(ids) != len(set(ids)):
+        raise HTTPException(422, "A player is on this card twice.")
+    # someone already on the card may have moved sport since; they stay on it
+    already = {line.student_id for line in card.lines}
+    players = {s.id: s for s in db.scalars(select(Student).where(Student.id.in_(ids)))} if ids else {}
+    if any(i not in players or (players[i].sport != sport and i not in already) for i in ids):
+        raise HTTPException(422, "One of those players isn't in this sport's squad.")
+    positions = sc.get_sport(sport)["positions"]
+    for line, _ in rows:
+        if line.position and line.position not in positions:
+            raise HTTPException(422, f"'{line.position}' isn't a {sport} position.")
+    if payload.final:
+        if not rows:
+            raise HTTPException(422, "Add the players before finishing the card.")
+        unmatched = [str(line.jersey if line.jersey is not None else line.name or "?")
+                     for line, _ in rows if line.student_id is None]
+        if unmatched:
+            raise HTTPException(422, f"Say which student is on the row for {', '.join(unmatched)} "
+                                     f"before finishing the card.")
+
+    counted = card.status == "final"
+    touched = {line.student for line in card.lines} | set(players.values())
+    card.category = payload.category
+    card.format = match_cards.pick_format(sport, payload.format)
+    card.header, card.team = header, team
+    card.lines = [MatchCardLine(student_id=line.student_id, jersey=line.jersey, name=line.name,
+                                position=line.position, data=data, coord=line.coord,
+                                overall=line.overall, strength=line.strength, improve=line.improve,
+                                remarks=line.remarks) for line, data in rows]
+    card.status = "final" if payload.final else "draft"
+    db.commit()
+    db.refresh(card)
+    if counted or payload.final:
+        cards_changed(db, sport, touched)
+    return card_out(card)
+
+
+@app.delete("/api/cards/{card_id}", status_code=204)
+def delete_card(card_id: int, db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    card = coach_card(card_id, coach, db)
+    counted, sport = card.status == "final", card.sport
+    students = [line.student for line in card.lines]
+    keys = [p["key"] for p in card.photos or []]
+    db.delete(card)
+    db.commit()
+    forget_files(*keys)
+    if counted:
+        cards_changed(db, sport, students)
+
+
+def card_photo(card: MatchCard, n: int, v: str | None = None) -> dict:
+    """Photo n — and, when the page says which photo it means, that one or a 409, so a
+    photo deleted in another tab never makes the next one get read or deleted instead."""
+    photos = card.photos or []
+    if not 0 <= n < len(photos):
+        raise HTTPException(404, "Photo not found")
+    if v and v != photo_version(photos[n]):
+        raise HTTPException(409, "The card's photos have changed — reopen the card.")
+    return photos[n]
+
+
+@app.post("/api/cards/{card_id}/photos", status_code=201)
+async def add_card_photo(card_id: int, request: Request, db: Session = Depends(get_db),
+                         coach: Coach = Depends(auth.current_coach)):
+    """A photo (or PDF scan) of the paper card, kept with it until the card is deleted."""
+    card = coach_card(card_id, coach, db)
+    if len(card.photos or []) >= MAX_CARD_PHOTOS:
+        raise HTTPException(409, f"A card holds up to {MAX_CARD_PHOTOS} photos — delete one first.")
+    data, mime = await read_upload(request, MAX_DOC_BYTES, set(EXTENSION))
+    try:
+        key = await run_in_threadpool(storage.save_bytes, f"card-{card.id}{EXTENSION[mime]}", data, mime)
+    except storage.StorageError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    card.photos = [*(card.photos or []), {"key": key, "mime": mime}]
+    db.commit()
+    return card_out(card)
+
+
+@app.get("/api/cards/{card_id}/photos/{n}")
+def get_card_photo(card_id: int, n: int, v: str | None = None, db: Session = Depends(get_db),
+                   coach: Coach = Depends(auth.current_coach)):
+    photo = card_photo(coach_card(card_id, coach, db), n, v)
+    return stored_image(photo["key"], "Photo missing", photo.get("mime") or "image/jpeg")
+
+
+@app.delete("/api/cards/{card_id}/photos/{n}")
+def delete_card_photo(card_id: int, n: int, v: str | None = None, db: Session = Depends(get_db),
+                      coach: Coach = Depends(auth.current_coach)):
+    card = coach_card(card_id, coach, db)
+    photo = card_photo(card, n, v)
+    card.photos = [p for i, p in enumerate(card.photos) if i != n]
+    card.ai_read = {k: v for k, v in (card.ai_read or {}).items() if k != photo["key"]}
+    db.commit()
+    forget_files(photo["key"])
+    return card_out(card)
+
+
+def suggest(sport: str, squad: list, reading: dict) -> dict:
+    """The AI's reading with each row matched to a student where that's certain: a jersey
+    number only one squad member wears, or else exactly one name that matches."""
+    by_jersey = {}
+    for s in squad:
+        if s["jersey"] is not None:
+            by_jersey.setdefault(s["jersey"], []).append(s["id"])
+    by_name = {}
+    for s in squad:
+        by_name.setdefault(" ".join(s["name"].split()).casefold(), []).append(s["id"])
+    players = []
+    for p in reading["players"]:
+        found = by_jersey.get(p["jersey"], [])
+        if len(found) != 1 and p["name"]:
+            found = by_name.get(" ".join(p["name"].split()).casefold(), [])
+        players.append({**p, "student_id": found[0] if len(found) == 1 else None})
+    return {**reading, "players": players}
+
+
+@app.post("/api/cards/{card_id}/photos/{n}/read")
+async def read_card_photo(card_id: int, n: int, v: str | None = None, db: Session = Depends(get_db),
+                          coach: Coach = Depends(auth.current_coach)):
+    """Have the document AI read Part A off one photo. Nothing is saved on the card: the
+    coach checks what it read in the editor, then saves."""
+    card = coach_card(card_id, coach, db)
+    photo = card_photo(card, n, v)
+    if not docreader.configured():
+        raise HTTPException(503, "Reading photos isn't switched on (GEMINI_API_KEY) — type the card in instead.")
+    key = f"cardai:{coach.id}"
+    hour = utcnow().strftime("%Y-%m-%dT%H")
+    used = get_state(db, key)
+    count = used.get("n", 0) if used.get("hour") == hour else 0
+    if count >= CARD_READS_PER_HOUR:
+        raise HTTPException(429, "That's a lot of photos read for one hour — try again later.")
+    set_state(db, key, {"hour": hour, "n": count + 1})
+    try:
+        data = await run_in_threadpool(storage.read_bytes, photo["key"])
+    except (FileNotFoundError, storage.StorageError) as exc:
+        raise HTTPException(502, "Couldn't open that photo from storage.") from exc
+    # two tries of 20 s each, plus the Drive read, stay inside the host's 60-second limit
+    found = await run_in_threadpool(docreader.read, data, photo.get("mime") or "image/jpeg",
+                                    match_cards.ai_prompt(card.sport), match_cards.ai_schema(card.sport), 20)
+    if not found:
+        raise HTTPException(502, "The photo couldn't be read. Try a sharper, straighter photo in good "
+                                 "light, or type the card in.")
+    reading = match_cards.from_ai(card.sport, found)
+    card.ai_read = {**(card.ai_read or {}), photo["key"]: reading}
+    db.commit()
+    return suggest(card.sport, squad_list(db, card.sport), reading)
+
+
 # ------------------------------ Excel downloads ----------------------------- #
 
 def histories(db: Session, student_ids) -> dict:
@@ -1818,7 +2181,9 @@ def export_squad(scope: str = "sport", db: Session = Depends(get_db),
     if stale:
         db.commit()
     coaches = db.scalars(select(Coach).order_by(Coach.sport, Coach.name)).all() if everyone else None
-    data = export.squad(students, histories(db, [s.id for s in students]), coaches)
+    sports = sc.sport_names() if everyone else [coach.sport]
+    data = export.squad(students, histories(db, [s.id for s in students]), coaches,
+                        {sport: final_cards(db, sport) for sport in sports})
     what = "all-sports" if everyone else coach.sport
     return xlsx(data, f"Stridian-{what}-{utcnow():%Y-%m-%d}.xlsx")
 

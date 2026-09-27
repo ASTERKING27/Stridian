@@ -6,6 +6,7 @@ import StudentAuth from './StudentAuth'
 import StudentForm from './StudentForm'
 import CoachEntry from './CoachEntry'
 import Matches from './Matches'
+import MatchCards from './MatchCards'
 import Dashboard, { MyDetails } from './Dashboard'
 import Portal from './Portal'
 import Weights from './Weights'
@@ -105,7 +106,8 @@ export default function App() {
     // adding students by hand is for admins; everyone else enrols themselves
     ...(coach.is_admin ? [{ key: 'student', label: 'Add Student', short: 'Add', icon: 'student' }] : []),
     { key: 'coach', label: 'Coach Entry', short: 'Entry', icon: 'clipboard' },
-    { key: 'matches', label: 'Match Footage', short: 'Match', icon: 'film' },
+    { key: 'matches', label: 'Match Footage', short: 'Footage', icon: 'film' },
+    { key: 'cards', label: 'Match Cards', short: 'Cards', icon: 'card' },
     { key: 'dashboard', label: 'Dashboard', short: 'Squad', icon: 'chart' },
     { key: 'weights', label: 'Weights', short: 'Weights', icon: 'sliders' },
     { key: 'training', label: 'AI Training', short: 'AI', icon: 'cpu' },
@@ -143,6 +145,7 @@ export default function App() {
       {view === 'matches' && coach && (
         <Matches version={version} onChanged={bump} />
       )}
+      {view === 'cards' && coach && <MatchCards coach={coach} version={version} onChanged={bump} />}
       {view === 'dashboard' && coach && (
         <Dashboard coach={coach} sports={sports} version={version} onChanged={bump} onCoach={setCoach} />
       )}

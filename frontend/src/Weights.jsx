@@ -3,19 +3,25 @@ import { api } from './api'
 
 const slugify = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-// The two kinds of evidence are scored separately, so they are edited separately too.
+// The three kinds of evidence are scored separately, so they are edited separately too.
 const GROUPS = [
   {
     key: 'test',
     title: 'Test battery & physique',
     hint: 'Measured in a testing session, plus height and weight from the student’s own form.',
-    match: m => m.source !== 'match',
+    match: m => m.source === 'test' || m.source === 'profile',
   },
   {
     key: 'match',
     title: 'Match footage',
     hint: 'Derived from tracked match clips. Retune these once you have footage from your own camera setup — framing shifts the numbers more than the players do.',
     match: m => m.source === 'match',
+  },
+  {
+    key: 'card',
+    title: 'Match cards',
+    hint: 'Worked out from the + / 0 / − tallies on finished match cards. The “share of actions” ones describe what a player does in a match, which is what sets the roles apart.',
+    match: m => m.source === 'card',
   },
 ]
 

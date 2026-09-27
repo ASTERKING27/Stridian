@@ -67,9 +67,10 @@ def _bytes(wb) -> bytes:
     return out.getvalue()
 
 
-def squad(students, histories: dict, coaches=None) -> bytes:
+def squad(students, histories: dict, coaches=None, cards=None) -> bytes:
     """Every student given, one tab per kind of information. `histories` maps a
-    student id to their test results, oldest first."""
+    student id to their test results, oldest first; `cards` is {sport: [(card, lines)]}
+    of finished match cards (sheets.card_tabs)."""
     wb = _workbook()
     _tab(wb, "Profiles", sheets.PROFILE_HEADER, [sheets.profile_row(s) for s in students])
     _tab(wb, "Analysis", sheets.HEADER,
@@ -78,6 +79,12 @@ def squad(students, histories: dict, coaches=None) -> bytes:
          [sheets.achievement_row(a) for s in students for a in s.achievements if a.status != "draft"])
     _tab(wb, "Test results", RESULT_HEADER,
          [row for s in students for row in _result_rows(s, histories.get(s.id, []))])
+    for sport, finished in (cards or {}).items():
+        if not finished:
+            continue
+        name = "" if len(cards) == 1 else f"{sport} "
+        for tab, rows in sheets.card_tabs(sport, finished).items():
+            _tab(wb, f"{name}{'Match cards' if tab == 'Matches' else tab}"[:31], rows[0], rows[1:])
     if coaches is not None:
         _tab(wb, "Coaches", sheets.COACH_HEADER, [sheets.coach_row(c) for c in coaches])
     return _bytes(wb)
@@ -94,4 +101,8 @@ def student(s, report: dict, history: list) -> bytes:
     _tab(wb, "Achievements", sheets.ACHIEVEMENT_HEADER,
          [sheets.achievement_row(a) for a in s.achievements if a.status != "draft"])
     _tab(wb, "Test results", RESULT_HEADER, _result_rows(s, history))
+    groups = (report.get("matchCards") or {}).get("partD") or []
+    if groups:
+        _tab(wb, "Match cards", ["Tournament"] + groups[0]["columns"],
+             [[g["tournament"]] + row for g in groups for row in g["rows"] + [g["total"]]])
     return _bytes(wb)

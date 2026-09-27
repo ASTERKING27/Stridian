@@ -16,9 +16,13 @@ training plan and a diet plan on top.
 - **Online:** website on Vercel, videos in Google Drive, heavy lifting on a worker
   computer (the laptop now, the lab iMac later), live Google Sheets for the admins,
   Excel downloads for coaches
-- **Documents:** certificates read by Google's Gemini API (free tier, swappable)
+- **Documents:** certificates and photos of match cards read by Google's Gemini API
+  (free tier, swappable)
 
-Sports covered: Football, Basketball, Volleyball, Cricket, Badminton/Tennis, Kho-Kho.
+Sports covered: Football, Basketball, Volleyball, Cricket, Badminton, Tennis, Kho-Kho.
+(Badminton and Tennis were one sport until they got cards of their own; a database from
+before is moved across by itself — everyone lands in Badminton, and an admin moves any
+tennis players with **Edit details**.)
 
 ---
 
@@ -27,7 +31,7 @@ Sports covered: Football, Basketball, Volleyball, Cricket, Badminton/Tennis, Kho
 | | Who | Scope |
 |---|---|---|
 | Enrol, then My space (dashboard, report, achievements, profile) | a student, signed in with their university email | **only their own record**; the report is read-only and appears once a coach has verified them |
-| Coach Entry, Match Footage, Dashboard, Weights, AI Training | a coach | **only the coach's own sport**, every student's full record included; Excel downloads, no Google Sheets |
+| Coach Entry, Match Footage, Match Cards, Dashboard, Weights, AI Training | a coach | **only the coach's own sport**, every student's full record included; Excel downloads, no Google Sheets |
 | all of the above, plus Add Student, editing anyone's details, every coach, the Google Sheets | an admin (`ADMIN_EMAILS`) | **every sport**, one at a time, switched from the menu |
 
 A coach signs up once and picks their sport. From then on every list, report, video
@@ -301,6 +305,7 @@ information, each rewritten whenever what it holds changes:
 | **Student profiles** (a tab per sport) | the university record: RA number, DOB, age, contacts, family, Aadhaar, passport, level, verified achievements |
 | **Achievements** (a tab per sport) | every achievement sent in, its status, who checked it and when, and the name the AI read off the certificate |
 | **Coaches** | name, email, employee ID, mobile, designation, sport, admin or not |
+| **Football match cards**, … (one file per sport) | **Matches** — a row per player per finished card (Part C); **Tournaments** — each player's Part D, a total row per tournament |
 
 The app makes each one the first time there is something to put in it (a sport's squad
 file when its first student enrols) — the Drive login's `drive.file` scope allows that —
@@ -311,8 +316,9 @@ plain text, so the sheets can't be broken by what people type, and the worker re
 all of them on every pass, repairing any push that failed.
 
 Coaches, instead of the sheets, get **Download Excel** — on the Dashboard for the whole
-squad (Profiles, Analysis, Achievements and Test results tabs) and on each student for
-just them. An admin also gets **All sports (Excel)**, with a Coaches tab. The downloads
+squad (Profiles, Analysis, Achievements and Test results tabs, plus Match cards and
+Tournaments once there are finished cards) and on each student for just them (with their
+Part D). An admin also gets **All sports (Excel)**, with a Coaches tab. The downloads
 are built from the same rows as the sheets. Aadhaar and phone numbers stay text (no
 `4.6E+11`), and anything that looks like a formula is written as text.
 
@@ -330,6 +336,50 @@ API calls however big the squad gets. Every push rewrites both tabs completely, 
 push that fails (Google briefly down) is simply repaired by the next one; the worker
 also pushes on every pass. Values are written as plain text, so a formula typed into a
 form stays text.
+
+---
+
+## Match cards
+
+The paper sheet a scorer fills in during a match, for all seven sports, defined in
+`backend/match_cards.py`. Volleyball copies the Directorate of Sports' hardcopy word for
+word; the others follow its five parts at the same depth, with their own skills:
+
+| Part | What it is |
+|---|---|
+| **A** — live match sheet | the header (tournament, round, level, date, venue, opponent, result, score, recorded by, coach, match no., women / men) and a row per player: a + / 0 / − tally for every skill |
+| **B** — scoring key | what counts as + / 0 / −, the formulas with worked examples and University / Elite targets, the 1–5 rating scale, elite add-ons |
+| **C** — post-match review | per player: the sport's key numbers, coordination and overall (1–5), key strength, area to improve; and a team summary |
+| **D** — progress tracker | one player across a tournament, a trend arrow per match (overall rating vs the match before), and an average / total row |
+| Player card | attempts, successes and errors by zone — on paper each cell lists jersey numbers |
+
+**Print blank card** prints them on A4 landscape with the ticked players' names and jersey
+numbers already written in (a racket card prints one player per page; Part D prints one
+page per player). Jersey numbers are set by the coach on a student's **Profile** tab.
+
+After the match the coach either **types the card in** (the grid mirrors Part A) or **adds
+a photo** and has the AI read the header and every row. A jersey number that only one squad
+member wears is matched to them; anything unclear becomes a highlighted row that asks
+which student it was. The coach checks the numbers, adds the ratings and comments, and
+**finishes** the card. Only finished cards count: Part C is worked out on the spot, Part D
+builds up across a tournament, each player's report gets a **Match cards** tab, and the
+card numbers become the third source for the position suggestion.
+
+Cricket (T20 / 50-over) and kho-kho (mat / traditional) pick their format per card;
+cricket's targets follow it, kho-kho's points per out and turn length do. A player's card
+metrics only pool cards of the same category and format as their latest one.
+
+**Targets.** Elite values come from published competition statistics (FIVB / VNL, Premier
+League, NBA, IPL, BWF, Grand Slams, Ultimate Kho Kho); University values sit a step below.
+Meeting the University target scores 60 on the 0–100 scale and the Elite target 100.
+Rates only count towards the report once there are enough attempts behind them (for
+example 20 attacks, 10 field-goal attempts, 100 balls faced).
+
+**Position weights.** The measures B2 lists say how *well* a player did; the engine also
+uses Stridian's own **share of actions** — how much of what a player does is setting,
+receiving, blocking — because that is what tells a setter from a libero or a keeper from a
+striker. Those role metrics are never called a strength or a weakness, and the trainer
+treats cards as their own pool of weight, like the tests and the footage.
 
 ---
 
@@ -352,16 +402,17 @@ Everything rests on one idea, so the output is always explainable.
 `confidence` turns that into high / medium / low. One test filled in still produces a
 ranking, clearly marked low-confidence.
 
-### Three passes, not one
+### Four passes, not one
 
-Every metric carries a `source`: `test` (the battery), `profile` (height and weight), or
-`match` (derived from footage). The engine takes a `sources` filter, so the same code
-runs three times per report:
+Every metric carries a `source`: `test` (the battery), `profile` (height and weight),
+`match` (derived from footage) or `card` (worked out from match cards). The engine takes a
+`sources` filter, so the same code runs four times per report:
 
 | Pass | Sources | Answers |
 |---|---|---|
 | Tests | `test` + `profile` | what their body and their testing say |
-| Match | `match` only | what they actually did in a game |
+| Footage | `match` only | how they moved in a game |
+| Cards | `card` only | what they did with the ball, skill by skill |
 | Combined | everything | the headline verdict |
 
 Weights are normalised so each source carries the same total weight — neither drowns the
@@ -369,8 +420,8 @@ other in the combined pass — and a filtered pass only counts the weights it co
 possibly satisfy, so a tests-only verdict isn't reported as half-covered just because the
 position also has match weights.
 
-`reconciliation` then says plainly whether the two agree, nearly agree (each ranks the
-other's pick in its own top three), or disagree — and what a disagreement usually means.
+`reconciliation` then says plainly whether the sources agree, nearly agree (each ranks the
+others' picks in its own top three), or disagree — and what a disagreement usually means.
 
 ### Editing the weights
 
@@ -384,7 +435,7 @@ Weights tab, not a code edit. A coach only ever edits their own sport.
 | `PUT` | `/api/sports/{sport}/weights` — set weights for one or more positions |
 | `POST` | `/api/sports/{sport}/weights/reset` — back to defaults |
 
-`{sport}` accepts the full name or a slug (`football`, `badminton-tennis`). Weights do
+`{sport}` accepts the full name or a slug (`football`, `kho-kho`). Weights do
 not have to sum to 1 — the engine divides by the total it actually used.
 
 ---
@@ -663,6 +714,12 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `DELETE` | `/api/matches/{id}/assign/{track}` | own sport | undo an identification |
 | `POST` `DELETE` | `/api/matches/{id}/calibrate` | own sport | mark out the pitch / remove it |
 | `DELETE` | `/api/matches/{id}` | own sport | remove a match clip |
+| `GET` | `/api/cards/config?category=W&format=` | coach | the sport's card (skills, formulas, targets, Part C/D columns, zones) and squad |
+| `GET` `POST` | `/api/cards` | coach | the sport's match cards / start one |
+| `GET` `PUT` `DELETE` | `/api/cards/{id}` | own sport | one card with its Part C / save it (`final: true` makes it count) / delete it |
+| `POST` | `/api/cards/{id}/photos` | own sport | add a photo or PDF of the paper card (raw body, 4 MB, up to 4) |
+| `GET` `DELETE` | `/api/cards/{id}/photos/{n}` | own sport | a photo / remove it |
+| `POST` | `/api/cards/{id}/photos/{n}/read` | own sport | the AI's reading of Part A, matched to the squad — nothing saved |
 | `GET` | `/api/training` | coach | the AI Training page: labels, versions, worker, queue, sheets (links for admins) |
 | `POST` | `/api/training/versions/{id}/rollback` | own sport | put an older model back live |
 
@@ -677,7 +734,7 @@ for the progress sparklines, while the analysis always uses the newest value per
 
 ## The interface
 
-Five coach screens (six for an admin) behind a rail on desktop and a bottom tab bar on
+Six coach screens (seven for an admin) behind a rail on desktop and a bottom tab bar on
 phones, with a light / dark / follow-system theme toggle that persists. Signed out, the
 site opens on the student sign-in, with a link across to the coach one. A student gets
 the enrolment form, then their own space (Dashboard, My report, Achievements, Profile).
@@ -687,8 +744,10 @@ standouts and weak links, and the two-source panel with its reconciliation),
 **Profile** (photo, the university record, achievements to verify or reject, print),
 **Measurements** (every test metric with its reference range and a progress sparkline once
 there are two readings), **Positions** (all of them ranked, each expanding to the weight
-table behind its score), **Match** (the footage-only verdict, match metrics with their own
-radar, and every clip the student appears in), **Training**, **Diet**, **Video**.
+table behind its score), **Footage** (the footage-only verdict, match metrics with their own
+radar, and every clip the student appears in), **Match cards** (the card-only verdict, Part D
+per tournament with trend arrows and University / Elite targets, and the player card summed
+over matches), **Training**, **Diet**, **Video**.
 
 Uploads show a progress bar, then the clip waits as **waiting → analysing → done**; the
 page refreshes itself while anything is in the queue, and says plainly when the
@@ -716,12 +775,14 @@ requirements.txt    the website's (light) Python packages — what Vercel instal
 
 backend/
   main.py           FastAPI app — all routes, uploads, verification, sheet sync
-  docreader.py      reads certificates with Gemini (the one file to change to swap AI)
+  docreader.py      reads certificates and match cards with Gemini (the one file to change to swap AI)
+  match_cards.py    every sport's match card: skills, formulas, targets, Parts C/D, zones
   export.py         the Excel downloads
   worker.py         the worker: queue, analysis, training, retention, sheet repair
   trainer.py        learns position weights from verified students (pure logic)
   storage.py        videos in Google Drive or a local folder, chunked uploads
-  sheets.py         the Google Sheets: a squad file per sport, profiles, achievements, coaches
+  sheets.py         the Google Sheets: squad and match-card files per sport, profiles,
+                    achievements, coaches
   gapi.py           the one Google login both of those use
   setup_google.py   one-time: Google sign-in, creates the video folder
   auth.py           password hashing, bearer-token sessions, email codes
@@ -729,7 +790,7 @@ backend/
   db.py             Postgres (DATABASE_URL) or SQLite engine + session
   migrate.py        adds missing columns on startup
   models.py         coaches, students, student logins, achievements, test results,
-                    weights, videos, match clips, model versions, app state
+                    weights, videos, match clips, match cards, model versions, app state
   schemas.py        request/response validation
   sports_config.py  sports, metrics, reference ranges, default weights, match
                     archetypes, nutrition profiles
@@ -752,8 +813,10 @@ frontend/src/
   people.jsx        shared: details form and view, photos, achievements
   CoachEntry.jsx    roster, test results, drill-video upload
   Matches.jsx       match clips, the click-to-identify frame, per-player table
+  MatchCards.jsx    match cards: list, editor, photos and the AI read, print setup
+  BlankCard.jsx     the printable blank card, Parts A–D and the player card
   Dashboard.jsx     squad overview, roster, achievements to check, Excel, your details
-  Report.jsx        the tabbed report, both source verdicts, reconciliation
+  Report.jsx        the tabbed report, the three source verdicts, reconciliation, Part D
   Diet.jsx          fuelling targets and the day's menu
   VideoCard.jsx     clip metrics, drills, skeleton thumbnail
   Weights.jsx       weight editor

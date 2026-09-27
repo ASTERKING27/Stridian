@@ -316,6 +316,8 @@ def maintenance(db):
     # and the people sheets catch up on any push that failed. Not the coaches sheet: its
     # Admin column comes from ADMIN_EMAILS, which only the website needs to have set
     main.sync_people(db, "profiles", "achievements")
+    for sport in main.card_sports(db):
+        main.sync_cards(db, sport)
 
 
 # --------------------------------------------------------------------------- #

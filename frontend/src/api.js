@@ -207,6 +207,19 @@ export const api = {
   calibrate: (clipId, body) => send('POST', `/api/matches/${clipId}/calibrate`, body),
   clearCalibration: clipId => send('DELETE', `/api/matches/${clipId}/calibrate`),
 
+  // match cards: the paper sheet, typed in or read off a photo
+  cardsConfig: (category = 'W', format = '') =>
+    get(`/api/cards/config?category=${encodeURIComponent(category)}${format ? `&format=${encodeURIComponent(format)}` : ''}`),
+  cards: () => get('/api/cards'),
+  card: id => get(`/api/cards/${id}`),
+  createCard: body => send('POST', '/api/cards', body),
+  saveCard: (id, body) => send('PUT', `/api/cards/${id}`, body),
+  deleteCard: id => send('DELETE', `/api/cards/${id}`),
+  addCardPhoto: (id, blob) => sendFile('POST', `/api/cards/${id}/photos`, blob),
+  // `v` names the photo meant, so one deleted in another tab can't shift the rest onto it
+  deleteCardPhoto: (id, n, v) => send('DELETE', `/api/cards/${id}/photos/${n}?v=${v}`),
+  readCardPhoto: (id, n, v) => send('POST', `/api/cards/${id}/photos/${n}/read?v=${v}`),
+
   training: () => get('/api/training'),
   rollback: versionId => send('POST', `/api/training/versions/${versionId}/rollback`),
 }

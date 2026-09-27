@@ -366,6 +366,7 @@ export function DetailsView({ student: s }) {
     ['Identity documents', [['Aadhaar', spacedAadhaar(s.aadhaar)], ['Passport', s.passport]]],
     ['Sport', [
       ['Sport', s.sport],
+      ['Jersey number', s.jersey_number],
       ['Highest level (their word)', [levelWord(s.highest_level), s.highest_level_details].filter(Boolean).join(' — ')],
       ['Highest verified level', levelWord(s.top_verified_level)],
       ['Height', s.height_cm && `${s.height_cm} cm`], ['Weight', s.weight_kg && `${s.weight_kg} kg`],
@@ -383,7 +384,7 @@ export function DetailsView({ student: s }) {
           <table className="data details">
             <tbody>
               {rows.map(([k, v]) => (
-                <tr key={k}><td className="muted">{k}</td><td>{v || '—'}</td></tr>
+                <tr key={k}><td className="muted">{k}</td><td>{v || v === 0 ? v : '—'}</td></tr>
               ))}
             </tbody>
           </table>

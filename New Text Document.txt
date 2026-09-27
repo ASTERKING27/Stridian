@@ -1,0 +1,25 @@
+login students---
+profile, ra no, name, photo, dob (with age), mob no, personal and official email id, fathers name, fathers mob no, mothers name and mob no, aadhar no, passport no, identification mark, blood grp, highest level performance and details (dropdown style)
+
+coach--
+emp id, ph no, etc
+coaches can only "view" the data or spreadsheets, not modify. coaches can only download it
+
+dashboard--
+achievements in dashboard for each students.
+
+requirements system--
+neon
+vercel website
+drive storage
+system capable of analysing footages (9am to 5pm)
+
+downloads--
+whole sheet download
+single students download
+
+metrics--
+a way to present a single student details in a way for higher officials.
+
+weights level--
+university, zonal, state, national, international

@@ -35,10 +35,10 @@ MIN_PER_METRIC = 2     # a position needs this many measured players before a me
 
 
 def _group(source):
-    """Tests and physique form one evidence pool, match footage the other. Each keeps
-    its own share of a position's weight, so learning never tips the tests-vs-footage
-    balance a coach set."""
-    return "match" if source == "match" else "test"
+    """Tests and physique form one evidence pool, match footage a second and match cards
+    a third. Each keeps its own share of a position's weight, so learning never tips the
+    balance between them that a coach set."""
+    return source if source in ("match", "card") else "test"
 
 
 def scores_of(rows):
@@ -106,7 +106,7 @@ def _fit(sport_name, prior, stats):
         keep = PRIOR_STRENGTH / (PRIOR_STRENGTH + n)   # share that stays with the prior
 
         weights = {}
-        for group in ("test", "match"):
+        for group in ("test", "match", "card"):
             keys = [k for k, src in sources.items() if _group(src) == group]
             budget = sum(max(0.0, prior_weights.get(k, 0.0)) for k in keys)
             if budget <= 0:

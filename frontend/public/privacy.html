@@ -30,7 +30,7 @@
   <a class="brand" href="/"><span class="mark">S</span><b>Stridian</b></a>
 
   <h1>Privacy policy</h1>
-  <p class="updated">Last updated: 26 September 2026</p>
+  <p class="updated">Last updated: 27 September 2026</p>
 
   <p>
     Stridian is a university sports talent-profiling tool. Students sign in and enter
@@ -51,6 +51,10 @@
       is for, and whether a coach verified or rejected it and why.</li>
     <li>What coaches record: test results, notes, the position they confirm, and videos of
       drills and matches.</li>
+    <li>Match cards: the sheet a scorer fills in during a match — for each player, how many
+      times each skill went well, neutral or wrong, some counts and times (minutes played, runs,
+      time on the mat), the coach's 1–5 ratings and a few words on their strengths and what to
+      improve — plus the student's jersey number and photos of the paper card.</li>
     <li>Student accounts: the student's university email address and a securely hashed
       password chosen for Stridian. Stridian never asks for, and never sees, the password
       of a university email account.</li>
@@ -66,7 +70,7 @@
     and it stops working after 15 minutes.
   </p>
 
-  <h2>Reading certificates with AI</h2>
+  <h2>Reading certificates and match cards with AI</h2>
   <p>
     When a certificate is uploaded, Stridian sends that one image or PDF to Google's Gemini
     AI service, which reads the event, level, year and result off it so the student doesn't
@@ -76,6 +80,12 @@
     uses Gemini's free service, under which <strong>Google may use what it is sent to improve
     its products</strong>, and people at Google may review it. If that is not acceptable for a
     certificate, ask the administrator to add it for you instead.
+  </p>
+  <p>
+    The same service reads match cards, but only when a coach asks it to: the photo of the paper
+    card is sent, which shows the players' names, jersey numbers and what the scorer recorded, and
+    nothing else. The coach checks every number before the card is saved. A coach who would rather
+    not send a card can type it in instead.
   </p>
 
   <h2>How it is used</h2>
@@ -90,7 +100,8 @@
     <li>A student sees only their own record. They can correct their own details, except that
       their RA number, sport and date of birth, once given, are changed only by an
       administrator. Their report — position analysis, training and diet plan — appears once a
-      coach has verified them, and they cannot change it. Coaches' private notes are not shown
+      coach has verified them, and they cannot change it; it includes their match cards, with the
+      ratings and comments the coach wrote on them. Coaches' private notes are not shown
       to students.</li>
     <li>A coach sees only the students of the sport they coach — their full record, Aadhaar
       and passport numbers included — and can download it as an Excel file.</li>
@@ -103,10 +114,11 @@
     <li>Student and coach records and accounts: a Postgres database hosted by Neon
       (Singapore).</li>
     <li>Sign-in codes are sent through Google's Gmail service.</li>
-    <li>Videos, preview images, photos and certificates: a private folder in the
-      administrator's Google Drive. <strong>Video files are deleted 30 days after
+    <li>Videos, preview images, photos, certificates and photos of match cards: a private folder
+      in the administrator's Google Drive. <strong>Video files are deleted 30 days after
       upload</strong>; the measurements taken from them are kept. Photos and certificates are
-      kept until the student's record is deleted.</li>
+      kept until the student's record is deleted, and a match card's photos until the coach
+      deletes the card.</li>
     <li>The website itself runs on Vercel.</li>
   </ul>
 
@@ -136,7 +148,9 @@
   <p>
     Ask your coach or the administrator, and your record, results, videos, photo and
     certificates will be deleted. Deleting a student in Stridian removes those files from
-    storage as well. To have your
+    storage as well, and takes their row off every match card. A photo of a paper match card
+    shows the whole team, so it stays with the card until the coach deletes that card — ask
+    them to if your name is on one. To have your
     sign-in account removed too, email the address below from your university email.
   </p>
 

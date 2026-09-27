@@ -245,7 +245,7 @@ SPORTS = {
         },
     },
 
-    "Badminton / Tennis": {
+    "Badminton": {
         "note": "Based on BWF-aligned national junior and squad testing programmes.",
         "metrics": [
             M("sprint20m", "20m Sprint", "sec", "lower", 3.80, 2.90),
@@ -296,6 +296,19 @@ SPORTS = {
     },
 }
 
+# Tennis starts with badminton's battery and playing styles — the fitness demands are
+# close (short repeated sprints, grip, change of direction, aerobic base); the match
+# cards are what set the two apart.
+SPORTS["Tennis"] = {
+    "note": "Starts with the same racket-sport battery as badminton: sprint, jump, grip, "
+            "on-court agility and aerobic level.",
+    "metrics": [dict(m) for m in SPORTS["Badminton"]["metrics"]],
+    "positions": {p: {**c, "weights": dict(c["weights"])}
+                  for p, c in SPORTS["Badminton"]["positions"].items()},
+}
+SPORTS = {name: SPORTS[name] for name in
+          ("Football", "Basketball", "Volleyball", "Cricket", "Badminton", "Tennis", "Kho-Kho")}
+
 
 # Training advice shown for a metric the player scores badly on.
 TRAINING_TIPS = {
@@ -339,7 +352,8 @@ NUTRITION = {
     "Basketball":         {"kcal_per_kg": 45, "carb_g_per_kg": 6.0, "protein_g_per_kg": 1.7, "style": "mixed"},
     "Volleyball":         {"kcal_per_kg": 43, "carb_g_per_kg": 5.5, "protein_g_per_kg": 1.7, "style": "power"},
     "Cricket":            {"kcal_per_kg": 41, "carb_g_per_kg": 5.5, "protein_g_per_kg": 1.6, "style": "mixed"},
-    "Badminton / Tennis": {"kcal_per_kg": 45, "carb_g_per_kg": 6.0, "protein_g_per_kg": 1.6, "style": "endurance"},
+    "Badminton":          {"kcal_per_kg": 45, "carb_g_per_kg": 6.0, "protein_g_per_kg": 1.6, "style": "endurance"},
+    "Tennis":             {"kcal_per_kg": 45, "carb_g_per_kg": 6.0, "protein_g_per_kg": 1.6, "style": "endurance"},
     "Kho-Kho":            {"kcal_per_kg": 45, "carb_g_per_kg": 6.0, "protein_g_per_kg": 1.6, "style": "endurance"},
 }
 
@@ -371,7 +385,7 @@ MATCH_RANGES = {
         # separates a goalkeeper from a centre-back, who is deep and covers ground
         "matchStationary": (20, 65),
     },
-    "court": {  # Basketball, Volleyball, Badminton / Tennis
+    "court": {  # Basketball, Volleyball, Badminton, Tennis
         "matchDistance": (20, 65), "matchTopSpeed": (1.5, 4.0), "matchSprints": (0.3, 2.0),
         "matchWorkRate": (40, 85), "matchWidth": (10, 60),
     },
@@ -501,7 +515,8 @@ SPORT_MATCH_FAMILY = {
     "Football": "field",
     "Basketball": "court",
     "Volleyball": "court",
-    "Badminton / Tennis": "court",
+    "Badminton": "court",
+    "Tennis": "court",
     "Cricket": "cricket",
     "Kho-Kho": "khokho",
 }
@@ -524,7 +539,12 @@ POSITION_ARCHETYPES = {
         "Fast Bowler": "power-specialist", "Spin Bowler": "high-motor",
         "Wicketkeeper": "deep-anchor", "All-rounder": "central-engine",
     },
-    "Badminton / Tennis": {
+    "Badminton": {
+        "Attacking / Power player": "power-specialist",
+        "Defensive / Counter player": "high-motor",
+        "All-court / Balanced": "central-engine",
+    },
+    "Tennis": {
         "Attacking / Power player": "power-specialist",
         "Defensive / Counter player": "high-motor",
         "All-court / Balanced": "central-engine",
@@ -593,9 +613,14 @@ def _install_match_layer():
 
 _install_match_layer()
 
+# the match-card layer (match_cards.py) adds its metrics and weights the same way
+import match_cards  # noqa: E402 — it extends SPORTS, so it has to come after it
+
+match_cards.install(SPORTS)
+
 
 def slug_for(name):
-    """URL-safe id for a sport name ("Badminton / Tennis" -> "badminton-tennis")."""
+    """URL-safe id for a sport name ("Kho-Kho" -> "kho-kho")."""
     out = []
     for ch in name.lower():
         out.append(ch if ch.isalnum() else "-")

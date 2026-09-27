@@ -40,15 +40,17 @@ def confidence_label(coverage):
     return "low"
 
 
-def build_metric_values(sport_name, student_profile, test_values, match_values=None):
+def build_metric_values(sport_name, student_profile, test_values, match_values=None, card_values=None):
     """Collect every metric's raw value for one student.
 
     `student_profile` is a dict with height_cm / weight_kg.
     `test_values` is {metric_key: value} from the coach-entered results.
     `match_values` is {metric_key: value} aggregated from assigned match tracks.
+    `card_values` is {metric_key: value} from their match cards (match_cards.player_values).
     Metrics marked source="profile" are read off the profile instead.
     """
     match_values = match_values or {}
+    card_values = card_values or {}
     values = {}
     for key, meta in metric_map(sport_name).items():
         if meta["source"] == "profile":
@@ -60,23 +62,33 @@ def build_metric_values(sport_name, student_profile, test_values, match_values=N
                 values[key] = None
         elif meta["source"] == "match":
             values[key] = match_values.get(key)
+        elif meta["source"] == "card":
+            values[key] = card_values.get(key)
         else:
             values[key] = test_values.get(key)
     return values
 
 
-def score_metrics(sport_name, values, sources=None):
+def score_metrics(sport_name, values, sources=None, ranges=None):
     """One row per metric: raw value, 0-100 score, and the reference range used.
 
     `sources` limits which kinds of evidence count. Anything outside it keeps its raw
     value for display but scores None, so it drops out of the ranking maths — that is
     what lets the same engine produce a tests-only verdict and a match-only verdict.
+    `ranges` replaces a metric's (poor, elite) for this student — a match card's targets
+    depend on whether they played in the women's or men's team — and None there means
+    the metric has no target to be scored against.
     """
     rows = []
     for meta in get_sport(sport_name)["metrics"]:
         raw = values.get(meta["key"])
         if sources is not None and meta["source"] not in sources:
             raw = None
+        if ranges and meta["key"] in ranges:
+            span = ranges[meta["key"]]
+            meta = {**meta, "poor": span[0] if span else None, "elite": span[1] if span else None}
+            if not span:
+                raw = None
         rows.append({
             "key": meta["key"],
             "label": meta["label"],
@@ -87,6 +99,9 @@ def score_metrics(sport_name, values, sources=None):
             "elite": meta["elite"],
             "value": raw,
             "score": normalize(raw, meta["poor"], meta["elite"]),
+            # describes what a player does rather than how well, so it is never a
+            # strength, a weakness or something to train
+            "role": meta.get("role", False),
         })
     return rows
 
@@ -193,7 +208,7 @@ def development_plan(metric_rows, top_position_weights):
     """What to train, weakest-and-most-relevant first."""
     plan = []
     for row in metric_rows:
-        if row["score"] is None or row["score"] > WEAKNESS_LINE:
+        if row["score"] is None or row["score"] > WEAKNESS_LINE or row["role"]:
             continue
         weight = top_position_weights.get(row["key"], 0.0)
         plan.append({
@@ -210,25 +225,25 @@ def development_plan(metric_rows, top_position_weights):
 
 
 def analyse(sport_name, student_profile, test_values, weights_by_position,
-            match_values=None, sources=None):
+            match_values=None, sources=None, card_values=None, ranges=None):
     """Full report for one student.
 
-    `sources` is a set of {"test", "profile", "match"}; None means all of them.
-    Running it three times — tests+profile, match+profile, everything — is how the
-    report shows a test verdict, a match verdict and a combined one from one engine.
+    `sources` is a set of {"test", "profile", "match", "card"}; None means all of them.
+    Running it once per source and once with everything is how the report shows a
+    test verdict, a footage verdict, a match-card verdict and a combined one.
     """
     sport = get_sport(sport_name)
     if sport is None:
         raise ValueError(f"Unknown sport: {sport_name}")
 
-    values = build_metric_values(sport_name, student_profile, test_values, match_values)
-    metric_rows = score_metrics(sport_name, values, sources)
+    values = build_metric_values(sport_name, student_profile, test_values, match_values, card_values)
+    metric_rows = score_metrics(sport_name, values, sources, ranges)
 
     in_scope = None if sources is None else {
         m["key"] for m in sport["metrics"] if m["source"] in sources
     }
 
-    scored = [r["score"] for r in metric_rows if r["score"] is not None]
+    scored = [r["score"] for r in metric_rows if r["score"] is not None and not r["role"]]
     overall = round(sum(scored) / len(scored), 1) if scored else None
 
     ranked = rank_positions(sport_name, metric_rows, weights_by_position, in_scope)
@@ -251,11 +266,11 @@ def analyse(sport_name, student_profile, test_values, weights_by_position,
         "margin": margin,
         "strengths": [
             {"key": r["key"], "label": r["label"], "score": r["score"], "source": r["source"]}
-            for r in metric_rows if r["score"] is not None and r["score"] >= STRENGTH_LINE
+            for r in metric_rows if r["score"] is not None and r["score"] >= STRENGTH_LINE and not r["role"]
         ],
         "weaknesses": [
             {"key": r["key"], "label": r["label"], "score": r["score"], "source": r["source"]}
-            for r in metric_rows if r["score"] is not None and r["score"] <= WEAKNESS_LINE
+            for r in metric_rows if r["score"] is not None and r["score"] <= WEAKNESS_LINE and not r["role"]
         ],
         "developmentPlan": plan,
         "missingMetrics": [
