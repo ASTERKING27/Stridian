@@ -168,7 +168,7 @@ export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
           <button className="linkbtn" onClick={onCoach}>I&apos;m a coach →</button>
         </div>
         <footer className="sitefoot" style={{ textAlign: 'center' }}>
-          <a href="/privacy.html">Privacy policy</a>
+          <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of use</a>
         </footer>
       </div>
     </div>

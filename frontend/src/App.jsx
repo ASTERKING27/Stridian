@@ -198,7 +198,7 @@ export default function App() {
 
         <main>
           {body}
-          <footer className="sitefoot"><a href="/privacy.html">Privacy policy</a></footer>
+          <footer className="sitefoot"><a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of use</a></footer>
         </main>
 
         {nav.length > 1 && (
