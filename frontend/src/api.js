@@ -151,6 +151,9 @@ export const api = {
 
   signup: body => send('POST', '/api/auth/signup', body),
   login: body => send('POST', '/api/auth/login', body),
+  // a forgotten password: a code to the account's email, then that code + a new password
+  resetCode: email => send('POST', '/api/auth/reset-code', { email }),
+  reset: body => send('POST', '/api/auth/reset', body),
   me: () => get('/api/auth/me'),
   updateMe: body => send('PATCH', '/api/auth/me', body),
   switchSport: sport => send('PATCH', '/api/auth/sport', { sport }),

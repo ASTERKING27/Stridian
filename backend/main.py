@@ -50,16 +50,16 @@ import sports_config as sc
 import storage
 import trainer
 from db import Base, SessionLocal, engine, get_db
-from models import (LEVELS, Achievement, AppState, Coach, MatchAssignment, MatchCard,
-                    MatchCardLine, MatchClip, ModelVersion, PositionWeight, Student,
+from models import (LEVELS, Achievement, AppState, Coach, CoachSession, MatchAssignment,
+                    MatchCard, MatchCardLine, MatchClip, ModelVersion, PositionWeight, Student,
                     StudentAccount, StudentSession, TestResult, VideoAnalysis)
 from models import _now as utcnow
 from models import admin_emails
 from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CardIn,
-                     CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, MatchAssignIn, MatchClipOut,
-                     MatchUploadIn, ResultsIn, ReviewIn, SportIn, StudentCodeIn, StudentCreate,
-                     StudentEnrol, StudentListItem, StudentLogin, StudentOut, StudentSelfUpdate,
-                     StudentUpdate, StudentVerifyIn, TokenOut, UploadIn, VerifyIn, VideoOut,
+                     CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, EmailCodeIn, EmailIn,
+                     MatchAssignIn, MatchClipOut, MatchUploadIn, ResultsIn, ReviewIn, SportIn,
+                     StudentCreate, StudentEnrol, StudentListItem, StudentLogin, StudentOut,
+                     StudentSelfUpdate, StudentUpdate, TokenOut, UploadIn, VerifyIn, VideoOut,
                      WeightsIn)
 
 log = logging.getLogger("stridian")
@@ -593,36 +593,60 @@ def signup(payload: CoachSignup, db: Session = Depends(get_db)):
     return TokenOut(token=token, coach=CoachOut.model_validate(coach))
 
 
+def _code_state(db: Session, purpose: str, email: str):
+    """The emailed code for (purpose, email), row-locked until the caller commits, so
+    guesses sent in parallel still count one at a time. Each purpose keeps its own code:
+    one emailed for a sign-up never resets a password."""
+    key = f"{purpose}code:" + hashlib.sha256(email.encode()).hexdigest()[:24]
+    row = db.scalar(select(AppState).where(AppState.key == key).with_for_update())
+    state = dict(row.value or {}) if row else {}
+    sent = datetime.fromisoformat(state["sentAt"]) if state.get("sentAt") else None
+    return key, state, (utcnow() - sent).total_seconds() if sent else None
+
+
+def send_email_code(db: Session, purpose: str, email: str) -> None:
+    """Email a fresh 6-digit code, unless one went out less than a minute ago (that one
+    still stands). Any earlier code stops working."""
+    key, _state, age = _code_state(db, purpose, email)
+    if age is not None and age < auth.CODE_RESEND_SECONDS:
+        db.rollback()                     # release the lock
+        return
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    try:
+        mailer.send_code(email, code)
+    except mailer.MailError as exc:
+        db.rollback()
+        raise HTTPException(503, str(exc)) from exc
+    set_state(db, key, {"hash": auth.code_hash(email, code), "sentAt": utcnow().isoformat(),
+                        "tries": 0})
+
+
+def email_code_ok(db: Session, purpose: str, email: str, typed: str) -> bool:
+    """Check a typed code. A right one is used up; wrong guesses count towards
+    CODE_TRIES, after which even the right code is refused."""
+    key, state, age = _code_state(db, purpose, email)
+    if not state.get("hash"):
+        db.rollback()                     # nothing was sent (or it was used): nothing to count
+        return False
+    tries = state.get("tries", 0)
+    if (age is not None and age <= auth.CODE_MINUTES * 60 and tries < auth.CODE_TRIES
+            and hmac.compare_digest(state["hash"], auth.code_hash(email, typed.strip()))):
+        set_state(db, key, {})            # used up
+        return True
+    set_state(db, key, {**state, "tries": tries + 1})
+    return False
+
+
 def prove_admin_email(db: Session, email: str, typed: str | None) -> None:
     """An ADMIN_EMAILS address gets an account only once its owner has typed a code
     emailed to it — otherwise whoever typed a listed address first would be an admin.
     Without a code this sends one and answers 428; with one it checks it."""
-    key = "admincode:" + hashlib.sha256(email.encode()).hexdigest()[:24]
-    row = db.scalar(select(AppState).where(AppState.key == key).with_for_update())
-    state = dict(row.value or {}) if row else {}
-    sent = datetime.fromisoformat(state["sentAt"]) if state.get("sentAt") else None
-    age = (utcnow() - sent).total_seconds() if sent else None
-
     if typed and typed.strip():
-        tries = state.get("tries", 0)
-        if (age is not None and age <= auth.CODE_MINUTES * 60 and tries < auth.CODE_TRIES
-                and hmac.compare_digest(state.get("hash", ""), auth.code_hash(email, typed.strip()))):
-            set_state(db, key, {})        # used up
+        if email_code_ok(db, "admin", email, typed):
             return
-        set_state(db, key, {**state, "tries": tries + 1})
         raise HTTPException(400, "That code is wrong or has expired — clear it and create the "
                                  "account again for a new one.")
-    if age is None or age >= auth.CODE_RESEND_SECONDS:
-        code = f"{secrets.randbelow(1_000_000):06d}"
-        try:
-            mailer.send_code(email, code)
-        except mailer.MailError as exc:
-            db.rollback()
-            raise HTTPException(503, str(exc)) from exc
-        set_state(db, key, {"hash": auth.code_hash(email, code), "sentAt": utcnow().isoformat(),
-                            "tries": 0})
-    else:
-        db.rollback()                     # release the lock; the last code still stands
+    send_email_code(db, "admin", email)
     raise HTTPException(428, f"This is an admin address, so a 6-digit code has been emailed to "
                              f"{email}. Type it in to finish creating the account.")
 
@@ -636,6 +660,33 @@ def login(payload: CoachLogin, db: Session = Depends(get_db)):
     stored = coach.password_hash if coach else auth.dummy_hash()
     if not auth.verify_password(payload.password, stored) or coach is None:
         raise HTTPException(401, "Email or password is incorrect")
+    return TokenOut(token=auth.issue_token(db, coach), coach=CoachOut.model_validate(coach))
+
+
+# A forgotten coach password: a code emailed to the account's address, then the code with
+# the new password. Whoever can read that inbox sets the password, as with students.
+
+@app.post("/api/auth/reset-code", status_code=202)
+def coach_reset_code(payload: EmailIn, db: Session = Depends(get_db)):
+    """Email a 6-digit code to a coach account's address. The answer is the same whether
+    or not an account uses it; only a real account's inbox gets anything."""
+    email = payload.email.strip().lower()
+    if db.scalar(select(Coach.id).where(func.lower(Coach.email) == email)):
+        send_email_code(db, "reset", email)
+    return {"email": email}
+
+
+@app.post("/api/auth/reset", response_model=TokenOut)
+def coach_reset(payload: EmailCodeIn, db: Session = Depends(get_db)):
+    """The emailed code and a new password: sets it, signs every other device out, and
+    signs this one in."""
+    email = payload.email.strip().lower()
+    coach = db.scalar(select(Coach).where(func.lower(Coach.email) == email))
+    if coach is None or not email_code_ok(db, "reset", email, payload.code):
+        raise HTTPException(400, "That code is wrong or has expired — ask for a new one.")
+    coach.password_hash = auth.hash_password(payload.password)
+    db.query(CoachSession).filter(CoachSession.coach_id == coach.id).delete()
+    db.commit()
     return TokenOut(token=auth.issue_token(db, coach), coach=CoachOut.model_validate(coach))
 
 
@@ -714,7 +765,7 @@ def student_view(account: StudentAccount) -> dict:
 
 
 @app.post("/api/student/code", status_code=202)
-def student_code(payload: StudentCodeIn, db: Session = Depends(get_db)):
+def student_code(payload: EmailIn, db: Session = Depends(get_db)):
     """Email a 6-digit code — to create an account, or to reset a forgotten password."""
     email = university_email(payload.email)
     since = utcnow() - timedelta(days=1)
@@ -740,7 +791,7 @@ def student_code(payload: StudentCodeIn, db: Session = Depends(get_db)):
 
 
 @app.post("/api/student/verify")
-def student_verify(payload: StudentVerifyIn, db: Session = Depends(get_db)):
+def student_verify(payload: EmailCodeIn, db: Session = Depends(get_db)):
     """The emailed code plus a new password: sets the password and signs the student in."""
     email = payload.email.strip().lower()
     # locked until commit, so guesses sent in parallel still count one at a time

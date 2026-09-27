@@ -38,6 +38,11 @@ A coach signs up once and picks their sport. From then on every list, report, vi
 and weight they can reach belongs to that sport — a football coach asking for a
 basketball student gets a 404, and asking for basketball weights gets a 403.
 
+A coach (or admin) who forgets their password uses **Forgot your password?** on the
+sign-in page: Stridian emails a 6-digit code to the account's address, and the code plus
+a new password signs them in and signs every other device out. The page says the same
+thing whether or not an account uses that email; codes follow the students' rules below.
+
 ### Admins
 
 An admin is a coach account whose email is listed in `ADMIN_EMAILS` on the server
@@ -667,6 +672,7 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 |---|---|---|---|
 | `GET` | `/api/health` | — | status, storage, whether the worker is online |
 | `POST` | `/api/auth/signup` `/login` | — | create a coach account (needs the sign-up code) / sign in |
+| `POST` | `/api/auth/reset-code` `/reset` | — | forgot password: email a 6-digit code / code + new password → signed in |
 | `GET` `PATCH` `POST` | `/api/auth/me` `/logout` | coach | current account, edit own details, revoke this token |
 | `PATCH` | `/api/auth/sport` | admin | switch the sport being viewed |
 | `GET` | `/api/coaches` | admin | every coach |
@@ -806,7 +812,7 @@ backend/
 
 frontend/src/
   App.jsx           app shell, nav, theme, auth state
-  Login.jsx         coach sign in / create account
+  Login.jsx         coach sign in / create account / forgot password
   StudentAuth.jsx   student sign in, email code, new password
   StudentForm.jsx   student enrolment (and an admin's Add Student)
   Portal.jsx        a student's space: dashboard, report, achievements, profile

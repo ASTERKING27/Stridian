@@ -132,12 +132,16 @@ class TokenOut(BaseModel):
 
 # ----------------------------- student accounts ---------------------------- #
 
-class StudentCodeIn(BaseModel):
+class EmailIn(BaseModel):
+    """Where to email a 6-digit code: a student's university inbox, or a coach's
+    address when they have forgotten their password."""
+
     email: str = Email
 
 
-class StudentVerifyIn(BaseModel):
-    """The emailed code, plus the Stridian password the student is choosing."""
+class EmailCodeIn(BaseModel):
+    """The emailed code, plus the new Stridian password being chosen (a student's, or a
+    coach resetting a forgotten one)."""
 
     email: str = Email
     code: str = Field(pattern=r"^\d{6}$")

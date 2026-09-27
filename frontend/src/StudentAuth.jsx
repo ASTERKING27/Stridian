@@ -67,7 +67,7 @@ export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
   const emailField = (
     <div className="field">
       <label htmlFor="semail">University email</label>
-      <input id="semail" type="email" required value={email} autoComplete="email"
+      <input id="semail" name="email" type="email" required value={email} autoComplete="username"
              placeholder={domain ? `you@${domain}` : ''}
              onChange={e => setEmail(e.target.value)} />
     </div>
@@ -105,7 +105,7 @@ export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
               {emailField}
               <div className="field">
                 <label htmlFor="spass">Stridian password</label>
-                <input id="spass" type="password" required value={password}
+                <input id="spass" name="password" type="password" required value={password}
                        autoComplete="current-password" onChange={e => setPassword(e.target.value)} />
               </div>
               <button className="btn wide" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
@@ -134,6 +134,9 @@ export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
           {mode === 'code' && (
             <form onSubmit={finish}>
               {info && <p className="muted" style={{ marginTop: 0 }}>{info}</p>}
+              {/* not shown: tells the password manager which account the new password is for,
+                  so it doesn't save the code as the username */}
+              <input type="text" name="email" autoComplete="username" defaultValue={email} hidden />
               <div className="field">
                 <label htmlFor="scode">6-digit code</label>
                 {/* no maxLength: a pasted "246 810" would be cut before the space is dropped */}
@@ -142,7 +145,7 @@ export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
               </div>
               <div className="field">
                 <label htmlFor="snew">Choose a Stridian password</label>
-                <input id="snew" type="password" required minLength={8} value={password}
+                <input id="snew" name="new-password" type="password" required minLength={8} value={password}
                        autoComplete="new-password" onChange={e => setPassword(e.target.value)} />
                 <p className="muted" style={{ marginTop: 6 }}>
                   At least 8 characters. Don&apos;t reuse your university email password.
