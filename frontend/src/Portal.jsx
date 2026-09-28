@@ -87,6 +87,7 @@ function Home({ me, achievements, onGo, onRefresh }) {
     ['Your mobile and a parent’s mobile', !!(s.phone && (s.father_phone || s.mother_phone)), 'Profile'],
     ['Your Aadhaar number', !!s.aadhaar, 'Profile'],
     ['Your blood group', !!s.blood_group, 'Profile'],
+    ['Your team (men’s or women’s)', !!s.category, 'Profile'],
     ['Your height and weight', !!(s.height_cm && s.weight_kg), 'Profile'],
     ...(s.highest_level
       ? [[`Proof of your ${levelWord(s.highest_level).toLowerCase()}-level achievement`,

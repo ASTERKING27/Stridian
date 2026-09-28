@@ -34,11 +34,13 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, or_, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 import auth
 import docreader
 import export
+import levels
 import mailer
 import match_cards
 import match_metrics
@@ -57,7 +59,7 @@ from models import _now as utcnow
 from models import admin_emails
 from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CardIn,
                      CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, EmailCodeIn, EmailIn,
-                     MatchAssignIn, MatchClipOut, MatchUploadIn, ResultsIn, ReviewIn, SportIn,
+                     LevelTargetsIn, MatchAssignIn, MatchClipOut, MatchUploadIn, ResultsIn, ReviewIn, SportIn,
                      StudentCreate, StudentEnrol, StudentListItem, StudentLogin, StudentOut,
                      StudentSelfUpdate, StudentUpdate, TokenOut, UploadIn, VerifyIn, VideoOut,
                      WeightsIn)
@@ -309,6 +311,11 @@ def build_report(db: Session, student: Student) -> dict:
         "context": card_context,
     }
     report["matchValues"] = match_values
+    position = (student.verified_position if student.status == "verified"
+                else (report.get("recommended") or {}).get("position"))
+    report["levels"] = level_read_out(db, student, tests, match_values, entries,
+                                      weights.get(position) if position else None)
+    report["levels"]["position"] = position      # whose weights the overall level used
     report["matchClips"] = [
         {"clipId": a.clip_id, "trackId": a.track_id, "label": a.clip.label,
          "originalName": a.clip.original_name, "metrics": a.metrics, "context": a.context,
@@ -335,6 +342,22 @@ def build_report(db: Session, student: Student) -> dict:
         report["recommended"]["position"] if report.get("recommended") else None,
     )
     return report
+
+
+def level_read_out(db: Session, student: Student, tests: dict, match_values: dict, entries: list,
+                   weights: dict | None) -> dict:
+    """The student's numbers against the level targets (see levels.py). Tests and footage
+    use the team on their profile, or else the one on their latest match card."""
+    sport = student.sport
+    keys = [k[5:] for k in levels.DEFAULTS.get(sport, {}) if k.startswith("card_")]
+    card_values, context = (match_cards.measure_values(sport, entries, keys) if entries and keys
+                            else ({}, None))
+    category, source = student.category, "profile" if student.category else None
+    if category is None and context:
+        category, source = context["category"], "card"
+    return levels.read_out(sport, {**tests, "heightCm": student.height_cm, **match_values, **card_values},
+                           category, context and context["category"], context and context["format"],
+                           weights, get_state(db, f"levels:{sport}"), source)
 
 
 # ------------------------------- shared state ------------------------------ #
@@ -868,7 +891,8 @@ def student_update_profile(payload: StudentSelfUpdate, db: Session = Depends(get
     data = payload.model_dump(exclude_unset=True)
     for field in STUDENT_ONCE & set(data):
         if getattr(student, field) is not None and data[field] != getattr(student, field):
-            raise HTTPException(403, "Your RA number and date of birth can only be changed by an "
+            raise HTTPException(403, "Your team can only be changed by your coach." if field == "category"
+                                else "Your RA number and date of birth can only be changed by an "
                                      "admin — ask your coach.")
     check_ra_free(db, data.get("ra_number"), student.id)
     for field, value in data.items():
@@ -987,6 +1011,80 @@ def reset_weights(sport: str, db: Session = Depends(get_db),
     db.commit()
     sync_sheet(db, sport_students(db, name))
     return {"sport": name, "weights": load_weights(db, name)}
+
+
+# ------------------------------- level targets ----------------------------- #
+#
+# What a player typically posts at University, Zonal, State, National and International
+# level (levels.py). Coaches retune them for their own sport, one measure at a time.
+
+def level_metric(sport: str, key: str, overrides: dict) -> dict:
+    entry = levels.DEFAULTS[sport][key]
+    return {"key": key, **levels.catalogue(sport)[key], "formats": levels.formats_of(sport, key),
+            "targets": levels.targets(sport, key, overrides), "defaults": entry["targets"],
+            "custom": key in overrides, "basis": entry["basis"], "sources": entry["sources"],
+            "note": entry["note"]}
+
+
+def level_sport(sport: str, coach: Coach) -> str:
+    name = require_sport(sport)
+    auth.require_own_sport(coach, name)
+    return name
+
+
+@app.get("/api/sports/{sport}/levels")
+def get_levels(sport: str, db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    name = level_sport(sport, coach)
+    overrides = get_state(db, f"levels:{name}")
+    formats = (match_cards.SPORTS.get(name) or {}).get("formats") or {}
+    return {"sport": name, "levels": levels.LEVEL_WORDS,
+            "formats": [{"key": k, "label": v} for k, v in formats.items()],
+            "metrics": [level_metric(name, key, overrides) for key in levels.catalogue(name)]}
+
+
+def edit_levels(db: Session, sport: str, key: str, change) -> dict:
+    """Apply `change(overrides)` to the sport's edits with the row locked, so two coaches
+    saving different measures at once both keep theirs."""
+    state_key = f"levels:{sport}"
+    if db.get(AppState, state_key) is None:
+        # a lock needs a row: make it first, so a sport's first two edits can't collide
+        try:
+            db.add(AppState(key=state_key, value={}))
+            db.commit()
+        except IntegrityError:
+            db.rollback()                 # the other request made it a moment ago
+    # ponytail: SQLite ignores FOR UPDATE; Postgres (production) holds the lock
+    db.scalar(select(AppState).where(AppState.key == state_key).with_for_update())
+    overrides = get_state(db, state_key)
+    change(overrides)
+    set_state(db, state_key, overrides)
+    return level_metric(sport, key, overrides)
+
+
+@app.put("/api/sports/{sport}/levels/{key}")
+def put_level(sport: str, key: str, payload: LevelTargetsIn, db: Session = Depends(get_db),
+              coach: Coach = Depends(auth.current_coach)):
+    name = level_sport(sport, coach)
+    try:
+        clean = levels.check(name, key, payload.targets)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    def change(overrides):
+        if clean == levels.DEFAULTS[name][key]["targets"]:
+            overrides.pop(key, None)      # the built-in numbers again: nothing to keep
+        else:
+            overrides[key] = clean
+    return edit_levels(db, name, key, change)
+
+
+@app.delete("/api/sports/{sport}/levels/{key}")
+def reset_level(sport: str, key: str, db: Session = Depends(get_db),
+                coach: Coach = Depends(auth.current_coach)):
+    name = level_sport(sport, coach)
+    if key not in levels.catalogue(name):
+        raise HTTPException(404, f"'{key}' has no level targets in {name}")
+    return edit_levels(db, name, key, lambda overrides: overrides.pop(key, None))
 
 
 # --------------------------------- students -------------------------------- #

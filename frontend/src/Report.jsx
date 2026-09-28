@@ -5,10 +5,11 @@ import Diet from './Diet'
 import Icon from './Icon'
 import VideoCard from './VideoCard'
 import {
-  Achievement, CertificateUpload, DetailsForm, DetailsView, Photo, PhotoButton,
+  Achievement, CertificateUpload, DetailsForm, DetailsView, Photo, PhotoButton, TEAMS,
 } from './people'
 
-const TABS = ['Overview', 'Profile', 'Measurements', 'Positions', 'Footage', 'Match cards', 'Training', 'Diet', 'Video']
+const TABS = ['Overview', 'Levels', 'Profile', 'Measurements', 'Positions', 'Footage', 'Match cards', 'Training',
+  'Diet', 'Video']
 // tests and physique — footage and match cards have tabs of their own
 const physical = m => m.source === 'test' || m.source === 'profile'
 
@@ -70,7 +71,16 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
     }
   }
 
-  const setStudent = s => { setData(d => ({ ...d, student: s })); onChanged?.() }
+  const setStudent = s => {
+    setData(d => ({ ...d, student: s }))
+    onChanged?.()
+    // their team picks the level targets, and their verified position weighs the levels,
+    // so either change means the levels are worked out again
+    if (!readOnly && (s.category !== student.category || s.status !== student.status
+                      || s.verified_position !== student.verified_position)) {
+      api.analysis(id).then(setData).catch(() => {})
+    }
+  }
 
   return (
     <>
@@ -110,7 +120,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
       </div>
 
       <VerifyCard student={student} positions={positions} recommended={recommended} readOnly={readOnly}
-                  onChange={s => { setData(d => ({ ...d, student: s })); onChanged?.() }} />
+                  onChange={setStudent} />
 
       <div className="seg noprint" role="tablist" style={{ maxWidth: 700 }}>
         {tabs.map(t => (
@@ -119,6 +129,8 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
       </div>
 
       {tab === 'Overview' && <Overview data={data} />}
+
+      {tab === 'Levels' && <LevelsTab data={data} readOnly={readOnly} />}
 
       {tab === 'Profile' && (
         <ProfileTab student={student} isAdmin={isAdmin} sports={sports} onStudent={setStudent}
@@ -233,7 +245,7 @@ function ProfileTab({ student, isAdmin, sports, onStudent, onMoved }) {
             <button className="btn sec sm" onClick={() => window.print()}>Print / save as PDF</button>
           </div>
         </div>
-        <JerseyNumber student={student} onStudent={onStudent} />
+        <TeamAndJersey student={student} onStudent={onStudent} />
         <DetailsView student={student} />
         {!isAdmin && (
           <p className="muted noprint" style={{ marginTop: 12 }}>
@@ -272,19 +284,25 @@ function ProfileTab({ student, isAdmin, sports, onStudent, onMoved }) {
   )
 }
 
-/* The number on their shirt — how a match card names them. Coaches set it. */
-function JerseyNumber({ student, onStudent }) {
-  const [value, setValue] = useState(student.jersey_number ?? '')
+/* What the coach sets: the number on their shirt (how a match card names them) and the
+   team they play in (whose level targets they are read against). */
+function TeamAndJersey({ student, onStudent }) {
+  const [jersey, setJersey] = useState(student.jersey_number ?? '')
+  const [team, setTeam] = useState(student.category ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const changed = String(value) !== String(student.jersey_number ?? '')
+  const changes = {
+    ...(String(jersey) !== String(student.jersey_number ?? '') && { jersey_number: jersey === '' ? null : Number(jersey) }),
+    ...(team !== (student.category ?? '') && { category: team || null }),
+  }
+  const changed = Object.keys(changes).length > 0
 
   async function save(e) {
     e.preventDefault()
     setBusy(true)
     setError('')
     try {
-      onStudent(await api.updateStudent(student.id, { jersey_number: value === '' ? null : Number(value) }))
+      onStudent(await api.updateStudent(student.id, changes))
     } catch (err) {
       setError(err.message)
     } finally {
@@ -294,11 +312,16 @@ function JerseyNumber({ student, onStudent }) {
 
   return (
     <form className="row noprint" onSubmit={save} style={{ marginBottom: 14 }}>
+      <label htmlFor="team" style={{ margin: 0 }}>Team</label>
+      <select id="team" value={team} onChange={e => setTeam(e.target.value)} style={{ width: 'auto' }}>
+        <option value="">Not set</option>
+        {TEAMS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+      </select>
       <label htmlFor="jersey" style={{ margin: 0 }}>Jersey number</label>
-      <input id="jersey" inputMode="numeric" style={{ width: 80 }} value={value}
-             onChange={e => setValue(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} />
+      <input id="jersey" inputMode="numeric" style={{ width: 80 }} value={jersey}
+             onChange={e => setJersey(e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} />
       <button className="btn sec sm" disabled={busy || !changed}>{busy ? 'Saving…' : 'Save'}</button>
-      <span className="muted">Match cards name players by it.</span>
+      <span className="muted">Match cards name players by their number; the team picks their level targets.</span>
       {error && <span className="note err">{error}</span>}
     </form>
   )
@@ -419,6 +442,11 @@ function Overview({ data }) {
             <span className="pill">{Math.round(recommended.coverage * 100)}% of the profile measured</span>
             {data.margin > 0 && <span className="pill accent">+{data.margin} ahead of next</span>}
             <span className="pill">Overall {data.overallScore}/100</span>
+            {data.levels?.overall?.level != null && (
+              <span className="pill accent">
+                {data.levels.overall.level >= 0 ? 'Plays at ' : ''}{levelName(data.levels, data.levels.overall.level)} level
+              </span>
+            )}
           </div>
 
           <p className="why">{recommended.why}</p>
@@ -567,6 +595,120 @@ function Reconciliation({ data }) {
         </p>
       )}
     </div>
+  )
+}
+
+/* Levels: each number against what players typically post at University, Zonal, State,
+   National and International level, and the level most of the evidence reaches. */
+const levelName = (lv, i) => (i == null ? '—' : i < 0 ? 'Below University' : lv.levels[i])
+const levelTone = i => (i == null ? '' : i < 0 ? 'bad' : i >= 3 ? 'good' : i === 2 ? 'accent' : '')
+const LEVEL_GROUPS = [
+  ['test', 'Test battery & physique', r => r.source === 'test' || r.source === 'profile', ''],
+  ['card', 'Match cards', r => r.source === 'card', ''],
+  ['match', 'Match footage', r => r.source === 'match',
+   'Counts half as much as the tests and match cards towards the overall level — one camera, one clip.'],
+]
+const TEAM_OF = { M: "men's", W: "women's" }
+const FORMAT_WORDS = { t20: 'T20', odi: '50-over', mat: 'mat', traditional: 'traditional' }
+
+function LevelsTab({ data, readOnly }) {
+  const lv = data.levels
+  if (!lv) return null
+  const { position } = lv
+  const plain = (v, r) => formatValue(v, { key: r.key })     // no unit in the ladder cells
+
+  return (
+    <>
+      <div className="card">
+        <div className="hero">
+          <div>
+            <div className="label">{lv.overall.level >= 0 ? 'Plays at' : 'Level'}</div>
+            <div className="big">
+              {lv.overall.level != null ? `${levelName(lv, lv.overall.level)} level` : 'Not enough measured yet'}
+            </div>
+          </div>
+        </div>
+        <div className="chips levelchips">
+          {LEVEL_GROUPS.map(([key, title]) => lv.groups[key].measures > 0 && (
+            <span key={key} className={`pill ${levelTone(lv.groups[key].level)}`}>
+              <i className="dot" />{title}: {levelName(lv, lv.groups[key].level)}
+              {' '}· {lv.groups[key].measures} measure{lv.groups[key].measures === 1 ? '' : 's'}
+            </span>
+          ))}
+        </div>
+        <p className="muted" style={{ marginTop: 12 }}>
+          Each level&apos;s target is what players at that level typically post. A measure reaches the
+          highest level whose target it matches. The overall level is where half the evidence sits,
+          each measure counted by how much it matters{position ? ` for ${position}` : ''}
+          {lv.overall.level == null && lv.overall.measures > 0 ? ` — it needs at least 3 measures that can be compared (${lv.overall.measures} so far)` : ''}.
+          {lv.category && ` Tests and footage are read against ${TEAM_OF[lv.category]} targets${lv.categoryFrom !== 'card' ? ''
+            : readOnly ? ' (from your latest match card)' : ' (from their latest match card — set their team on the Profile tab)'}.`}
+          {lv.cardCategory && ` Match cards use ${TEAM_OF[lv.cardCategory]}${lv.cardFormat ? ` ${FORMAT_WORDS[lv.cardFormat] ?? lv.cardFormat}` : ''} targets, from the cards ${readOnly ? 'you' : 'they'} played.`}
+        </p>
+        {!lv.category && (
+          <div className="banner" style={{ marginBottom: 0 }}>
+            {readOnly ? 'Your team (men’s or women’s) isn’t set yet, so your tests can’t be compared with a level — add it on your Profile.'
+              : 'Their team (men’s or women’s) isn’t set, so tests and footage can’t be compared with a level — set it on the Profile tab.'}
+          </div>
+        )}
+      </div>
+
+      {LEVEL_GROUPS.map(([key, title, match, hint]) => {
+        const rows = lv.rows.filter(match)
+        if (rows.length === 0) return null
+        return (
+          <div className="card" key={key}>
+            <div className="card-head">
+              <div>
+                <h2>{title}</h2>
+                {hint && <p className="muted">{hint}</p>}
+              </div>
+            </div>
+            <div className="sheetwrap">
+              <table className="data levels">
+                <thead>
+                  <tr>
+                    <th>Measure</th><th className="num">Value</th><th>Reaches</th><th>Next level</th>
+                    {lv.levels.map(l => <th key={l} className="num">{l}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(r => (
+                    <tr key={r.key}>
+                      <td>
+                        {r.label}{r.basis === 'estimated' ? ' *' : ''}
+                        {r.custom && <span className="muted"> (edited)</span>}
+                      </td>
+                      <td className="num">{formatValue(r.value, r)}</td>
+                      <td>
+                        {r.level != null
+                          ? <span className={`pill ${levelTone(r.level)}`}>{levelName(lv, r.level)}</span>
+                          : <span className="muted">{r.ladder ? '—' : 'Not compared'}</span>}
+                      </td>
+                      <td>
+                        {r.next ? `${lv.levels[r.next.level]}: ${formatValue(r.next.target, r)}`
+                          : r.level === lv.levels.length - 1 ? 'Top level' : ''}
+                      </td>
+                      {lv.levels.map((l, i) => (
+                        <td key={l} className={`num${r.level != null && i <= r.level ? ' hit' : ''}`}>
+                          {r.ladder ? plain(r.ladder[i], r) : ''}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })}
+
+      <p className="muted">
+        * Estimated: no published norm for this level, so the number was spaced between ones that
+        are.{!readOnly && ' Coaches can retune any target from Weights → Level targets.'}
+        {lv.rows.some(r => !r.ladder) && ' “Not compared” means the measure has no level targets (it depends on the opposition more than the player) or their team isn’t set.'}
+      </p>
+    </>
   )
 }
 

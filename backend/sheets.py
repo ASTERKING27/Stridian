@@ -145,9 +145,10 @@ def squad(students) -> dict:
 
 LEVEL_WORDS = {"university": "University", "zonal": "Zonal", "state": "State",
                "national": "National", "international": "International"}
+TEAM_WORDS = {"M": "Men", "W": "Women"}
 
 PROFILE_HEADER = [
-    "Student ID", "RA number", "Name", "Sport", "Jersey no.", "University email", "Personal email",
+    "Student ID", "RA number", "Name", "Sport", "Team", "Jersey no.", "University email", "Personal email",
     "Mobile", "Date of birth", "Age", "Blood group", "Father's name", "Father's mobile",
     "Mother's name", "Mother's mobile", "Aadhaar", "Passport", "Identification mark",
     "Highest level (student says)", "Level details", "Highest verified level",
@@ -175,7 +176,8 @@ OLD_TABS = {"profiles": ["Profiles"], "achievements": ["Achievements"], "coaches
 
 def profile_row(s) -> list:
     return [
-        s.id, s.ra_number or "", s.name, s.sport, "" if s.jersey_number is None else s.jersey_number,
+        s.id, s.ra_number or "", s.name, s.sport, TEAM_WORDS.get(s.category, ""),
+        "" if s.jersey_number is None else s.jersey_number,
         s.email or "", s.personal_email or "",
         s.phone or "", s.dob.isoformat() if s.dob else "", s.age_now or "", s.blood_group or "",
         s.father_name or "", s.father_phone or "", s.mother_name or "", s.mother_phone or "",

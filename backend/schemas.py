@@ -12,6 +12,7 @@ from models import years_since
 DietPreference = Literal["vegan", "veg", "egg", "nonveg"]
 BloodGroup = Literal["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
 Level = Literal["university", "zonal", "state", "national", "international"]
+Category = Literal["M", "W"]      # the men's or the women's team
 
 # The email is only a login identifier here, so a shape check beats pulling in
 # email-validator for RFC-correctness nobody needs.
@@ -174,6 +175,7 @@ class Profile(Form):
     blood_group: BloodGroup | None = None
     highest_level: Level | None = None
     highest_level_details: str | None = Field(default=None, max_length=2000)
+    category: Category | None = None
     height_cm: float | None = Field(default=None, ge=100, le=250)
     weight_kg: float | None = Field(default=None, ge=20, le=200)
     declared_position: str | None = Field(default=None, max_length=60)
@@ -239,8 +241,8 @@ class Profile(Form):
 ADMIN_ONLY = {"sport", "ra_number", "dob", "phone", "personal_email", "father_name",
               "father_phone", "mother_name", "mother_phone", "aadhaar", "passport", "id_mark",
               "highest_level", "highest_level_details"}
-# what a student can fill in once but never change (an admin can)
-STUDENT_ONCE = {"ra_number", "dob"}
+# what a student can fill in once but never change (a coach or an admin can)
+STUDENT_ONCE = {"ra_number", "dob", "category"}
 # what can't be emptied once given
 REQUIRED = {"name", "phone", "father_name", "mother_name", "aadhaar", "blood_group"}
 
@@ -265,6 +267,7 @@ class StudentEnrol(StudentCreate):
     mother_name: str = Field(min_length=1, max_length=120)
     aadhaar: str
     blood_group: BloodGroup
+    category: Category
 
     @model_validator(mode="after")
     def _a_parent_phone(self):
@@ -332,6 +335,7 @@ class StudentOut(BaseModel):
     photo_version: str | None = None
     top_verified_level: str | None = None
     jersey_number: int | None = None
+    category: str | None = None
     height_cm: float | None
     weight_kg: float | None
     blood_group: str | None
@@ -449,6 +453,12 @@ class ResultsIn(BaseModel):
     declared_position: str | None = Field(default=None, max_length=60)
     coach_notes: str | None = None
     sessions_observed: int | None = Field(default=None, ge=0, le=10000)
+
+
+class LevelTargetsIn(BaseModel):
+    """One measure's level targets, shaped like levels.json's (levels.check says how)."""
+
+    targets: dict
 
 
 class WeightsIn(BaseModel):

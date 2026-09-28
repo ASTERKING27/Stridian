@@ -56,7 +56,7 @@ const FIELD_WORDS = {
   father_name: "Father's name", father_phone: "Father's mobile", mother_name: "Mother's name",
   mother_phone: "Mother's mobile", aadhaar: 'Aadhaar', passport: 'Passport', id_mark: 'Identification mark',
   blood_group: 'Blood group', highest_level: 'Highest level', employee_id: 'Employee ID',
-  height_cm: 'Height', weight_kg: 'Weight', name: 'Name', year: 'Year',
+  height_cm: 'Height', weight_kg: 'Weight', name: 'Name', year: 'Year', category: 'Team',
 }
 function fieldError(d) {
   const msg = String(d.msg ?? '').replace(/^Value error, /, '')
@@ -164,6 +164,10 @@ export const api = {
   weights: slug => get(`/api/sports/${slug}/weights`),
   saveWeights: (slug, weights) => send('PUT', `/api/sports/${slug}/weights`, { weights }),
   resetWeights: slug => send('POST', `/api/sports/${slug}/weights/reset`),
+  // what a player typically posts at each level, University → International
+  levels: slug => get(`/api/sports/${slug}/levels`),
+  saveLevel: (slug, key, targets) => send('PUT', `/api/sports/${slug}/levels/${key}`, { targets }),
+  resetLevel: (slug, key) => send('DELETE', `/api/sports/${slug}/levels/${key}`),
 
   enrolCode: () => get('/api/enrol-code'),
   newEnrolCode: () => send('POST', '/api/enrol-code/rotate'),

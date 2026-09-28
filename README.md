@@ -82,7 +82,8 @@ has no login.
 
 Enrolling is the student's record with the sports directorate, so it asks for what the
 match-card forms need: name, RA number (`RA` + 13 digits, one student per number), date
-of birth (age is worked out from it), mobile, personal email, blood group,
+of birth (age is worked out from it), their team (men's or women's — which level targets
+apply), mobile, personal email, blood group,
 identification mark, both parents' names and at least one parent's mobile, Aadhaar
 (checked with its built-in Verhoeff check digit, so one mistyped digit is caught),
 passport if any, the highest level they have played at (University → Zonal → State →
@@ -443,6 +444,43 @@ Weights tab, not a code edit. A coach only ever edits their own sport.
 `{sport}` accepts the full name or a slug (`football`, `kho-kho`). Weights do
 not have to sum to 1 — the engine divides by the total it actually used.
 
+### Levels: University to International
+
+Beside the 0–100 scores, every report has a **Levels** tab: each number against what
+players typically post at **University, Zonal (AIU zone), State, National and
+International** level, for the men's or the women's team. A measure *reaches* the highest
+level whose target it matches, and the tab says how far the next level is. The overall
+"plays at" level is where half the evidence sits (a weighted median), each measure
+counted by its weight for the player's position (their verified one, else the suggested
+one) — the tests and the match cards lead, match footage counts half. At least three
+comparable measures are needed before it names an overall level. The scores, the
+position engine and the trainer never read the levels; they are a second, plainer
+reading of the same numbers.
+
+* **Which team.** Students pick Men's or Women's team when they enrol (once — their coach
+  can change it; the Profile tab has it next to the jersey number). Tests and footage
+  are read against that team's targets; match-card measures use the team and format
+  (T20 / 50-over) of the cards they played. A student with no team set borrows it from
+  their latest match card, and otherwise the tab asks for it.
+* **Where the numbers come from.** `backend/levels.json` holds every ladder with its
+  `basis` (`published`, `mixed` or `estimated`), its sources and a note on how the levels
+  were mapped. Published norms were used where they exist (Indian studies first, then
+  federation and international data); the levels between were interpolated and the rest
+  estimated. Match-card ladders start at the directorate's University target. A measure
+  that gets *worse* at higher levels because the opposition does (T20 economy, smash
+  winners in badminton) has no ladder at all rather than a misleading one.
+* **Retuning.** Weights → **Level targets** lists every ladder, men's and women's, with
+  where it came from. A coach edits one measure at a time for their own sport; a ladder
+  must never get worse going up, and clearing all five stops comparing that measure.
+  Edits are stored in `AppState["levels:<sport>"]`; Reset goes back to the built-in
+  numbers.
+
+| Method | Endpoint |
+|---|---|
+| `GET` | `/api/sports/{sport}/levels` — every ladder, its defaults, basis and sources |
+| `PUT` | `/api/sports/{sport}/levels/{metric}` — `{"targets": {"M": [5 numbers], "W": [...]}}` (inside `{format: ...}` for cricket's card measures) |
+| `DELETE` | `/api/sports/{sport}/levels/{metric}` — back to the built-in ladder |
+
 ---
 
 ## Are these international standards?
@@ -678,13 +716,14 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `GET` | `/api/coaches` | admin | every coach |
 | `GET` | `/api/sports`, `/api/sports/{sport}` | — | metric batteries and positions |
 | `GET` `PUT` `POST` | `/api/sports/{sport}/weights[/reset]` | own sport | read / edit / reset weights |
+| `GET` `PUT` `DELETE` | `/api/sports/{sport}/levels[/{metric}]` | own sport | level targets: read / retune one measure / reset it |
 | `POST` | `/api/student/code` | — | email a 6-digit code (new account or forgotten password) |
 | `POST` | `/api/student/verify` | — | code + chosen password → signed in |
 | `POST` | `/api/student/login` | — | student sign-in |
 | `GET` `POST` | `/api/student/me` `/logout` | student | own account and enrolment, revoke this token |
 | `POST` | `/api/student/enrol` | student | join a sport with its enrolment code |
 | `GET` | `/api/student/report` | student | own report, read-only, once verified |
-| `PATCH` | `/api/student/profile` | student | edit own details (not sport; RA number and DOB only if empty) |
+| `PATCH` | `/api/student/profile` | student | edit own details (not sport; RA number, DOB and team only if empty) |
 | `PUT` `GET` | `/api/student/photo` | student | set / fetch own photo (JPEG body) |
 | `GET` `POST` | `/api/student/achievements` | student | list / upload a certificate (raw body, `X-Filename`) — comes back as a draft, AI-filled |
 | `PATCH` `DELETE` | `/api/student/achievements/{id}` | student | edit, send (`submit: true`) / delete — until verified |
@@ -747,7 +786,9 @@ the enrolment form, then their own space (Dashboard, My report, Achievements, Pr
 
 The report itself is tabbed: **Overview** (best-fit position, the reasoning, the radar,
 standouts and weak links, and the two-source panel with its reconciliation),
-**Profile** (photo, the university record, achievements to verify or reject, print),
+**Levels** (each number against the University → International ladder, and the level
+they play at), **Profile** (photo, team and jersey number, the university record,
+achievements to verify or reject, print),
 **Measurements** (every test metric with its reference range and a progress sparkline once
 there are two readings), **Positions** (all of them ranked, each expanding to the weight
 table behind its score), **Footage** (the footage-only verdict, match metrics with their own
@@ -801,6 +842,8 @@ backend/
   sports_config.py  sports, metrics, reference ranges, default weights, match
                     archetypes, nutrition profiles
   scoring.py        the prediction engine (no DB access — pure logic)
+  levels.py         the University → International read-out (pure logic)
+  levels.json       every sport's level ladders, men's and women's, with sources
   nutrition.py      diet engine + food table
   video.py          MediaPipe drill pipeline, metric maths, drill rules
   pose_sports.py    sport-specific technique: strike, spike, shot, bowling action

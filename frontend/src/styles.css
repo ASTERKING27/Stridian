@@ -687,3 +687,12 @@ tr.total td { font-weight: 700; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* level targets: the ladder cells a player's number reaches */
+table.levels td.hit { color: var(--good); font-weight: 600; }
+table.levels td.num, table.levels th.num, table.levels .pill { white-space: nowrap; }
+.levelchips .pill { white-space: normal; }
+table.ladder input { width: 76px; padding: 6px 8px; text-align: right; }
+table.ladder td { vertical-align: middle; }
+.sources { font-size: .8rem; color: var(--ink-3); }
+.sources ul { margin: 4px 0 0; padding-left: 18px; overflow-wrap: anywhere; }

@@ -9,6 +9,9 @@ export const LEVELS = [
   ['national', 'National'], ['international', 'International'],
 ]
 export const levelWord = key => LEVELS.find(([k]) => k === key)?.[1] ?? ''
+// the team a student plays in — which level targets (men's or women's) they are read against
+export const TEAMS = [['M', "Men's team"], ['W', "Women's team"]]
+export const teamWord = key => TEAMS.find(([k]) => k === key)?.[1] ?? ''
 
 const BLOOD = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const DIETS = [['nonveg', 'Non-veg'], ['egg', 'Eggetarian'], ['veg', 'Vegetarian'], ['vegan', 'Vegan']]
@@ -22,7 +25,7 @@ const ALLERGEN_LABELS = {
 const TEXT_FIELDS = [
   'name', 'ra_number', 'dob', 'phone', 'personal_email', 'blood_group', 'id_mark',
   'father_name', 'father_phone', 'mother_name', 'mother_phone', 'aadhaar', 'passport',
-  'highest_level', 'highest_level_details', 'height_cm', 'weight_kg', 'declared_position',
+  'category', 'highest_level', 'highest_level_details', 'height_cm', 'weight_kg', 'declared_position',
   'training_hours_per_day', 'diet_preference', 'student_notes',
 ]
 
@@ -283,6 +286,18 @@ export function DetailsForm({ student, mode, sports, sport: fixedSport, sportLoc
         </div>
         <div className="grid2">
           <div className="field">
+            <label htmlFor="f-team">Team{strict ? ' *' : ''}</label>
+            <select id="f-team" value={form.category} {...needed} disabled={onceLocked('category')}
+                    onChange={e => set('category', e.target.value)}>
+              <option value="">Choose…</option>
+              {TEAMS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
+            <p className="muted" style={{ marginTop: 5 }}>
+              {onceLocked('category') ? 'Only your coach can change this.'
+                : `Which level targets ${staff ? 'their' : 'your'} results are compared with.`}
+            </p>
+          </div>
+          <div className="field">
             <label htmlFor="f-level">Highest level {staff ? 'played' : 'you have played'} at</label>
             <select id="f-level" value={form.highest_level} onChange={e => set('highest_level', e.target.value)}>
               <option value="">Not yet competed</option>
@@ -366,6 +381,7 @@ export function DetailsView({ student: s }) {
     ['Identity documents', [['Aadhaar', spacedAadhaar(s.aadhaar)], ['Passport', s.passport]]],
     ['Sport', [
       ['Sport', s.sport],
+      ['Team', teamWord(s.category)],
       ['Jersey number', s.jersey_number],
       ['Highest level (their word)', [levelWord(s.highest_level), s.highest_level_details].filter(Boolean).join(' — ')],
       ['Highest verified level', levelWord(s.top_verified_level)],

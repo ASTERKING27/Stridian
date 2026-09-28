@@ -1,0 +1,3623 @@
+{
+ "Football": {
+  "sprint30m": {
+   "targets": {
+    "M": [
+     4.55,
+     4.44,
+     4.33,
+     4.22,
+     4.1
+    ],
+    "W": [
+     5.2,
+     5.1,
+     4.99,
+     4.89,
+     4.75
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.academia.edu/32019110/The_Role_and_Development_of_Sprinting_Speed_in_Soccer (Haugen et al. 2014)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+    "https://link.springer.com/article/10.1007/s40279-025-02251-0 (Compton et al. 2025, Benchmarking physical performance in women's football, Sports Med)",
+    "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)"
+   ],
+   "note": "International M from elite senior 30 m ~4.0-4.3 s (Haugen review; Portuguese U19 elite 4.23-4.31); W international = Chile NT 4.74 s, national/tier-2 steps from Compton meta (-0.15 s, -0.32 s). University/zonal/state estimated and interpolated."
+  },
+  "cmj": {
+   "targets": {
+    "M": [
+     33,
+     35,
+     37,
+     39,
+     41
+    ],
+    "W": [
+     24,
+     25,
+     26,
+     27,
+     29
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.academia.edu/32019110/The_Role_and_Development_of_Sprinting_Speed_in_Soccer (Haugen et al. 2014)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+    "https://link.springer.com/article/10.1007/s40279-025-02251-0 (Compton et al. 2025, Benchmarking physical performance in women's football, Sports Med)",
+    "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)"
+   ],
+   "note": "Elite men 37-42 cm and elite women 26-33 cm (Haugen review); Chile women NT 29.3 cm; Compton: +3.3 cm national->international, flat below. Indian youth elite VJ ~29-32 cm; lower levels estimated."
+  },
+  "agilityTtest": {
+   "targets": {
+    "M": [
+     10.5,
+     10.25,
+     10.0,
+     9.8,
+     9.6
+    ],
+    "W": [
+     11.8,
+     11.45,
+     11.1,
+     10.8,
+     10.5
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.cepcometti.com/wp-content/uploads/2018/02/testT.pdf (Pauole et al. 2000, JSCR, T-test in college men/women)",
+    "https://www.topendsports.com/testing/tests/t-test.htm",
+    "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)"
+   ],
+   "note": "Pauole 2000: US intercollegiate athletes M 9.94 / W 10.94 s, recreational M 10.49 / W 12.52 s; norms 'excellent' <9.5 M / <10.5 W. University placed near recreational-athlete level, international at 'excellent' border. Indian youth players ran 11.9 s (likely slower surface/timing), so the university value is a doubtful middle ground."
+  },
+  "yoyoLevel": {
+   "targets": {
+    "M": [
+     17.2,
+     17.6,
+     18.2,
+     18.8,
+     19.5
+    ],
+    "W": [
+     15.4,
+     15.6,
+     16.1,
+     16.4,
+     16.8
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.topendsports.com/testing/results/yo-yo-intermittent.htm (summarising Bangsbo et al. (2008) Sports Med)",
+    "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+    "https://link.springer.com/article/10.1007/s40279-025-02251-0 (Compton et al. 2025, Benchmarking physical performance in women's football, Sports Med)"
+   ],
+   "note": "Values are level.shuttle converted from distance (M 1480/1640/1800/2040/2240 m; W 920/1000/1120/1240/1400 m); interpolate in metres, not decimals. M: Bangsbo moderate 1810, sub-elite 2030, elite 2190, top-class 2420 m; Mohr 2040 vs 2260 m. W: Bangsbo sub-elite 1160, elite 1360 m; Chile NT 1437 m; Compton tier steps +170/+184 m. University/zonal extrapolated below."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     170,
+     171,
+     172,
+     173,
+     175
+    ],
+    "W": [
+     158,
+     158,
+     159,
+     160,
+     161
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://ijpefs.org/index.php/ijpefs/article/view/36 (Singh, Kulkarni & Sandhu 2013, Indian U-22 national players)",
+    "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)",
+    "https://www.academia.edu/16626733/ (Dey, Jana & Bandyopadhyay 2015, Indian senior national women)",
+    "https://pubs.sciepub.com/ajssm/3/2/4/index.html (Sharma 2015, Indian women footballers by level)",
+    "https://www.mdpi.com/2075-4663/14/9/400 (Preissler et al. 2026, Brazilian women by stage)"
+   ],
+   "note": "Indian U-22 national men 173 cm, Indian elite youth 168-171 cm; Indian senior national women 158.4 cm, Indian national/inter-university/state women 161-162 cm (small sample). Height barely separates levels in Indian data; ladder kept nearly flat."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     95,
+     98,
+     101,
+     104,
+     110
+    ],
+    "W": [
+     88,
+     91,
+     94,
+     98,
+     106
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+    "https://researchonline.ljmu.ac.uk/id/eprint/4044/ (match physical performance of elite female players in international competition)",
+    "https://www.frontiersin.org/articles/604605 (Griffin et al. 2021, women's international vs domestic matches)",
+    "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)"
+   ],
+   "note": "Chile women NT 108 m/min; England women internationals ~10.3 km (~109 m/min); international women cover ~8% more than domestic (Griffin). Men international from pro 10-11 km/match; lower levels estimated."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     27.5,
+     28.5,
+     29.5,
+     30.5,
+     31.5
+    ],
+    "W": [
+     23.5,
+     24.2,
+     24.9,
+     25.6,
+     26.5
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.mdpi.com/2075-4663/13/1/18 (narrative review, velocity/acceleration profile by position)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+   ],
+   "note": "Elite men's match peak ~30.7 km/h season average, forwards ~31.8-32 km/h; Chile women NT peak 25.3 km/h. Per-match (not season-best) peaks; the app's 33 km/h elite anchor is above typical single-match peaks. Lower levels estimated."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": [
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "W": [
+     1.6,
+     2.1,
+     2.6,
+     3.0,
+     3.8
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2023.1116293/full (systematic review, HSR >19.8 and sprint >25.2 km/h in professional men)",
+    "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)",
+    "https://researchonline.ljmu.ac.uk/id/eprint/4044/ (match physical performance of elite female players in international competition)",
+    "https://www.frontiersin.org/articles/604605 (Griffin et al. 2021, women's international vs domestic matches)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+   ],
+   "note": "Pro men 618-1001 m >19.8 km/h per match (~6.5-10.5 m/min); moderate pros ~22% less high-intensity running than top-class (Mohr). England women internationals ~7.5 m/min, but Chile NT only 515 m >18 km/h, so Indian women scaled well below; +26% domestic->international (Griffin). Lower levels estimated."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": [
+     0.4,
+     0.6,
+     0.9,
+     1.2,
+     1.8
+    ],
+    "W": [
+     0.05,
+     0.1,
+     0.15,
+     0.2,
+     0.3
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2023.1116293/full (systematic review, HSR >19.8 and sprint >25.2 km/h in professional men)",
+    "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)",
+    "https://researchonline.ljmu.ac.uk/id/eprint/4044/ (match physical performance of elite female players in international competition)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+   ],
+   "note": "Pro men 153-295 m >25.2 km/h per match (~1.6-3.1 m/min); top-class 58% more sprinting than moderate (Mohr). Women: England internationals ~1.8 m/min, but with match peaks ~25 km/h (Chile) the 25.2 km/h men's threshold is rarely crossed, so women's values are tiny and estimated."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     0.3,
+     0.33,
+     0.36,
+     0.4,
+     0.45
+    ],
+    "W": [
+     0.25,
+     0.28,
+     0.31,
+     0.34,
+     0.38
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.nature.com/articles/s41598-021-97903-2 (Pons et al. 2021, accelerations by video tracking vs GPS)",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+   ],
+   "note": "GPS literature: ~30 accelerations >2.75 m/s2 per elite match (~0.33/min); Chile women 102 >2 m/s2 per match. The app's 1.5/min elite anchor is far above GPS counts; video tracking may count more, so retune after calibration."
+  },
+  "card_passPct": {
+   "targets": {
+    "M": [
+     75,
+     77.3,
+     79.5,
+     81.8,
+     84
+    ],
+    "W": [
+     75,
+     77.3,
+     79.5,
+     81.8,
+     84
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.statsperform.com/insights/why-womens-football-analytics-are-set-to-transform-the-industry-insights-from-opta/ (Women's Euro 2025: pass accuracy 79.1%, conversion 12.2%)",
+    "https://arxiv.org/html/2506.22119v1 (Carstens et al. 2025, men's vs women's elite pass accuracy)"
+   ],
+   "note": "Women's Euro 2025 averaged 79.1% pass accuracy; men's top leagues run higher (ground passes 90-95% men vs 85-90% women). University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Women's 84 is above the Euro 2025 average (doubtful but kept)."
+  },
+  "card_shotAcc": {
+   "targets": {
+    "M": [
+     30,
+     31.3,
+     32.5,
+     33.8,
+     35
+    ],
+    "W": [
+     30,
+     31.3,
+     32.5,
+     33.8,
+     35
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://fbref.com/en/comps/82/Indian-Super-League-Stats (ISL squad SoT% and goals/shot)"
+   ],
+   "note": "ISL squads 26-38% shots on target (~30% average). University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Note the University target already equals the Indian top-flight average."
+  },
+  "card_conversion": {
+   "targets": {
+    "M": [
+     10,
+     10.3,
+     10.5,
+     10.8,
+     11
+    ],
+    "W": [
+     10,
+     10.3,
+     10.5,
+     10.8,
+     11
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://fbref.com/en/comps/82/Indian-Super-League-Stats (ISL squad SoT% and goals/shot)",
+    "https://www.statsperform.com/insights/why-womens-football-analytics-are-set-to-transform-the-industry-insights-from-opta/ (Women's Euro 2025: pass accuracy 79.1%, conversion 12.2%)"
+   ],
+   "note": "ISL squads 0.05-0.13 goals/shot (~8%); Women's Euro 2025 12.2%. University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Conversion barely rises with level because defending improves too."
+  },
+  "card_crossAcc": {
+   "targets": {
+    "M": [
+     15,
+     16.3,
+     17.5,
+     18.8,
+     20
+    ],
+    "W": [
+     15,
+     16.3,
+     17.5,
+     18.8,
+     20
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. No published cross-accuracy average seen in this search."
+  },
+  "card_dribblePct": {
+   "targets": {
+    "M": [
+     45,
+     46.8,
+     48.5,
+     50.3,
+     52
+    ],
+    "W": [
+     45,
+     46.8,
+     48.5,
+     50.3,
+     52
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated."
+  },
+  "card_tacklePct": {
+   "targets": {
+    "M": [
+     50,
+     52.5,
+     55,
+     57.5,
+     60
+    ],
+    "W": [
+     50,
+     52.5,
+     55,
+     57.5,
+     60
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated."
+  },
+  "card_aerialPct": {
+   "targets": {
+    "M": [
+     50,
+     52.5,
+     55,
+     57.5,
+     60
+    ],
+    "W": [
+     50,
+     52.5,
+     55,
+     57.5,
+     60
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. League-wide aerial win % is 50% by construction; the ladder only makes sense for the position-filtered (CB/striker) card."
+  },
+  "card_savePct": {
+   "targets": {
+    "M": [
+     62,
+     63.5,
+     65,
+     66.5,
+     68
+    ],
+    "W": [
+     62,
+     63.5,
+     65,
+     66.5,
+     68
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://fbref.com/en/comps/82/Indian-Super-League-Stats (ISL squad SoT% and goals/shot)"
+   ],
+   "note": "ISL squad SoT% and goals/shot imply ~70% of on-target shots saved. University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Women's elite conversion (12.2%) suggests women's save % may sit lower; same ladder kept."
+  },
+  "card_interceptEff": {
+   "targets": {
+    "M": [
+     40,
+     45,
+     50,
+     55,
+     60
+    ],
+    "W": [
+     40,
+     45,
+     50,
+     55,
+     60
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+  },
+  "card_chanceEff": {
+   "targets": {
+    "M": [
+     -10,
+     -5,
+     0,
+     5,
+     10
+    ],
+    "W": [
+     -10,
+     -5,
+     0,
+     5,
+     10
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+  },
+  "card_touchEff": {
+   "targets": {
+    "M": [
+     10,
+     15,
+     20,
+     25,
+     30
+    ],
+    "W": [
+     10,
+     15,
+     20,
+     25,
+     30
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+  },
+  "card_gkHighEff": {
+   "targets": {
+    "M": [
+     50,
+     55,
+     60,
+     65,
+     70
+    ],
+    "W": [
+     50,
+     55,
+     60,
+     65,
+     70
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+  }
+ },
+ "Basketball": {
+  "wingspan": {
+   "targets": {
+    "M": [
+     179,
+     181,
+     186,
+     192,
+     202
+    ],
+    "W": [
+     166,
+     168,
+     172,
+     176,
+     182
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Cui Y et al. (2019) Key Anthropometric and Physical Determinants for Different Playing Positions During NBA Draft Combine Test, Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+    "https://www.kheljournal.com/archives/2025/vol12issue1/PartC/12-1-20-236.pdf"
+   ],
+   "note": "No Indian wingspan data found. Derived from the heightCm ladder using an arm-span/height ratio rising from ~1.03 (sub-elite) to ~1.045 (NBA Combine: drafted PG 186.3 cm tall / 198.0 cm span, C 207.9 / 221.4). Women use the same approach (ratio ~1.02-1.03)."
+  },
+  "standingReach": {
+   "targets": {
+    "M": [
+     230,
+     233,
+     238,
+     246,
+     257
+    ],
+    "W": [
+     214,
+     217,
+     221,
+     226,
+     234
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+    "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+   ],
+   "note": "Derived from the heightCm ladder using the Combine reach/height ratio (~1.33; e.g. undrafted SG 189.9 cm tall / 252.6 cm reach) and ~1.31-1.32 for lower levels. The international men's value (257) sits near Combine undrafted guards. Women's college all-star combine forwards (185-193 cm) reached 254-255 cm, well above the Indian women's ladder."
+  },
+  "laneAgility": {
+   "targets": {
+    "M": [
+     13.0,
+     12.7,
+     12.4,
+     12.1,
+     11.8
+    ],
+    "W": [
+     14.15,
+     13.85,
+     13.5,
+     13.2,
+     12.85
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+    "https://lpsathletic.com/nba-draft-combine-stats-measurements-agility-strength-standards/",
+    "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+   ],
+   "note": "The published data are NBA Combine only: 11.1-11.9 s for drafted players and 11.4-12.3 s for undrafted players, by position. The India international level was set just slower than the undrafted Combine mean, with even steps down to university. Women are ~9% slower. One women's all-star combine forward ran 11.65 s, which is elite."
+  },
+  "shuttleRun": {
+   "targets": {
+    "M": [
+     3.65,
+     3.57,
+     3.5,
+     3.43,
+     3.35
+    ],
+    "W": [
+     3.98,
+     3.89,
+     3.81,
+     3.73,
+     3.65
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+    "PLOS One (2024) Anthropometric and physical fitness indicators in the combine draft between the finalist and the eliminated player in the NBA All-Star slam dunk contest https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0299262",
+    "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+   ],
+   "note": "Treated as the Combine 3/4-court sprint, as the app's description says. Combine drafted players ran 3.2-3.4 s and undrafted 3.3-3.5 s; dunk-contest finalists ran 3.15 s. International was set at 3.35 s with even steps down to university. Women are ~9% slower; a highlighted women's combine guard ran 3.36 s. The Combine also has a separate ~3.0 s 'shuttle run', so the app label is ambiguous."
+  },
+  "standingVertical": {
+   "targets": {
+    "M": [
+     42,
+     45,
+     50,
+     55,
+     62
+    ],
+    "W": [
+     30,
+     32,
+     36,
+     40,
+     45
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Vignesh PS, Antharias PM (2025) Analysis of vertical jumping ability and height on basketball playing ability of inter university male basketball players, Int J Physical Education, Sports and Health 12(1) https://www.kheljournal.com/archives/2025/vol12issue1/PartC/12-1-20-236.pdf",
+    "Ziv G, Lidor R (2010) Vertical jump in female and male basketball players - a review, J Sci Med Sport https://www.sciencedirect.com/science/article/abs/pii/S1440244009000887",
+    "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full"
+   ],
+   "note": "Published anchor: 156 men from 13 universities at the South Zone inter-university tournament (zonal level) jumped 0.43 m, taken as ~43-45 cm. NBA Combine drafted players reach 71-77 cm, the upper bound. International (62) is interpolated between these. Women are ~28% lower, inside the 22-48 cm female range in Ziv & Lidor."
+  },
+  "maxVertical": {
+   "targets": {
+    "M": [
+     52,
+     56,
+     61,
+     67,
+     75
+    ],
+    "W": [
+     37,
+     40,
+     44,
+     48,
+     54
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+    "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+   ],
+   "note": "Built as the standingVertical ladder plus a run-up gain. At the Combine the gain is +10-15 cm (drafted PG 76.5 standing vs 91.9 max; C 70.8 vs 81.1). Lower levels were given smaller gains. Women are ~28% lower; one women's combine guard went 27.5 in standing and 32.5 in approach, i.e. +5 in (~13 cm)."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     174,
+     176,
+     180,
+     185,
+     193
+    ],
+    "W": [
+     163,
+     165,
+     168,
+     172,
+     177
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Vignesh PS, Antharias PM (2025) Int J Physical Education, Sports and Health 12(1) https://www.kheljournal.com/archives/2025/vol12issue1/PartC/12-1-20-236.pdf",
+    "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+    "Applied Sciences (2025) Exploring the Relationship Between Vertical Jump and Short Sprint Performance in Female Basketball Players https://www.mdpi.com/2076-3417/15/9/4868"
+   ],
+   "note": "Men: the zonal value comes from South Zone inter-university players (175.9 cm, published). The international value (193) is estimated for India's senior/WUG squads and sits below the NBA Combine mean (~197). Women: all estimated, with the top anchored to Spanish third-tier elite women (177.0 cm)."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     58,
+     62,
+     66,
+     71,
+     77
+    ],
+    "W": [
+     54,
+     58,
+     62,
+     66,
+     71
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Specific Absolute Velocity Thresholds during Male Basketball Games Using Local Positional System; Differences between Age Categories, Applied Sciences 11(10):4390 (2021) https://www.mdpi.com/2076-3417/11/10/4390",
+    "Comparing Average and Peak Physical Demands and Well-Being Status During Basketball Back-to-Back Games, Applied Sciences 14(23):11374 (2024) https://www.mdpi.com/2076-3417/14/23/11374",
+    "Game vs. Practice Differences in External Load in U16 and U18 Women's Basketball Players, Sports 13(9):296 (2025) https://www.mdpi.com/2075-4663/13/9/296",
+    "Stojanovic E et al. (2018) The Activity Demands and Physiological Responses Encountered During Basketball Match-Play: A Systematic Review, Sports Med https://link.springer.com/article/10.1007/s40279-017-0794-z"
+   ],
+   "note": "LPS data for elite men give ~74-84 m/min of on-court time (U18 men 77.9; senior+junior men 83.95). Top-tier U16 women give 68.4 m/min. International was set a little below these because a filmed clip includes dead-ball time. The level trend is weak: seniors cover fewer m/min than juniors, and Stojanovic says higher levels play more intermittently, so the ladder is kept shallow."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     19.0,
+     20.0,
+     21.0,
+     22.5,
+     24.0
+    ],
+    "W": [
+     17.0,
+     18.0,
+     19.0,
+     20.5,
+     22.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Petway AJ et al. (2020) Training load and match-play demands in basketball based on competition level: A systematic review, PLOS One 15(3):e0229212 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229212",
+    "Study of the Load During Official Competition in Professional Women's Basketball - A Case Study, Sports 13(2):59 (2025) https://www.mdpi.com/2075-4663/13/2/59"
+   ],
+   "note": "Petway reports top speed of 8.09 m/s (29 km/h) for elite/NBA and 6.2 m/s (22.3 km/h) for sub-elite. In the Spanish women's 2nd division, match peaks were 21.1-24.3 km/h. The ladder is set below whole-game peaks because the app takes the peak from a short clip, not a full game."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": [
+     4.0,
+     5.0,
+     6.0,
+     7.5,
+     9.5
+    ],
+    "W": [
+     3.0,
+     3.8,
+     4.6,
+     5.8,
+     7.5
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Applied Sciences 11(10):4390 (2021) https://www.mdpi.com/2076-3417/11/10/4390",
+    "High-Speed Running and Sprinting Thresholds in Elite Female Team Sports: A Systematic Review, Applied Sciences 15(10):5497 (2025) https://www.mdpi.com/2076-3417/15/10/5497"
+   ],
+   "note": "Elite men: 14.7% of 84 m/min is at 12-18 km/h and 5.2% above 18 km/h. That puts distance above 14.4 km/h at ~10 m/min, used for international; lower levels are estimated. Female basketball studies put HSR at ~14 km/h, but there are few; women are estimated ~20% lower."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": [
+     1.2,
+     1.7,
+     2.3,
+     3.2,
+     4.2
+    ],
+    "W": [
+     0.6,
+     0.9,
+     1.3,
+     1.8,
+     2.5
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Applied Sciences 11(10):4390 (2021) https://www.mdpi.com/2076-3417/11/10/4390",
+    "Portes R et al. (2020) Comparing the External Loads Encountered during Competition between Elite, Junior Male and Female Basketball Players, IJERPH 17(4):1456 https://www.mdpi.com/1660-4601/17/4/1456"
+   ],
+   "note": "Elite senior+junior men: 5.23% of 84 m/min above 18 km/h gives ~4.4 m/min, used for the international men's value. Lower levels are estimated. Portes found males cover more high-intensity and sprint distance than females at the same level, so women are set ~40% lower (estimated)."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     0.6,
+     0.8,
+     1.0,
+     1.3,
+     1.6
+    ],
+    "W": [
+     0.5,
+     0.65,
+     0.8,
+     1.0,
+     1.25
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Petway AJ et al. (2020) PLOS One 15(3):e0229212 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229212",
+    "Portes R et al. (2020) IJERPH 17(4):1456 https://www.mdpi.com/1660-4601/17/4/1456"
+   ],
+   "note": "Petway reports 43-145 total and 1-15 high-intensity accelerations per elite match. Thresholds vary between studies, so bursts above 3 m/s² were estimated at ~1-2 per minute on court for elite. Video tracking may count more. Women are set slightly lower."
+  },
+  "card_fgPct": {
+   "targets": {
+    "M": [
+     45,
+     45.5,
+     46,
+     46.5,
+     47
+    ],
+    "W": [
+     45,
+     45.5,
+     46,
+     46.5,
+     47
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+    "https://www.basketball-reference.com/wnba/years/2025.html"
+   ],
+   "note": "University = the approved 45. The approved Elite 47 equals the NBA 2025-26 league average (47.1%), so Elite maps to international, with even steps between. Doubt: the WNBA 2025 average is only 43.9%, so the women's targets are above pro women's averages; the flat ladder minimum is kept because the university target is fixed."
+  },
+  "card_threePct": {
+   "targets": {
+    "M": [
+     34,
+     34.5,
+     35,
+     35.5,
+     36
+    ],
+    "W": [
+     34,
+     34.5,
+     35,
+     35.5,
+     36
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+    "https://www.basketball-reference.com/wnba/years/2025.html"
+   ],
+   "note": "Elite 36 = the NBA 2025-26 average (36.0%), so Elite maps to international. The WNBA 2025 average is 33.8%, below even the women's university target of 34; the university value is kept per rule 5."
+  },
+  "card_ftPct": {
+   "targets": {
+    "M": [
+     73,
+     74.3,
+     75.5,
+     76.8,
+     78
+    ],
+    "W": [
+     73,
+     74.3,
+     75.5,
+     76.8,
+     78
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+    "https://www.basketball-reference.com/wnba/years/2025.html"
+   ],
+   "note": "Elite 78 matches both the NBA 2025-26 average (78.3%) and the WNBA 2025 average (78.7%), so Elite maps to international for both sexes, with even steps from the approved 73."
+  },
+  "card_efgPct": {
+   "targets": {
+    "M": [
+     51,
+     52,
+     53,
+     54,
+     55
+    ],
+    "W": [
+     51,
+     52,
+     53,
+     54,
+     55
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+    "https://www.basketball-reference.com/wnba/years/2025.html"
+   ],
+   "note": "Elite 55 is about the NBA 2025-26 average (54.6%), so Elite maps to international. The WNBA 2025 average is 50.0%, below the women's university target of 51, which is kept per rule 5."
+  },
+  "card_tsPct": {
+   "targets": {
+    "M": [
+     55,
+     55.8,
+     56.5,
+     57.3,
+     58
+    ],
+    "W": [
+     55,
+     55.8,
+     56.5,
+     57.3,
+     58
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+    "https://www.basketball-reference.com/wnba/years/2025.html"
+   ],
+   "note": "Elite 58 is about the NBA 2025-26 average (58.1%), so Elite maps to international. The WNBA 2025 average is 54.2%, below the women's university target of 55, which is kept per rule 5."
+  },
+  "card_astTo": {
+   "targets": {
+    "M": [
+     1.2,
+     1.35,
+     1.5,
+     1.65,
+     1.8
+    ],
+    "W": [
+     1.2,
+     1.35,
+     1.5,
+     1.65,
+     1.8
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+    "https://www.basketball-reference.com/wnba/years/2025.html"
+   ],
+   "note": "In the NBA 2025-26, 26.7 assists / 14.5 turnovers = 1.84, which matches Elite 1.8, so Elite maps to international. In the WNBA 2025, 20.3 / 12.9 = 1.57, so the women's top is ambitious. These are team-level ratios and individual guards run higher."
+  }
+ },
+ "Volleyball": {
+  "standingReach": {
+   "targets": {
+    "M": [
+     235,
+     238,
+     244,
+     250,
+     255
+    ],
+    "W": [
+     205,
+     208,
+     215,
+     222,
+     229
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.redalyc.org/pdf/3010/301023489009.pdf",
+    "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+    "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads"
+   ],
+   "note": "No published Indian standing-reach data found. Derived from the heightCm ladder (Indian inter-university and India squad heights) using a reach/height ratio of ~1.31 (men) and ~1.30 (women)."
+  },
+  "blockTouch": {
+   "targets": {
+    "M": [
+     285,
+     296,
+     308,
+     319,
+     330
+    ],
+    "W": [
+     245,
+     253,
+     262,
+     270,
+     278
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+    "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads",
+    "https://en.wikipedia.org/wiki/2017_Asian_Women%27s_Volleyball_Championship_squads",
+    "Pradhan K (2017) Physical Fitness and Performance Indicators of Indian Female Volleyball Players, Bhatter College J Multidisciplinary Studies 7(1) - http://www.bcjms.bhattercollege.ac.in/v7/n1/ped-en-v7-01-01.pdf"
+   ],
+   "note": "International = India squad averages (men 2019 Asian Ch. 330 cm; women U23 2015 278 cm; Asian senior women teams 262-288). University = standing reach + ~50 cm (M) / ~40 cm (W) block jump, cross-checked with Indian sub-junior national-camp girls (250 cm); levels between interpolated. Federation-listed block heights are self-reported and tend to run high."
+  },
+  "spikeTouch": {
+   "targets": {
+    "M": [
+     298,
+     310,
+     321,
+     333,
+     344
+    ],
+    "W": [
+     252,
+     261,
+     270,
+     279,
+     288
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+    "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads",
+    "https://en.wikipedia.org/wiki/2018_FIVB_Men%27s_Volleyball_Nations_League_squads",
+    "http://www.bcjms.bhattercollege.ac.in/v7/n1/ped-en-v7-01-01.pdf",
+    "https://www.scirp.org/journal/paperinformation?paperid=137216"
+   ],
+   "note": "International = India men 2019 squad mean 343.9 cm (VNL teams 331-352) and India women U23 286 cm (Asian senior teams 287-300). University = standing reach + ~62 cm (M) / ~47 cm (W) approach jump (Japanese Div-1 university women spike jump 55 cm; Indian sub-junior national girls 255 cm); interpolated between."
+  },
+  "proAgility": {
+   "targets": {
+    "M": [
+     4.95,
+     4.85,
+     4.74,
+     4.62,
+     4.5
+    ],
+    "W": [
+     5.4,
+     5.27,
+     5.15,
+     5.02,
+     4.9
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://doi.org/10.3390/sports13100339",
+    "https://ovrperformance.com/blogs/news/pro-agility-benchmarks-by-sport-gender-and-level"
+   ],
+   "note": "NCAA Division I women volleyball 5-10-5 = 4.9 +/- 0.2 s (Sports 2025), mapped to international for Indian women. Men set ~0.4 s faster, per the college men/women gap in coaching benchmarks (blog, secondary). Lower levels interpolated to the app's poor anchor."
+  },
+  "serveVelocity": {
+   "targets": {
+    "M": [
+     65,
+     72,
+     79,
+     86,
+     93
+    ],
+    "W": [
+     50,
+     54,
+     58,
+     63,
+     67
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://thesportjournal.org/article/normative-profiles-for-serve-speed-for-the-training-of-the-serve-and-reception-in-volleyball/",
+    "https://link.springer.com/article/10.1186/s13102-024-01031-z"
+   ],
+   "note": "Sport Journal norms: FIVB World League men power jump serve 73-104 km/h, jump float 40-75; Spanish Queen's Cup women power jump 66-89, floats 40-61. International = a hard jump serve (M) / strong float-to-jump serve (W); university = float-serve speeds. Turkish league data confirm speed rises with league level."
+  },
+  "attackVelocity": {
+   "targets": {
+    "M": [
+     72,
+     77,
+     81,
+     86,
+     90
+    ],
+    "W": [
+     59,
+     62,
+     65,
+     68,
+     71
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://ojs.ub.uni-konstanz.de/cpa/article/view/2174/2030",
+    "https://jhp-ojs-tamucc.tdl.org/jhp/article/view/jshp.0053.2015",
+    "https://journals.sagepub.com/doi/full/10.1177/0363546505274935"
+   ],
+   "note": "International men's spikes in competition averaged 22.8-25.2 m/s (82-91 km/h, ISBS); Spanish 1st-division women jump spike 71.2 km/h. These are mapped to international. Forthomme (2005) confirms 1st > 2nd division. University values estimated, and the levels between interpolated."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     179,
+     182,
+     186,
+     191,
+     195
+    ],
+    "W": [
+     158,
+     160,
+     165,
+     171,
+     176
+    ]
+   },
+   "basis": "published",
+   "sources": [
+    "Koley S, Singh J, Sandhu JS - Anthropometric and physiological characteristics on Indian inter-university volleyball players - https://www.redalyc.org/pdf/3010/301023489009.pdf",
+    "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+    "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads"
+   ],
+   "note": "Indian inter-university players: M 181.9 cm, W 159.7 cm (zonal). India men squad 2019: 195.3 cm, India women U23 2015: 176.3 cm (international). University set 2-3 cm below zonal; levels between interpolated."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     35,
+     38,
+     40,
+     43,
+     45
+    ],
+    "W": [
+     32,
+     34,
+     36,
+     39,
+     41
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://link.springer.com/article/10.1186/s13102-025-01302-3",
+    "Mroczek D et al. (2014) Analysis of male volleyball players' motor activities during a top level match, J Strength Cond Res 28(8)",
+    "https://peerj.com/articles/16736/"
+   ],
+   "note": "National-level men covered ~1250-1340 m in 30-min matches (~42-45 m/min, IMU), mapped to national. Live-ball-only rates are much higher (elite women 68.6 m/min). Polish top-league men covered ~1.2 km per 3-set match. Level differences and women's values (~8% lower) are estimated."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     15.0,
+     15.8,
+     16.5,
+     17.3,
+     18.0
+    ],
+    "W": [
+     13.5,
+     14.3,
+     15.0,
+     15.8,
+     16.5
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://link.springer.com/article/10.1186/s13102-025-01365-2",
+    "https://link.springer.com/article/10.1186/s13102-025-01302-3"
+   ],
+   "note": "LPS data on elite/national-team women: training max speed 15.9-17.1 km/h, warm-up 13.1-15.3. National-level men exceed 15 km/h ~8 times per 30 min. Women's elite value mapped to international; men set ~1.5 km/h higher; lower levels estimated. Well below the app's football-based anchors."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": [
+     0.3,
+     0.4,
+     0.5,
+     0.65,
+     0.8
+    ],
+    "W": [
+     0.15,
+     0.22,
+     0.3,
+     0.4,
+     0.5
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://link.springer.com/article/10.1186/s13102-025-01302-3"
+   ],
+   "note": "Only published figure: 8.3 +/- 6.0 efforts above 15 km/h per 30-min match (national-level men). Assumed ~2-3 m per effort (~0.7 m/min) at national/international. Other levels and women estimated. Volleyball HSR is tiny, so this discriminates poorly."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://link.springer.com/article/10.1186/s13102-025-01365-2"
+   ],
+   "note": "Null: volleyball players' top speeds are ~15-18 km/h (LPS data), so distance above 18 km/h is ~0 m/min at every level. The measure cannot separate levels in a 9 x 9 m half-court."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     0.4,
+     0.47,
+     0.54,
+     0.62,
+     0.7
+    ],
+    "W": [
+     0.35,
+     0.41,
+     0.47,
+     0.53,
+     0.6
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://link.springer.com/article/10.1186/s13102-025-01302-3",
+    "https://link.springer.com/article/10.1186/s13102-025-01365-2"
+   ],
+   "note": "National-level men made 18.7 +/- 9.3 high-intensity accelerations (plus 19 decelerations >3 m/s2) per 30-min match = 0.62/min, mapped to national. Elite women made 18.5-31.8 accelerations in a 45-min warm-up. Other levels and women estimated."
+  },
+  "card_attackEff": {
+   "targets": {
+    "M": [
+     25,
+     27.5,
+     30,
+     32.5,
+     35
+    ],
+    "W": [
+     20,
+     22.5,
+     25,
+     27.5,
+     30
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Kountouris P et al. (2015) Evidence for Differences in Men's and Women's Volleyball Games Based on Skills Effectiveness in Four Consecutive Olympic Tournaments, Comprehensive Psychology 4:9 - https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+    "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+   ],
+   "note": "Olympics: successful/faulty attacks M 47.1/16.5%, W 39.6/15.0%, i.e. efficiency ~31% (M) / ~25% (W). AVC Challenge Cup 2023 kill% M 48.5-56.9, W 40.3-49.2. Directorate Elite (35/30) mapped to international, which is ambitious vs Olympic averages. University kept at the approved 25/20."
+  },
+  "card_receptionPos": {
+   "targets": {
+    "M": [
+     30,
+     32.5,
+     35,
+     37.5,
+     40
+    ],
+    "W": [
+     30,
+     32.5,
+     35,
+     37.5,
+     40
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+    "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+   ],
+   "note": "Published elite 'excellent' reception is 58.8-60.4% (Olympics) and 'precise' is 53.5-60.2% (AVC Challenge Cup 2023). Both count perfect+good, not perfect-only as in the app formula, so they are not directly comparable. Kept the approved University 30, mapped Elite 40 to international, and interpolated."
+  },
+  "card_serveAce": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+    "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+   ],
+   "note": "Null (rule 4): ace % depends on the opponent's reception. International rates are at or below the approved University target of 5: Olympics M 5.0%, W 4.5%; AVC Challenge Cup 2023 M 2.9-5.3%, W 3.0-3.8%. If a single target is needed, keep the directorate's 5 (University) / 6 (Elite) as flat targets."
+  },
+  "card_serveFault": {
+   "targets": {
+    "M": null,
+    "W": [
+     15,
+     13.3,
+     11.7,
+     10,
+     8.5
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+    "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+   ],
+   "note": "Men null (rule 4): elite men serve riskier jump serves and fault more (Olympics 15.2%, AVC 14.4-15.5%; directorate Elite 20 is worse than University 15). Women fault less at higher levels (Olympics 8.7%, AVC 6.4-7.0%), so the approved Elite 10 was mapped to national and international set to 8.5."
+  },
+  "card_setEff": {
+   "targets": {
+    "M": [
+     30,
+     33.8,
+     37.5,
+     41.3,
+     45
+    ],
+    "W": [
+     30,
+     33.8,
+     37.5,
+     41.3,
+     45
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published set-efficiency norms using the (+ minus -)/attempts formula were found. Kept the approved University 30, mapped Elite 45 to international, and interpolated evenly."
+  },
+  "card_digEff": {
+   "targets": {
+    "M": [
+     5,
+     8.8,
+     12.5,
+     16.3,
+     20
+    ],
+    "W": [
+     5,
+     8.8,
+     12.5,
+     16.3,
+     20
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published dig-efficiency norms using this formula were found. Kept the approved University 5, mapped Elite 20 to international, and interpolated evenly."
+  },
+  "card_blockPerSet": {
+   "targets": {
+    "M": [
+     0.3,
+     0.38,
+     0.45,
+     0.53,
+     0.6
+    ],
+    "W": [
+     0.3,
+     0.38,
+     0.45,
+     0.53,
+     0.6
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9"
+   ],
+   "note": "The only published figure is Olympic block success (18.6% M, 17% W); no per-player per-set norms were found. Kept the approved University 0.3, mapped Elite 0.6 to international, and interpolated. Middle blockers will sit well above these all-position values."
+  }
+ },
+ "Cricket": {
+  "yoyoLevel": {
+   "targets": {
+    "M": [
+     15.1,
+     15.5,
+     16.1,
+     16.5,
+     17.1
+    ],
+    "W": [
+     14.5,
+     14.8,
+     15.3,
+     15.6,
+     16.1
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.espncricinfo.com/story/new-fitness-target-for-indian-players-yo-yo-level-raised-to-17-1-time-trial-2k-run-1251503",
+    "https://khelnow.com/cricket/what-bronco-2k-tests-bcci-new-fitness-criteria-202608",
+    "https://www.theyoyotest.com/standards.htm",
+    "https://www.theyoyotest.com/results-cricket.htm",
+    "https://www.topendsports.com/testing/results/yo-yo-intermittent.htm",
+    "Brazier TA, Tallent J, Patterson SD, Howe LP, Callaghan SJ (2024) The physical profile of female cricketers: an investigation between playing standard and position, PLOS ONE - https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0302647"
+   ],
+   "note": "YYIR1 level.shuttle notation (not decimals): men evenly spaced 160 m (800-1440 m), women 120 m (640-1120 m). International = BCCI selection bar 17.1, national = 16.5 and state = 16.1 (earlier BCCI bars); India squad members typically test 17-19. Women estimated from Brazier 2024 (English pro women ~20% further than non-pro, non-seamers ~1234 m); no BCCI women's bar found."
+  },
+  "timeTrial2km": {
+   "targets": {
+    "M": [
+     570,
+     555,
+     540,
+     525,
+     510
+    ],
+    "W": [
+     650,
+     630,
+     610,
+     590,
+     570
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.espncricinfo.com/story/new-fitness-target-for-indian-players-yo-yo-level-raised-to-17-1-time-trial-2k-run-1251503",
+    "https://www.topendsports.com/testing/results/2km-run.htm",
+    "https://www.cricketmatters.com/2km-time-trial-cricket/",
+    "https://www.cricketnews.com/en/cricket/news/bcci-fitness-testing-india-injury-crisis-standardises-bronco-2k-benchmarks/a41308a81e234a14987f5394"
+   ],
+   "note": "International = BCCI 2 km bar 8:30 for batters, spinners and keepers (8:15 for pacers; Sri Lanka 8:35). Women's international = CSA women's 9:30 standard (Megan Schutt ran 8:22). Lower levels estimated at 15 s (men) / 20 s (women) per level. A 2025 report quoting '9-10 min' for the BCCI 2K is vague, so it was not used."
+  },
+  "sprint20m": {
+   "targets": {
+    "M": [
+     3.3,
+     3.24,
+     3.18,
+     3.12,
+     3.05
+    ],
+    "W": [
+     3.65,
+     3.58,
+     3.51,
+     3.44,
+     3.37
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "Foden, Astley, Comfort, McMahon, Matthews, Jones (2015) J Trainology, academy cricketers speed/COD - https://salford-repository.worktribe.com/OutputFile/1494890",
+    "Physical profiling of international cricket players: an investigation between bowlers and batters (2020), Biology of Sport - https://doaj.org/article/871ba6266617429c8ff94b728cf563be"
+   ],
+   "note": "The only published cricket 20 m time found: English academy (17 y) 3.38 s. Senior international men estimated at ~3.05 s, women ~10% slower. Depends heavily on start type and timing gates, so recalibrate on your own gates."
+  },
+  "bowlingSpeed": {
+   "targets": {
+    "M": [
+     110,
+     117,
+     124,
+     131,
+     138
+    ],
+    "W": [
+     85,
+     91,
+     96,
+     102,
+     108
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Letter RT, Dwyer DB, Drinkwater EJ, Feros SA (2022) The physical differences between faster and slower elite male and female pace bowlers, IJSPP - https://bowlstrong.com/wp-content/uploads/2022/12/Letter-et-al-2022a.pdf",
+    "Jacobs J, Olivier B, Brandt C, Boulle N (2024) Anthropometric and biomechanical factors in elite male and female fast bowlers, J Biomech 170:112157 - https://www.sciencedirect.com/science/article/pii/S0021929024002355",
+    "Thiagarajan KA et al. (2015) Cricket biomechanics analysis of skilled and amateur fast bowling techniques, JPMER 49(4):173-181 - https://www.jpmer.com/doi/JPMER/pdf/10.5005/jp-journals-10028-1171"
+   ],
+   "note": "Pace bowlers only. Australian state/national contracted: men 118-128 (mean ~123), women 93-101 (~97). SA elite: men 131.9, women 101.3. Indian sub-elite 16-25 y: ~100-107. International = typical match speed-gun (men 135-145, women ~105-115; the women's range is general knowledge, no source)."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     172,
+     174,
+     176,
+     178,
+     180
+    ],
+    "W": [
+     158,
+     160,
+     162,
+     164,
+     166
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Physical profiling of international cricket players: an investigation between bowlers and batters (2020), Biology of Sport - https://doaj.org/article/871ba6266617429c8ff94b728cf563be",
+    "Jacobs J, Olivier B, Brandt C, Boulle N (2024) Anthropometric and biomechanical factors in elite male and female fast bowlers, J Biomech 170:112157 - https://www.sciencedirect.com/science/article/pii/S0021929024002355",
+    "Brazier TA, Tallent J, Patterson SD, Howe LP, Callaghan SJ (2024) The physical profile of female cricketers: an investigation between playing standard and position, PLOS ONE - https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0302647",
+    "Foden, Astley, Comfort, McMahon, Matthews, Jones (2015) J Trainology, academy cricketers speed/COD - https://salford-repository.worktribe.com/OutputFile/1494890"
+   ],
+   "note": "International men ~180 cm (Biology of Sport 2020); SA elite pacers 184.8 cm (M) / 165.5 cm (F); English women pro 168 / non-pro 167 cm. Indian lower levels estimated from shorter population norms. Height barely separates levels except for pacers."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     45,
+     48,
+     51,
+     55,
+     65
+    ],
+    "W": [
+     39,
+     42,
+     44,
+     47,
+     57
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Garcia-Byrne F et al. (2020) External and internal workload demands of women's Twenty20 cricket competition, JSAMS 23(1):89-93 - https://www.sciencedirect.com/science/article/abs/pii/S1440244019303676",
+    "Harland A (2023) Physical match demands of women's international cricket, MSc thesis, Univ. of Essex - https://repository.essex.ac.uk/36557/1/A%20HARLAND%20PHYSICAL%20MATCH%20DEMANDS%20OF%20WOMEN'S%20INTERNATIONAL%20CRICKET.pdf",
+    "Sholto-Douglas R, Cook R, Wilkie M, Christie CJ (2020) Movement demands of an elite cricket team during the Big Bash League, JSSM 19:59-64 - https://www.jssm.org/19-1-59.p_d_f",
+    "Turner et al. (2020) Fielding specific walk/run patterns in English professional cricket, JSES - https://jses.net/wp-content/uploads/2020/02/Turner-et-al-2020.pdf",
+    "Vickers J (2023) GPS external work demands of seam bowlers between formats, Univ. of Gloucestershire thesis - https://eprints.glos.ac.uk/14345/"
+   ],
+   "note": "Cricket T20 fielding GPS, not football. Men: BBL fielders/pacers 68-69 m/min, English county T20 50-59 (county mapped to national). Women: Garcia-Byrne youth/national/international totals 3436/4113/5250 m (/~88 min ≈ 39/47/60), England intl 54-59 m/min. Youth mapped to university."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     25.0,
+     25.8,
+     26.7,
+     27.5,
+     29.0
+    ],
+    "W": [
+     21.0,
+     22.0,
+     23.0,
+     24.0,
+     25.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Sholto-Douglas R, Cook R, Wilkie M, Christie CJ (2020) Movement demands of an elite cricket team during the Big Bash League, JSSM 19:59-64 - https://www.jssm.org/19-1-59.p_d_f",
+    "Turner et al. (2020) Fielding specific walk/run patterns in English professional cricket, JSES - https://jses.net/wp-content/uploads/2020/02/Turner-et-al-2020.pdf",
+    "Harland A (2023) Physical match demands of women's international cricket, MSc thesis, Univ. of Essex - https://repository.essex.ac.uk/36557/1/A%20HARLAND%20PHYSICAL%20MATCH%20DEMANDS%20OF%20WOMEN'S%20INTERNATIONAL%20CRICKET.pdf"
+   ],
+   "note": "Match peak speed. BBL peak 28.8-29.5 km/h (international). County boundary riders ~27.5 km/h (90% of 8.5 m/s), mapped to national. England women intl 24-26 km/h. Lower levels estimated."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": [
+     3.0,
+     3.8,
+     4.6,
+     6.0,
+     9.0
+    ],
+    "W": [
+     1.4,
+     1.7,
+     2.0,
+     2.3,
+     3.8
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Sholto-Douglas R, Cook R, Wilkie M, Christie CJ (2020) Movement demands of an elite cricket team during the Big Bash League, JSSM 19:59-64 - https://www.jssm.org/19-1-59.p_d_f",
+    "Turner et al. (2020) Fielding specific walk/run patterns in English professional cricket, JSES - https://jses.net/wp-content/uploads/2020/02/Turner-et-al-2020.pdf",
+    "Harland A (2023) Physical match demands of women's international cricket, MSc thesis, Univ. of Essex - https://repository.essex.ac.uk/36557/1/A%20HARLAND%20PHYSICAL%20MATCH%20DEMANDS%20OF%20WOMEN'S%20INTERNATIONAL%20CRICKET.pdf",
+    "Garcia-Byrne F et al. (2020) External and internal workload demands of women's Twenty20 cricket competition, JSAMS 23(1):89-93 - https://www.sciencedirect.com/science/article/abs/pii/S1440244019303676"
+   ],
+   "note": ">15 km/h. BBL >14 km/h: fielders 10.4, pacers 12.6 m/min (intl ≈ 9 at 15 km/h). County T20 HIR (zones above 15 km/h): boundary 10.5, ring 2.8 m/min → team ≈ 6 (national). England women intl >16 km/h: seamers 7.0, others 2.2 → ≈ 3.8 at 15 km/h. Lower levels estimated. The app's 5.0 elite anchor looks low."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": [
+     1.0,
+     1.3,
+     1.6,
+     2.0,
+     3.0
+    ],
+    "W": [
+     0.25,
+     0.3,
+     0.35,
+     0.4,
+     0.9
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Garcia-Byrne F et al. (2020) External and internal workload demands of women's Twenty20 cricket competition, JSAMS 23(1):89-93 - https://www.sciencedirect.com/science/article/abs/pii/S1440244019303676",
+    "Harland A (2023) Physical match demands of women's international cricket, MSc thesis, Univ. of Essex - https://repository.essex.ac.uk/36557/1/A%20HARLAND%20PHYSICAL%20MATCH%20DEMANDS%20OF%20WOMEN'S%20INTERNATIONAL%20CRICKET.pdf",
+    "Sholto-Douglas R, Cook R, Wilkie M, Christie CJ (2020) Movement demands of an elite cricket team during the Big Bash League, JSSM 19:59-64 - https://www.jssm.org/19-1-59.p_d_f"
+   ],
+   "note": ">20 km/h. Women: Garcia-Byrne >21 km/h youth/national/intl 20/31/73 m per match (~0.23/0.35/0.83 per min), England intl >20 km/h 0.7-1.5 → the big step to international is in the data. Men: BBL >20.9 km/h 3.3-4.3 m/min; lower men's levels estimated."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     0.08,
+     0.09,
+     0.11,
+     0.13,
+     0.15
+    ],
+    "W": [
+     0.05,
+     0.06,
+     0.07,
+     0.08,
+     0.1
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "Harland A (2023) Physical match demands of women's international cricket, MSc thesis, Univ. of Essex - https://repository.essex.ac.uk/36557/1/A%20HARLAND%20PHYSICAL%20MATCH%20DEMANDS%20OF%20WOMEN'S%20INTERNATIONAL%20CRICKET.pdf"
+   ],
+   "note": "Fielding clips. England women intl T20: 0.07-0.12 accelerations per min at 3-4 m/s² (published). Men and lower levels estimated. Batting clips run far higher (~0.4 per min at 3-4 m/s² in Harland), so the app's elite anchor of 1.0 only fits batting footage."
+  },
+  "card_battingSR": {
+   "targets": {
+    "t20": {
+     "M": [
+      125,
+      131,
+      138,
+      144,
+      150
+     ],
+     "W": [
+      125,
+      131,
+      138,
+      144,
+      150
+     ]
+    },
+    "odi": {
+     "M": [
+      75,
+      79,
+      83,
+      86,
+      90
+     ],
+     "W": [
+      75,
+      79,
+      83,
+      86,
+      90
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.yardbarker.com/cricket/articles/ipl_2026_top_3_batters_with_the_lowest_dot_ball_percentage/s1_17781_43827578",
+    "November et al. (2025) Determinants of success in ODI and T20 cricket: systematic review, Applied Sciences 15(19):10341 - https://www.mdpi.com/2076-3417/15/19/10341"
+   ],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation. Women use the approved targets, which equal the men's, but women's T20I/ODI norms are well below them (T20I ~105-120); the directorate should revisit."
+  },
+  "card_battingAvg": {
+   "targets": {
+    "t20": {
+     "M": [
+      25,
+      26.3,
+      27.5,
+      28.8,
+      30
+     ],
+     "W": [
+      25,
+      26.3,
+      27.5,
+      28.8,
+      30
+     ]
+    },
+    "odi": {
+     "M": [
+      30,
+      32.5,
+      35,
+      37.5,
+      40
+     ],
+     "W": [
+      30,
+      32.5,
+      35,
+      37.5,
+      40
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation."
+  },
+  "card_batDotPct": {
+   "targets": {
+    "t20": {
+     "M": [
+      40,
+      37.5,
+      35,
+      32.5,
+      30
+     ],
+     "W": [
+      40,
+      37.5,
+      35,
+      32.5,
+      30
+     ]
+    },
+    "odi": null
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.yardbarker.com/cricket/articles/ipl_2026_top_3_batters_with_the_lowest_dot_ball_percentage/s1_17781_43827578"
+   ],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation. The lowest IPL 2026 dot-ball % among batters was ~25-26%. No ODI target and no level-graded ODI data, so ODI is null."
+  },
+  "card_boundaryPct": {
+   "targets": {
+    "t20": {
+     "M": [
+      15,
+      16.8,
+      18.5,
+      20.3,
+      22
+     ],
+     "W": [
+      15,
+      16.8,
+      18.5,
+      20.3,
+      22
+     ]
+    },
+    "odi": null
+   },
+   "basis": "estimated",
+   "sources": [
+    "November et al. (2025) Determinants of success in ODI and T20 cricket: systematic review, Applied Sciences 15(19):10341 - https://www.mdpi.com/2076-3417/15/19/10341"
+   ],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation. Winning T20 sides hit ~3.9 more fours and ~1.9 more sixes (November 2025). No ODI target or level data, so ODI is null."
+  },
+  "card_controlPct": {
+   "targets": {
+    "t20": {
+     "M": [
+      75,
+      76.8,
+      78.5,
+      80.3,
+      82
+     ],
+     "W": [
+      75,
+      76.8,
+      78.5,
+      80.3,
+      82
+     ]
+    },
+    "odi": {
+     "M": [
+      75,
+      76.8,
+      78.5,
+      80.3,
+      82
+     ],
+     "W": [
+      75,
+      76.8,
+      78.5,
+      80.3,
+      82
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation. No public level-graded false-shot data found."
+  },
+  "card_economy": {
+   "targets": {
+    "t20": null,
+    "odi": {
+     "M": [
+      5.5,
+      5.38,
+      5.25,
+      5.13,
+      5.0
+     ],
+     "W": [
+      5.5,
+      5.38,
+      5.25,
+      5.13,
+      5.0
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "T20 is null (rule 4): the approved Elite 8.5 is worse than University 7.5 because economy rises against stronger batting. ODI keeps the approved 5.5→5.0; it is also opposition-sensitive, so treat it with care. Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation."
+  },
+  "card_bowlSR": {
+   "targets": {
+    "t20": {
+     "M": [
+      20,
+      19.5,
+      19,
+      18.5,
+      18
+     ],
+     "W": [
+      20,
+      19.5,
+      19,
+      18.5,
+      18
+     ]
+    },
+    "odi": {
+     "M": [
+      36,
+      34.5,
+      33,
+      31.5,
+      30
+     ],
+     "W": [
+      36,
+      34.5,
+      33,
+      31.5,
+      30
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation."
+  },
+  "card_bowlAvg": {
+   "targets": {
+    "t20": {
+     "M": [
+      25,
+      25,
+      25,
+      25,
+      25
+     ],
+     "W": [
+      25,
+      25,
+      25,
+      25,
+      25
+     ]
+    },
+    "odi": {
+     "M": [
+      25,
+      25,
+      25,
+      25,
+      25
+     ],
+     "W": [
+      25,
+      25,
+      25,
+      25,
+      25
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Approved University = Elite = 25, so the ladders are flat. The T20 targets agree with each other (7.5x20/6=25, 8.5x18/6≈25.5). ODI does not: the approved economy and strike rate give 5.5x36/6=33 at university, so a flat 25 is harsh for ODI. Worth revisiting."
+  },
+  "card_bowlDotPct": {
+   "targets": {
+    "t20": null,
+    "odi": null
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Null (rule 4): the approved T20 Elite 40 is worse than University 45 because dot % falls against stronger batting. No ODI target, and ODI has the same opposition effect."
+  },
+  "card_boundaryConcPct": {
+   "targets": {
+    "t20": null,
+    "odi": null
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Null (rule 4): the approved T20 Elite 18 is worse than University 12 because boundaries conceded rise against stronger batting. No ODI target, and ODI has the same opposition effect."
+  },
+  "card_extrasPerOver": {
+   "targets": {
+    "t20": {
+     "M": [
+      0.5,
+      0.44,
+      0.38,
+      0.31,
+      0.25
+     ],
+     "W": [
+      0.5,
+      0.44,
+      0.38,
+      0.31,
+      0.25
+     ]
+    },
+    "odi": {
+     "M": [
+      0.5,
+      0.44,
+      0.38,
+      0.31,
+      0.25
+     ],
+     "W": [
+      0.5,
+      0.44,
+      0.38,
+      0.31,
+      0.25
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [
+    "November et al. (2025) Determinants of success in ODI and T20 cricket: systematic review, Applied Sciences 15(19):10341 - https://www.mdpi.com/2076-3417/15/19/10341"
+   ],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation. Winning T20 sides bowl ~0.29 fewer no-balls per match (November 2025)."
+  },
+  "card_catchEff": {
+   "targets": {
+    "t20": {
+     "M": [
+      70,
+      72.5,
+      75,
+      77.5,
+      80
+     ],
+     "W": [
+      70,
+      72.5,
+      75,
+      77.5,
+      80
+     ]
+    },
+    "odi": {
+     "M": [
+      70,
+      72.5,
+      75,
+      77.5,
+      80
+     ],
+     "W": [
+      70,
+      72.5,
+      75,
+      77.5,
+      80
+     ]
+    }
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.thehawk.in/news/sports/ipl-2026-dropped-catches-dip-in-catching-efficiency-fielding-issues-raise-huge-alarms",
+    "https://mansionsportsnews.com/en/other-sports/cricket/womens-t20-world-cup-catches-drop-stakes-rise/"
+   ],
+   "note": "CricViz IPL catching efficiency 75-81.5% (2023-26); women's T20 World Cup 63.9% (2024), 82% (2023), 89% (2020). Approved Elite 80 = international. Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation."
+  },
+  "card_keeperConv": {
+   "targets": {
+    "t20": {
+     "M": [
+      80,
+      82.5,
+      85,
+      87.5,
+      90
+     ],
+     "W": [
+      80,
+      82.5,
+      85,
+      87.5,
+      90
+     ]
+    },
+    "odi": {
+     "M": [
+      80,
+      82.5,
+      85,
+      87.5,
+      90
+     ],
+     "W": [
+      80,
+      82.5,
+      85,
+      87.5,
+      90
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation. No public level-graded keeper data found."
+  },
+  "card_runningEff": {
+   "targets": {
+    "t20": {
+     "M": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "W": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ]
+    },
+    "odi": {
+     "M": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "W": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "In-house +/- metric with no published norms. Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation."
+  },
+  "card_fieldingEff": {
+   "targets": {
+    "t20": {
+     "M": [
+      20,
+      25,
+      30,
+      35,
+      40
+     ],
+     "W": [
+      20,
+      25,
+      30,
+      35,
+      40
+     ]
+    },
+    "odi": {
+     "M": [
+      20,
+      25,
+      30,
+      35,
+      40
+     ],
+     "W": [
+      20,
+      25,
+      30,
+      35,
+      40
+     ]
+    }
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "In-house +/- metric with no published norms. Elite mapped to international (the approved Elite values match IPL/T20I and men's ODI international norms); levels between are even interpolation."
+  }
+ },
+ "Badminton": {
+  "sprint20m": {
+   "targets": {
+    "M": [
+     3.3,
+     3.24,
+     3.18,
+     3.12,
+     3.06
+    ],
+    "W": [
+     3.63,
+     3.56,
+     3.5,
+     3.43,
+     3.37
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.topendsports.com/sport/badminton/fitness-testing.htm"
+   ],
+   "note": "No badminton 20 m sprint norms found (topendsports recommends the test with 5/10 m splits but gives no values). Estimated for electronic gates, standing start: trained court-sport men ~3.3 s rising ~2% per level; women +10%."
+  },
+  "verticalJump": {
+   "targets": {
+    "M": [
+     44,
+     47,
+     50,
+     53,
+     56
+    ],
+    "W": [
+     33,
+     35,
+     38,
+     40,
+     42
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.badmintonitalia.it/images/FORMAZIONE-DOCUMENTAZIONE-RICERCA/Physiological_characteristics_of_elite_and_sub-elite_badminton_players_2009_badmin.pdf",
+    "Ooi et al. (2009) Physiological characteristics of elite and sub-elite badminton players, J Sports Sci 27(14):1591-1599",
+    "https://websites.mygameday.app/get_file.cgi?id=256038"
+   ],
+   "note": "Ooi 2009: Malaysian world-ranked men CMJ 46.3 cm vs sub-elite squad 46.0 cm (no difference). App scale (30-65) matches Badminton Australia's arm-swing Sargent jump (men 'average' 41-50, 'above average' 51-60 cm), so ladder is arm-swing values ~5-10 cm above Ooi's CMJ; women ~25% lower."
+  },
+  "handGrip": {
+   "targets": {
+    "M": [
+     40,
+     43,
+     46,
+     49,
+     52
+    ],
+    "W": [
+     26,
+     28,
+     30,
+     32,
+     34
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://websites.mygameday.app/get_file.cgi?id=256038",
+    "https://www.recentscientific.com/sites/default/files/4888.pdf"
+   ],
+   "note": "No adult badminton grip data in kg found. Badminton Australia NJP norms (mean of both hands): men 'average' 48-52, women 26-30 kg; Indian players (Hyderabad, mean age 15) only 26/21 kg. Estimated dominant-hand ladder; women ~65% of men. Grip discriminates level weakly."
+  },
+  "onCourtAgility": {
+   "targets": {
+    "M": [
+     13.6,
+     13.2,
+     12.8,
+     12.4,
+     12.0
+    ],
+    "W": [
+     14.8,
+     14.4,
+     14.0,
+     13.5,
+     13.1
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.badmintonitalia.it/images/FORMAZIONE-DOCUMENTAZIONE-RICERCA/Physiological_characteristics_of_elite_and_sub-elite_badminton_players_2009_badmin.pdf",
+    "https://websites.mygameday.app/get_file.cgi?id=256038"
+   ],
+   "note": "The app does not fix a protocol, so values sit inside its 18-11 s scale with a ~12% spread from university to international (women ~9% slower). Ooi 2009's sideways agility test (15.3 s elite vs 15.0 s sub-elite) and four-corner test did not separate levels; Badminton Australia's on-court speed test is ~10 s."
+  },
+  "yoyoLevel": {
+   "targets": {
+    "M": [
+     16.2,
+     17.1,
+     17.8,
+     18.7,
+     19.6
+    ],
+    "W": [
+     14.7,
+     15.4,
+     16.1,
+     16.6,
+     17.3
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.mdpi.com/1660-4601/18/2/638",
+    "Liu et al. (2021) The Effect of Eight-Week Sprint Interval Training on Aerobic Performance of Elite Badminton Players, IJERPH 18(2):638",
+    "https://efdeportes.com/efdeportes/index.php/EFDeportes/article/download/2407/1321?inline=1",
+    "https://www.topendsports.com/testing/yo-yo-intermittent-levels.htm"
+   ],
+   "note": "Yo-Yo IR1 levels. International: Chinese national semi-finalists ran IR2 1083 m (men) / 725 m (women), converted at an estimated IR1 ~2.1x IR2 to ~2280 m (19.6) / ~1520 m (17.3). University: Brazilian club players ran IR1 1028 m; set at 1160 m (16.2) for men. Even 280 m (men) / 200 m (women) steps between."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     171,
+     172,
+     174,
+     175,
+     178
+    ],
+    "W": [
+     159,
+     161,
+     163,
+     165,
+     168
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.ijok.org/index.php/ijok/article/download/91/54/126",
+    "Kavanashri et al. (2023) Anthropometry and Physical Characteristics of Indian Badminton Players, Int J Kinanthropometry",
+    "https://www.mdpi.com/1660-4601/18/2/638",
+    "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0037821",
+    "https://www.badmintonitalia.it/images/FORMAZIONE-DOCUMENTAZIONE-RICERCA/Physiological_characteristics_of_elite_and_sub-elite_badminton_players_2009_badmin.pdf"
+   ],
+   "note": "National = Indian sub-elite players with national/international experience (M 175.4, W 165.2 cm). International = Chinese national semi-finalists (M ~178, W ~168), Spanish national championship (M 178, W 165), Malaysian elite (176). University estimated; zonal/state interpolated."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     38,
+     40,
+     43,
+     45,
+     48
+    ],
+    "W": [
+     36,
+     38,
+     41,
+     44,
+     46
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton",
+    "Rojas-Valverde et al. (2020) Identification of games and sex-related activity profile in junior international badminton, Int J Perf Anal Sport",
+    "https://www.academia.edu/115287476/Relationships_Between_Results_Of_An_Internal_And_External_Match_Load_Determining_Method_In_Male_Singles_Badminton_Players",
+    "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2026.1753118/full"
+   ],
+   "note": "Whole-match averages including rest between rallies. U18 international juniors, UWB tracking: 44.6 (M) / 43.5 (W) m/min, mapped to national. Elite African men (10 Hz GPS): 1763 m in 35.3 min = 50 m/min, mapped to international ~48. Lower levels estimated from shorter rallies and lower work density."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     8.4,
+     8.8,
+     9.2,
+     9.6,
+     10.0
+    ],
+    "W": [
+     8.0,
+     8.4,
+     8.8,
+     9.2,
+     9.6
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton",
+    "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2026.1753118/full"
+   ],
+   "note": "The app reports the 95th percentile of smoothed speed, not the absolute peak. Published: max speed ~10.8-11.0 km/h (M) and ~10.4-11.0 (W) in U18 internationals; top-30 world singles footwork 2.2-2.6 m/s (8-9.4 km/h). High-school players were often as fast, so the ladder is deliberately shallow."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "published",
+   "sources": [
+    "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton"
+   ],
+   "note": "Null: the app's court threshold (14.4 km/h) is above the ~11 km/h maximum badminton players reach on court, so the value is ~0 at every level and cannot rank players. A badminton-specific threshold (~9 km/h) would be needed first."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "published",
+   "sources": [
+    "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton"
+   ],
+   "note": "Null: the 18 km/h sprint threshold is never reached on a badminton court (published max ~11 km/h), so the value is 0 at every level."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     0.4,
+     0.5,
+     0.6,
+     0.7,
+     0.8
+    ],
+    "W": [
+     0.3,
+     0.35,
+     0.4,
+     0.5,
+     0.6
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton",
+    "https://www.jssm.org/jssm-24-901.xml-Fulltext",
+    "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.640199/full"
+   ],
+   "note": "Method-dependent. IMU counts are high (Guo 2025: 55.9 efforts >3 m/s2 per set; Fu 2021: ~1.7 M / 2.9 W accelerations per min). Position tracking like the app's video is closer to UWB, where the whole-match maximum averaged only 3.87 (M) / 3.47 (W) m/s2, so bursts above 3 m/s2 are rare. Estimated low; calibrate on real clips."
+  },
+  "card_wue": {
+   "targets": {
+    "M": [
+     1.0,
+     1.05,
+     1.1,
+     1.15,
+     1.2
+    ],
+    "W": [
+     1.0,
+     1.05,
+     1.1,
+     1.15,
+     1.2
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.academia.edu/28708169/Changes_in_the_Game_Characteristics_of_a_Badminton_Match_A_Longitudinal_Study_through_the_Olympic_Game_Finals_Analysis_in_Mens_Singles",
+    "Laffaye, Phomsoupha & Dor (2015) Changes in the game characteristics of a badminton match, J Sports Sci Med"
+   ],
+   "note": "Elite mapped to international. Olympic men's singles finals: 36% winners, 23% forced errors, 41% unforced errors, a pooled W:UE of ~0.88, below both approved targets. The approved targets read as a winning player's ratio, not a level average; kept per rule 5."
+  },
+  "card_serveWonPct": {
+   "targets": {
+    "M": [
+     48,
+     48.5,
+     49,
+     49.5,
+     50
+    ],
+    "W": [
+     48,
+     48.5,
+     49,
+     49.5,
+     50
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.mdpi.com/1660-4601/16/21/4057"
+   ],
+   "note": "No published rally-won-on-serve % found (Gomez 2019 splits point outcome by serving/receiving but not win share). Between evenly matched players this sits near the structural serve (dis)advantage at every level, so it discriminates weakly. Approved targets kept; Elite = international."
+  },
+  "card_serveErrPct": {
+   "targets": {
+    "M": [
+     3.0,
+     2.5,
+     2.0,
+     1.5,
+     1.0
+    ],
+    "W": [
+     3.0,
+     2.5,
+     2.0,
+     1.5,
+     1.0
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published serve-fault rates found. Approved University 3 / Elite 1 kept, Elite mapped to international (serve faults are rare in elite play), with even interpolation between."
+  },
+  "card_receiveErrPct": {
+   "targets": {
+    "M": [
+     12.0,
+     10.8,
+     9.5,
+     8.3,
+     7.0
+    ],
+    "W": [
+     12.0,
+     10.8,
+     9.5,
+     8.3,
+     7.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.mdpi.com/2076-3417/16/8/3819",
+    "Hayashi et al. (2026) Novel Analysis of Game Performance in Badminton: BWF Top-Ranking vs Regional University League Players, Applied Sciences 16(8):3819"
+   ],
+   "note": "Men's singles receive errors: BWF top-ranking 6.8% vs university league 13.6%. Approved University 12 kept (rule 5); Elite 7 matches BWF, so Elite = international. Evenly interpolated; women assumed equal (no data)."
+  },
+  "card_smashWinPct": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "published",
+   "sources": [
+    "https://www.mdpi.com/2076-3417/16/8/3819",
+    "Hayashi et al. (2026) Applied Sciences 16(8):3819"
+   ],
+   "note": "Null (rule 4): smash ace rate falls as opposition defence improves. University players 15.4% after a lift and 22.3% after a clear, vs BWF 12.2% and 14.2%; after a long receive both ~24.5%. Approved 12/13 fit BWF players but would rate university players as international."
+  },
+  "card_smashErrPct": {
+   "targets": {
+    "M": [
+     10.0,
+     9.3,
+     8.5,
+     7.8,
+     7.0
+    ],
+    "W": [
+     10.0,
+     9.3,
+     8.5,
+     7.8,
+     7.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.mdpi.com/2076-3417/16/8/3819",
+    "Hayashi et al. (2026) Applied Sciences 16(8):3819"
+   ],
+   "note": "Smash error rates: BWF 7.1-9.4% vs university 8.0-15.8% depending on preceding shot. Approved University 10 kept; Elite 7 matches BWF, so Elite = international; even interpolation. Women assumed equal."
+  },
+  "card_netErrPct": {
+   "targets": {
+    "M": [
+     8.0,
+     7.3,
+     6.5,
+     5.8,
+     5.0
+    ],
+    "W": [
+     8.0,
+     7.3,
+     6.5,
+     5.8,
+     5.0
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.mdpi.com/2076-3417/16/8/3819"
+   ],
+   "note": "Hayashi 2026 reports significantly lower hairpin (net) error rates and >90% rally-continuing hairpin shots for BWF players vs university players, but the exact rates were not accessible. Approved targets kept, Elite = international, even interpolation."
+  },
+  "card_netKillPct": {
+   "targets": {
+    "M": [
+     50,
+     52.5,
+     55,
+     57.5,
+     60
+    ],
+    "W": [
+     50,
+     52.5,
+     55,
+     57.5,
+     60
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published net-kill conversion data found. Approved targets kept, Elite = international. Like smash winners, this may fall against stronger defence; revisit with the app's own data."
+  },
+  "card_liftNegPct": {
+   "targets": {
+    "M": [
+     25,
+     22.5,
+     20,
+     17.5,
+     15
+    ],
+    "W": [
+     25,
+     22.5,
+     20,
+     17.5,
+     15
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published data on graded (+/-) lifts and clears. Approved University 25 / Elite 15 kept, Elite = international, even interpolation."
+  },
+  "card_effDefence": {
+   "targets": {
+    "M": [
+     -10,
+     -5,
+     0,
+     5,
+     10
+    ],
+    "W": [
+     -10,
+     -5,
+     0,
+     5,
+     10
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Coach-graded (+ minus -) / attempts; no published equivalent found. Approved targets kept, Elite = international, even interpolation."
+  },
+  "card_effDrop": {
+   "targets": {
+    "M": [
+     10,
+     15,
+     20,
+     25,
+     30
+    ],
+    "W": [
+     10,
+     15,
+     20,
+     25,
+     30
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://www.mdpi.com/2076-3417/16/8/3819"
+   ],
+   "note": "Coach-graded. Hayashi 2026 found >90% rally-continuing drops and significantly fewer drop errors for BWF players, but its ace-minus-error 'effectiveness' is opposition-sensitive, and the paper's grading differs from this card's +/-. Approved targets kept, Elite = international."
+  }
+ },
+ "Tennis": {
+  "sprint20m": {
+   "targets": {
+    "M": [
+     3.3,
+     3.23,
+     3.16,
+     3.09,
+     3.02
+    ],
+    "W": [
+     3.62,
+     3.54,
+     3.46,
+     3.38,
+     3.3
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12397999/",
+    "Axman et al. (2025) Physical Performance Tests in 8008 Competitive Youth Tennis Players - A Systematic Review and Meta-Analysis of Normative Values, European Journal of Sport Science"
+   ],
+   "note": "Meta-analysis pooled U18 competitive tennis players: boys 3.09 s, girls 3.38 s, mapped to national. The other levels are spread evenly (about 0.07-0.08 s per level), and international is estimated. The women's gap (~9-10%) matches the published sex difference."
+  },
+  "verticalJump": {
+   "targets": {
+    "M": [
+     44,
+     47,
+     50,
+     53,
+     57
+    ],
+    "W": [
+     33,
+     35,
+     37,
+     39,
+     42
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12397999/",
+    "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf"
+   ],
+   "note": "Assumes a free-arm vertical jump, as the app's 30-65 cm anchors imply. Meta-analysis hands-on-hips CMJ for U18 players is 38 cm (boys) and 31 cm (girls); adding ~12-15% for arm swing gives about 43/35. Chinese national/international juniors aged ~15 jumped 50.6/39.6 cm. National-to-international is estimated from these. Take ~6 cm off every value if the app measures hands-on-hips CMJ."
+  },
+  "handGrip": {
+   "targets": {
+    "M": [
+     44,
+     47,
+     50,
+     53,
+     56
+    ],
+    "W": [
+     30,
+     32,
+     34,
+     36,
+     38
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12397999/",
+    "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf"
+   ],
+   "note": "Dominant hand. Meta-analysis pooled values: U18 boys 49.9 kg (U17 49.1), U18 girls 35.8 kg (U17 37.7). Chinese elite juniors: 47.7 / 37.0 kg. Junior values were mapped to state-national, and adult international (~56/38) plus the lower levels are estimated."
+  },
+  "onCourtAgility": {
+   "targets": {
+    "M": [
+     17.3,
+     16.9,
+     16.5,
+     16.1,
+     15.7
+    ],
+    "W": [
+     18.4,
+     18.0,
+     17.6,
+     17.2,
+     16.8
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://peerj.com/articles/19339/",
+    "https://doi.org/10.3390/ijerph18126512",
+    "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf"
+   ],
+   "note": "Assumes the tennis Spider run (5 sprints from the centre of the baseline), which is the standard on-court agility test in tennis. Published values: collegiate women (ITN 5+) 18.2 s, mapped to university/zonal; elite Hungarian U18 juniors 18.05 s (boys) and 19.28 s (girls); Chinese national juniors 18.3/19.1 s. Protocols differ by ~1 s, so the adult men's and international values are estimated. Note: the app's 11-18 s anchors do not fit a Spider run."
+  },
+  "yoyoLevel": {
+   "targets": {
+    "M": [
+     16.3,
+     16.8,
+     17.3,
+     17.8,
+     18.5
+    ],
+    "W": [
+     15.2,
+     15.6,
+     16.1,
+     16.5,
+     17.1
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf",
+    "https://www.theyoyotest.com/table-YYIR1.htm"
+   ],
+   "note": "Yo-Yo IR1 in speed-level.shuttle notation (M 1200-1920 m, W 840-1440 m). The only tennis data found: Chinese national/international juniors aged ~15 ran 1504 m (~17.2) and 1100 m (~16.0), mapped to state. The rest is estimated, and tennis sits well below football norms."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     173,
+     175,
+     177,
+     179,
+     182
+    ],
+    "W": [
+     160,
+     162,
+     164,
+     166,
+     169
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://tenniscompanion.org/players/male/height-and-weight/",
+    "https://tenniscompanion.org/players/female/height-and-weight/",
+    "https://baselinerank.com/blog/atp-top-100-height-analysis/"
+   ],
+   "note": "Tour top-100 averages are ATP 188 cm (top-10 191.9) and WTA 174 cm. Those are a ceiling, not Indian international level. The ladder is estimated from Indian university population heights, stepping up about 2-3 cm per level. No Indian tennis height data was found."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     42,
+     44,
+     46,
+     48,
+     50
+    ],
+    "W": [
+     40,
+     41,
+     42,
+     43,
+     44
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "http://efsupit.ro/images/stories/2iunie2017/art126.pdf",
+    "https://pubmed.ncbi.nlm.nih.gov/25111161/",
+    "https://www.jssm.org/16-4-489.p_d_f"
+   ],
+   "note": "Tennis GPS match play (whole match, including time between points): young players 46.0 m/min; adolescent boys 3362 m in 81 min (41 m/min). These are mapped to university-state. The footballer 105-120 m/min figure does not apply. Hawk-Eye in-point distance per point is 7.4 m (pro men) vs 6.9 m (junior boys) but 5.9 m (pro women) vs 6.3 m (junior girls), so the women's ladder is nearly flat."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     16.5,
+     17.3,
+     18.1,
+     18.9,
+     19.8
+    ],
+    "W": [
+     15.2,
+     15.9,
+     16.6,
+     17.3,
+     18.2
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "http://efsupit.ro/images/stories/2iunie2017/art126.pdf",
+    "https://pubmed.ncbi.nlm.nih.gov/25111161/",
+    "https://www.atptour.com/en/news/physicality-index-detailed-explainer-2023"
+   ],
+   "note": "Youth GPS peak speeds are 4.34 m/s (15.6 km/h) and 4.4 m/s (15.8 km/h). The ATP Physicality Index lists a men's-tennis maximum speed of 23.58 km/h. Adult university to international peaks are estimated between these, and women are set ~8% lower. A short filmed clip gives a lower peak than a full match."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": [
+     0.5,
+     0.7,
+     0.9,
+     1.1,
+     1.4
+    ],
+    "W": [
+     0.3,
+     0.45,
+     0.6,
+     0.75,
+     0.9
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "http://efsupit.ro/images/stories/2iunie2017/art126.pdf"
+   ],
+   "note": "Young players covered 0.51 m/min above 3.8 m/s (13.7 km/h), mapped to university men. The other levels are estimated. High-speed running is a tiny share of tennis movement because most movements happen within ~2.5 m."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": [
+     0.01,
+     0.03,
+     0.05,
+     0.08,
+     0.12
+    ],
+    "W": [
+     0.01,
+     0.01,
+     0.02,
+     0.03,
+     0.05
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "http://efsupit.ro/images/stories/2iunie2017/art126.pdf",
+    "https://www.atptour.com/en/news/physicality-index-detailed-explainer-2023"
+   ],
+   "note": "Running above 18 km/h is rare in tennis: youth peak speeds (~15.6 km/h) never reach it, and only elite adults touch 18-23 km/h. Values are estimated near zero and are flat for university/zonal women. This metric will barely separate tennis players."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     0.5,
+     0.6,
+     0.7,
+     0.8,
+     0.9
+    ],
+    "W": [
+     0.45,
+     0.5,
+     0.6,
+     0.7,
+     0.8
+    ]
+   },
+   "basis": "estimated",
+   "sources": [
+    "https://pubmed.ncbi.nlm.nih.gov/25111161/",
+    "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2025.1613661/xml"
+   ],
+   "note": "Adolescent boys: high accelerations 0.6/min. Elite U16 boys: 56-58 accelerations of at least 2 m/s² per match. Neither study used the 3 m/s² threshold, so the ladder is estimated around these values."
+  },
+  "card_firstInPct": {
+   "targets": {
+    "M": [
+     55.0,
+     56.8,
+     58.5,
+     60.3,
+     62.0
+    ],
+    "W": [
+     55.0,
+     56.8,
+     58.5,
+     60.3,
+     62.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f",
+    "Kovalchik & Reid (2017) Comparing Matchplay Characteristics and Physical Demands of Junior and Professional Tennis Athletes in the Era of Big Data, J Sports Sci Med 16:489-497",
+    "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+   ],
+   "note": "Elite maps to international. At the 2017 Australian Open: pro men 63.7%, junior boys 59.3%; pro women 57.1%, junior girls 55.0%. At the 2023 Roland Garros: men ~61%. Levels are interpolated evenly from the approved 55 to 62. The women's elite value of 62 is above the observed pro average of ~57, but was kept as approved."
+  },
+  "card_firstWonPct": {
+   "targets": {
+    "M": [
+     62.0,
+     64.5,
+     67.0,
+     69.5,
+     72.0
+    ],
+    "W": [
+     57.0,
+     58.8,
+     60.5,
+     62.3,
+     64.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f",
+    "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+   ],
+   "note": "Elite maps to international: pro men 72.1% and pro women 64.2% at the 2017 AO match the approved Elite targets almost exactly. Junior boys 66.7% sits at state level; junior girls 64.1% is already at the pro women's value. Even interpolation from the approved University values."
+  },
+  "card_secondWonPct": {
+   "targets": {
+    "M": [
+     45.0,
+     46.3,
+     47.5,
+     48.8,
+     50.0
+    ],
+    "W": [
+     40.0,
+     41.5,
+     43.0,
+     44.5,
+     46.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f",
+    "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+   ],
+   "note": "Pro men 50.4% / junior boys 47.3%, and pro women 45.6% / junior girls 44.3% (2017 AO), so Elite maps to international. At the 2023 Grand Slams, male winners won 54-55% and losers 44%. Even interpolation."
+  },
+  "card_acePct": {
+   "targets": {
+    "M": [
+     5.0,
+     6.3,
+     7.5,
+     8.8,
+     10.0
+    ],
+    "W": [
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f"
+   ],
+   "note": "Aces per service point at the 2017 AO: pro men 8.0%, junior boys 3.6%, pro women 3.8%, junior girls 2.8%. Elite maps to international. Evidence suggests the men's approved University target of 5 is high, since elite junior boys averaged only 3.6%. It was kept as approved."
+  },
+  "card_dfPct": {
+   "targets": {
+    "M": [
+     15.0,
+     13.8,
+     12.5,
+     11.3,
+     10.0
+    ],
+    "W": [
+     15.0,
+     14.3,
+     13.5,
+     12.8,
+     12.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f"
+   ],
+   "note": "The 2017 AO double faults per service point (pro men 3.8%, junior boys 4.9%, pro women 5.0%, junior girls 5.4%) were converted per second serve using first-serve-in %. That gives pro men ~10.5%, junior boys ~12.0%, pro women ~11.7%, junior girls ~12.0%. Elite maps to international. Lower is better, and the ladder falls evenly from the approved 15."
+  },
+  "card_wue": {
+   "targets": {
+    "M": [
+     0.8,
+     0.93,
+     1.05,
+     1.18,
+     1.3
+    ],
+    "W": [
+     0.7,
+     0.74,
+     0.78,
+     0.81,
+     0.85
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match",
+    "https://www.tennisabstract.com/blog/2015/09/04/a-closer-look-at-the-winner-unforced-error-ratio/"
+   ],
+   "note": "At the 2023 Roland Garros and US Open, male match winners averaged ~1.1-1.2 and losers ~0.76-0.81 (overall ~0.9-1.0). Tennis Abstract: 1.2 for men and 0.85 for women each go with ~70% match wins. The approved Elite (1.3 / 0.85) is a strong tour value, so it maps to international. Even interpolation."
+  },
+  "card_netWonPct": {
+   "targets": {
+    "M": [
+     58.0,
+     60.3,
+     62.5,
+     64.8,
+     67.0
+    ],
+    "W": [
+     58.0,
+     59.8,
+     61.5,
+     63.3,
+     65.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+   ],
+   "note": "2023 Roland Garros and US Open men: winners 70.2%, losers 61.3-63.6%, averaging about 66-67% (the approved Elite). This maps to international. No women's or sub-elite net data was found, so the women's ladder and lower levels are interpolated evenly from the approved targets."
+  },
+  "card_bpConvPct": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "published",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f"
+   ],
+   "note": "Set to null under rule 4: the level average falls as opposition gets stronger, because better servers are harder to break. At the 2017 AO: junior boys 42.9% vs pro men 37.5%, junior girls 44.4% vs pro women 42.9%. Approved targets (M 35→40, W 40→45) are not used as a ladder; university-level averages are likely above them."
+  },
+  "card_bpSavedPct": {
+   "targets": {
+    "M": [
+     50.0,
+     52.5,
+     55.0,
+     57.5,
+     60.0
+    ],
+    "W": [
+     50.0,
+     51.0,
+     52.0,
+     53.0,
+     54.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f"
+   ],
+   "note": "The mirror of break-point conversion, which rises with level. At the 2017 AO: pro men ~62.5% saved vs junior boys ~57.1%; pro women ~57.1% vs junior girls ~55.6%. Elite maps to international (approved 60 / 54, slightly below the pros). Even interpolation."
+  },
+  "card_returnWonPct": {
+   "targets": {
+    "M": null,
+    "W": null
+   },
+   "basis": "published",
+   "sources": [
+    "https://www.jssm.org/16-4-489.p_d_f",
+    "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+   ],
+   "note": "Set to null under rule 4. A level's average return-points-won equals 100 minus its serve-points-won, and serve dominance grows with level. From the 2017 AO serve stats: junior boys ~41% vs pro men ~36%, junior girls ~45% vs pro women ~44%. The approved targets (M 35→38, W 40→43) even sit below what a typical university returner would post."
+  },
+  "card_effForehand": {
+   "targets": {
+    "M": [
+     0,
+     5,
+     10,
+     15,
+     20
+    ],
+    "W": [
+     0,
+     5,
+     10,
+     15,
+     20
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published data uses this (+ minus -) / attempts coding. Elite maps to international to match the other card stats. Even interpolation from the approved University (0) to Elite (20)."
+  },
+  "card_effBackhand": {
+   "targets": {
+    "M": [
+     -5,
+     0,
+     5,
+     10,
+     15
+    ],
+    "W": [
+     -5,
+     0,
+     5,
+     10,
+     15
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published data uses this coding. Elite maps to international, with even interpolation from the approved -5 to 15."
+  },
+  "card_effDefence": {
+   "targets": {
+    "M": [
+     -10,
+     -5,
+     0,
+     5,
+     10
+    ],
+    "W": [
+     -10,
+     -5,
+     0,
+     5,
+     10
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No published data uses this coding. Elite maps to international, with even interpolation from the approved -10 to 10."
+  }
+ },
+ "Kho-Kho": {
+  "sprint30m": {
+   "targets": {
+    "M": [
+     4.85,
+     4.75,
+     4.63,
+     4.51,
+     4.4
+    ],
+    "W": [
+     5.4,
+     5.28,
+     5.15,
+     5.02,
+     4.9
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC9425793/",
+    "Kalpana K, Cherian KS, Khanna GL (2022) Energy availability and RED-S risk assessment among Kho-Kho players in India, Sport Sciences for Health",
+    "https://www.academia.edu/30049542/A_COMPARATIVE_STUDY_OF_SELECTED_PHYSICAL_FITNESS_VARIABLES_BETWEEN_KABADDI_AND_KHO_KHO_MALE_PLAYERS",
+    "https://www.academia.edu/90631689/Change_of_Performance_Characteristics_in_Different_Age_Group_of_Kho_Kho_Players"
+   ],
+   "note": "Men national = published 4.51 s 30 m sprint (n=52 national male players, Kalpana 2022). University men estimated from intercollegiate 50 m 7.09 s (Singh & Dubey 2016); international extrapolated. Women estimated ~11% slower, consistent with 18-23 y club/university women's 50 m 8.34 s (Kapas & Paul 2022)."
+  },
+  "shuttleRun": {
+   "targets": {
+    "M": [
+     10.9,
+     10.55,
+     10.25,
+     9.4,
+     9.2
+    ],
+    "W": [
+     11.9,
+     11.55,
+     11.2,
+     10.15,
+     9.95
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.ijfmr.com/papers/2025/3/46170.pdf",
+    "Das S, Sekh N (2025) A Comparative Status on Selected Physiological and Motor Variables of Different Level Women Kho-Kho Players in West Bengal, IJFMR 7(3)",
+    "https://www.journalofsports.com/pdf/2023/vol8issue1/PartB/8-1-52481.pdf",
+    "https://www.academia.edu/90631689/Change_of_Performance_Characteristics_in_Different_Age_Group_of_Kho_Kho_Players"
+   ],
+   "note": "Women state/national = published 4x10 m (block pick-up) 11.20 / 10.15 s (Das & Sekh 2025); university blends their district 12.38 s with club/university women 11.34 s (Kapas & Paul 2022). Men estimated ~8% faster; college men 11.44 s (Paudyal 2023, Nepal) is the slow bound. Protocols vary a lot between Indian studies."
+  },
+  "standingBroadJump": {
+   "targets": {
+    "M": [
+     2.18,
+     2.24,
+     2.31,
+     2.4,
+     2.5
+    ],
+    "W": [
+     1.82,
+     1.9,
+     1.98,
+     2.07,
+     2.16
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.journalofsports.com/pdf/2023/vol8issue1/PartB/8-1-52481.pdf",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC9425793/",
+    "https://www.ijfmr.com/papers/2025/3/46170.pdf"
+   ],
+   "note": "College men 2.02 m (Paudyal 2023) sets the low end; national men estimated ~2.40 m from their 44-47 cm vertical jump (Kalpana 2022). Women: district 1.87 m published (Das & Sekh 2025); their state 2.12 / national 2.55 m were discounted as implausible (national women above national men, SD only 0.07-0.15 m), so women set ~17% below men."
+  },
+  "sitAndReach": {
+   "targets": {
+    "M": [
+     22,
+     25,
+     28,
+     32,
+     34
+    ],
+    "W": [
+     28,
+     31,
+     34,
+     38,
+     40
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.ijfmr.com/papers/2025/3/46170.pdf",
+    "https://www.academia.edu/25446537/A_comparative_study_of_flexibility_between_kabaddi_and_kho_kho_male_players"
+   ],
+   "note": "Women published district 27.7 / state 34.2 / national 38.9 cm (Das & Sekh 2025), mapped university/state/national. Men estimated ~6 cm lower (usual sex gap); male kho-kho studies use incompatible box zeros (e.g. 5.9 in university men, Pandey 2016), so not used directly."
+  },
+  "heightCm": {
+   "targets": {
+    "M": [
+     166,
+     166,
+     167,
+     168,
+     169
+    ],
+    "W": [
+     156,
+     158,
+     160,
+     162,
+     163
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.academia.edu/83844647/Physical_and_anthropometric_characteristics_of_national_level_male_runners_of_kho_kho_game",
+    "Tyagi S, Vanaik A, Kumar A (2018) Physical and anthropometric characteristics of national level male runners of kho-kho game, International Journal of Applied Research 4(5):490-492",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC9425793/",
+    "https://www.ijfmr.com/papers/2025/3/46170.pdf",
+    "https://www.academia.edu/90631689/Change_of_Performance_Characteristics_in_Different_Age_Group_of_Kho_Kho_Players"
+   ],
+   "note": "National men 168.9 cm (n=100, Tyagi 2018) and ~164-168 cm (n=52, Kalpana 2022) -> national 168; height barely separates levels in kho-kho so the male ladder is near-flat. Women: West Bengal district/state/national 158.5/162.6/165.7 cm (SD ~1 cm, implausibly tight) blended with 18-23 y club/university women 153.5 cm (Kapas & Paul 2022)."
+  },
+  "matchMetresPerMin": {
+   "targets": {
+    "M": [
+     100,
+     108,
+     116,
+     124,
+     132
+    ],
+    "W": [
+     92,
+     99,
+     107,
+     114,
+     121
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "No kho-kho GPS/time-motion study found (searched Indian journals). Estimated for a defender's active bout on a 27x16 m court (near-continuous running broken by pole turns and dodges), kept inside the app's 60-140 anchors; women ~8% lower. Chasers sitting in the squares will read far lower, so compare like with like."
+  },
+  "matchTopSpeedKmh": {
+   "targets": {
+    "M": [
+     22.0,
+     23.0,
+     24.0,
+     25.0,
+     26.0
+    ],
+    "W": [
+     19.5,
+     20.5,
+     21.5,
+     22.5,
+     23.5
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Estimated. Longest straight in kho-kho is ~20-24 m (post to post), so peaks sit well below football; a 4.5 s 30 m sprinter reaches ~25-27 km/h over that distance."
+  },
+  "matchHsrPerMin": {
+   "targets": {
+    "M": [
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0
+    ],
+    "W": [
+     3.0,
+     3.8,
+     4.6,
+     5.4,
+     6.2
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Estimated (>15 km/h). Short straights and constant direction changes limit time above 15 km/h; no kho-kho tracking data exists to calibrate."
+  },
+  "matchSprintMetresPerMin": {
+   "targets": {
+    "M": [
+     0.8,
+     1.0,
+     1.3,
+     1.6,
+     2.0
+    ],
+    "W": [
+     0.4,
+     0.55,
+     0.7,
+     0.9,
+     1.1
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Estimated (>20 km/h). Only the active chaser's lane sprints and long dives cross 20 km/h, so values are small; treat as low-confidence."
+  },
+  "matchAccelPerMin": {
+   "targets": {
+    "M": [
+     2.0,
+     2.4,
+     2.8,
+     3.2,
+     3.6
+    ],
+    "W": [
+     1.7,
+     2.0,
+     2.4,
+     2.7,
+     3.0
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Estimated (>3 m/s^2). Kho-kho is dominated by bursts: kho-and-go starts, pole turns and dodges, so acceleration counts are relatively high for the distance covered."
+  },
+  "card_touchSuccess": {
+   "targets": {
+    "M": [
+     35,
+     38.8,
+     42.5,
+     46.3,
+     50
+    ],
+    "W": [
+     35,
+     38.8,
+     42.5,
+     46.3,
+     50
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Directorate targets kept (University 35, Elite 50 -> international), even interpolation. No published attempt counts exist; UKK only publishes successful outs. One set for mat and traditional."
+  },
+  "card_chaserOuts": {
+   "targets": {
+    "M": [
+     1.5,
+     1.88,
+     2.25,
+     2.63,
+     3.0
+    ],
+    "W": [
+     1.5,
+     1.88,
+     2.25,
+     2.63,
+     3.0
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.ultimatekhokho.com/news/dream-team-from-season-1-of-ultimate-kho-kho",
+    "https://www.ultimatekhokho.com/news/ultimate-kho-kho-season-2-hall-of-fame-meet-the-top-attackers",
+    "https://www.ultimatekhokho.com/news/ultimate-kho-kho-season-2-all-your-faqs-answered"
+   ],
+   "note": "Elite 3 mapped to international. UKK scores every out at 2 pts; league-leading attackers (Indian internationals) scored 84-108 pts a season, ~3.5-5 outs/match, so a typical international at 3 is consistent. Between levels interpolated."
+  },
+  "card_diveShare": {
+   "targets": {
+    "M": [
+     30,
+     37.5,
+     45,
+     52.5,
+     60
+    ],
+    "W": [
+     30,
+     37.5,
+     45,
+     52.5,
+     60
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.ultimatekhokho.com/news/ultimate-kho-kho-season-2-hall-of-fame-meet-the-top-attackers",
+    "https://www.ultimatekhokho.com/news/dream-team-from-season-1-of-ultimate-kho-kho"
+   ],
+   "note": "Elite 60 mapped to international. UKK (mat) top attackers took 65-75% of outs by pole/sky dive (e.g. Ramji Kashyap S2: 58 of 84 pts from dives), so league leaders sit just above. Dives are likely rarer on mud grounds, but no data quantifies it, so one set is kept."
+  },
+  "card_khoQuality": {
+   "targets": {
+    "M": [
+     25,
+     28.8,
+     32.5,
+     36.3,
+     40
+    ],
+    "W": [
+     25,
+     28.8,
+     32.5,
+     36.3,
+     40
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Directorate targets kept (University 25, Elite 40 -> international), even interpolation. No published kho-grading data found."
+  },
+  "card_khoFoul": {
+   "targets": {
+    "M": [
+     10,
+     8.8,
+     7.5,
+     6.3,
+     5
+    ],
+    "W": [
+     10,
+     8.8,
+     7.5,
+     6.3,
+     5
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Lower is better. Directorate targets kept (University 10, Elite 5 -> international), even interpolation. No published foul-kho rates found."
+  },
+  "card_defendTime": {
+   "targets": {
+    "M": [
+     60,
+     70,
+     80,
+     90,
+     100
+    ],
+    "W": [
+     60,
+     70,
+     80,
+     90,
+     100
+    ]
+   },
+   "basis": "mixed",
+   "sources": [
+    "https://www.ultimatekhokho.com/news/dream-team-from-season-1-of-ultimate-kho-kho"
+   ],
+   "note": "Elite 100 mapped to international. UKK S1 best defenders (India internationals) averaged ~101-106 s/match (e.g. 20:23 over 12 matches; 1:43/match), which matches Elite 100 closely. Between levels interpolated."
+  },
+  "card_avgRun": {
+   "targets": {
+    "M": [
+     45,
+     52.5,
+     60,
+     67.5,
+     75
+    ],
+    "W": [
+     45,
+     52.5,
+     60,
+     67.5,
+     75
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Directorate targets kept (University 45, Elite 75 -> international), even interpolation. UKK does not publish runs per match, so per-run time could not be checked."
+  },
+  "card_notOutPct": {
+   "targets": {
+    "M": [
+     10,
+     12.5,
+     15,
+     17.5,
+     20
+    ],
+    "W": [
+     10,
+     12.5,
+     15,
+     17.5,
+     20
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Directorate targets kept (University 10, Elite 20 -> international), even interpolation. No published survival-to-end-of-turn rates found."
+  },
+  "card_defErrors": {
+   "targets": {
+    "M": [
+     0.5,
+     0.38,
+     0.25,
+     0.13,
+     0
+    ],
+    "W": [
+     0.5,
+     0.38,
+     0.25,
+     0.13,
+     0
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Lower is better. Directorate targets kept (University 0.5, Elite 0 -> international), even interpolation. No published error counts found."
+  },
+  "card_dodgeEff": {
+   "targets": {
+    "M": [
+     0,
+     7.5,
+     15,
+     22.5,
+     30
+    ],
+    "W": [
+     0,
+     7.5,
+     15,
+     22.5,
+     30
+    ]
+   },
+   "basis": "estimated",
+   "sources": [],
+   "note": "Directorate targets kept (University 0, Elite 30 -> international), even interpolation. No published dodge-outcome data found."
+  }
+ }
+}

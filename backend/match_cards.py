@@ -1673,18 +1673,27 @@ def player_values(sport, entries):
     cfg = SPORTS.get(sport)
     if not cfg or not entries:
         return {}, {}, None
+    values, context = measure_values(sport, entries, cfg["used"])
+    category, fmt = context["category"], context["format"]
+    ranges = {f"card_{key}": anchors(cfg["measure"][key], category, fmt) for key in cfg["used"]}
+    return values, ranges, context
+
+
+def measure_values(sport, entries, keys):
+    """({"card_<key>": value}, context) for these measures, over the cards in the category
+    and format of the player's latest one."""
+    cfg = SPORTS[sport]
     latest = max(entries, key=_when)["card"]
     category, fmt = latest.get("category"), latest.get("format")
     lines = [e["line"] for e in entries
              if e["card"].get("category") == category and e["card"].get("format") == fmt]
     t = tally(sport, lines, {"format": fmt})
-    values, ranges = {}, {}
-    for key in cfg["used"]:
+    values = {}
+    for key in keys:
         m = cfg["measure"][key]
         v = _value(m, t) if _enough(m, t) else None
         values[f"card_{key}"] = None if v is None else round(v, 1 if m["unit"] == "%" else 2)
-        ranges[f"card_{key}"] = anchors(m, category, fmt)
-    return values, ranges, {"category": category, "format": fmt, "matches": len(lines)}
+    return values, {"category": category, "format": fmt, "matches": len(lines)}
 
 
 def install(sports):

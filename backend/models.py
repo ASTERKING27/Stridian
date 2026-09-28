@@ -107,6 +107,8 @@ class Student(Base):
     photo_key: Mapped[str | None] = mapped_column(String(255))
     # set by the coach; it is how a match card names a player
     jersey_number: Mapped[int | None] = mapped_column(Integer)
+    # the team they play in, "M" (men's) or "W" (women's): which level targets apply
+    category: Mapped[str | None] = mapped_column(String(1))
 
     # nutrition inputs
     diet_preference: Mapped[str] = mapped_column(String(20), default="nonveg")
