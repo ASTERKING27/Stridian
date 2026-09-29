@@ -796,6 +796,13 @@ radar, and every clip the student appears in), **Match cards** (the card-only ve
 per tournament with trend arrows and University / Elite targets, and the player card summed
 over matches), **Training**, **Diet**, **Video**.
 
+**Official report** (a button beside Download Excel) is the one page for the Directorate
+of Sports: the player's details and photo, the level they play at, the best-fit (or
+confirmed) position, their test and match-card results with the level each reaches,
+strengths and what to work on — both read by level, so they agree with the headline —
+verified achievements, lines for the coach's remarks, and signature lines for the coach
+and the Director of Sports. It prints (or saves as PDF) on one A4 portrait page.
+
 Uploads show a progress bar, then the clip waits as **waiting → analysing → done**; the
 page refreshes itself while anything is in the queue, and says plainly when the
 analysis computer is off. The Dashboard filters Pending / Verified, and the report
@@ -856,6 +863,7 @@ backend/
 frontend/src/
   App.jsx           app shell, nav, theme, auth state
   Login.jsx         coach sign in / create account / forgot password
+  OfficialReport.jsx  the one-page report for the Directorate of Sports
   StudentAuth.jsx   student sign in, email code, new password
   StudentForm.jsx   student enrolment (and an admin's Add Student)
   Portal.jsx        a student's space: dashboard, report, achievements, profile

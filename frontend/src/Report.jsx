@@ -3,6 +3,7 @@ import { api, band, bandWord, download, formatValue, shortLabel, utc, wrapLabel 
 import { Radar, Sparkline } from './charts'
 import Diet from './Diet'
 import Icon from './Icon'
+import OfficialReport from './OfficialReport'
 import VideoCard from './VideoCard'
 import {
   Achievement, CertificateUpload, DetailsForm, DetailsView, Photo, PhotoButton, TEAMS,
@@ -23,6 +24,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
   const [error, setError] = useState('')
   const [tab, setTab] = useState(initialTab)
   const [saving, setSaving] = useState(false)
+  const [official, setOfficial] = useState(false)     // the one-page print for the directorate
 
   useEffect(() => {
     setData(null)
@@ -44,6 +46,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
 
   if (error) return <div className="banner bad">{error}</div>
   if (!data) return <div className="skeleton">Building report…</div>
+  if (official) return <OfficialReport data={data} onBack={() => setOfficial(false)} />
 
   const { student, recommended, metrics, positions, developmentPlan, videos, diet } = data
   const videoDrills = (videos ?? []).flatMap(v => v.metrics?.drills ?? [])
@@ -110,6 +113,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
           </div>
           {!readOnly && (
             <div className="row noprint">
+              <button className="btn sec sm" onClick={() => setOfficial(true)}>Official report</button>
               <button className="btn sec sm" disabled={saving} onClick={saveExcel}>
                 {saving ? 'Preparing…' : 'Download Excel'}
               </button>

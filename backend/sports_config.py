@@ -306,6 +306,16 @@ SPORTS["Tennis"] = {
     "positions": {p: {**c, "weights": dict(c["weights"])}
                   for p, c in SPORTS["Badminton"]["positions"].items()},
 }
+# ...except on-court agility: tennis times it with the Spider run, which covers the whole
+# baseline half of the court and takes longer than badminton's court test.
+# ponytail: the protocol is our pick until the coaches confirm theirs; the key stays the
+# same, so switching it back is this one line.
+SPORTS["Tennis"]["metrics"] = [
+    M("onCourtAgility", "Spider Run (on-court agility)", "sec", "lower", 20.0, 15.5,
+      basis="published", authority="Tennis Spider run",
+      note="Five sprints out from the centre of the baseline to the court's lines and back. "
+           "College players run about 18 s; elite junior boys about 18 s, girls about 19 s.")
+    if m["key"] == "onCourtAgility" else m for m in SPORTS["Tennis"]["metrics"]]
 SPORTS = {name: SPORTS[name] for name in
           ("Football", "Basketball", "Volleyball", "Cricket", "Badminton", "Tennis", "Kho-Kho")}
 

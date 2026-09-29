@@ -23,6 +23,7 @@ from pathlib import Path
 
 import match_cards
 import sports_config as sc
+from sports_config import TRAINING_TIPS
 from models import LEVELS
 
 DEFAULTS = json.loads((Path(__file__).parent / "levels.json").read_text(encoding="utf-8"))
@@ -93,15 +94,15 @@ def _weighted_median(pairs):
     return None
 
 
-def _summary(rows, weights):
+def _summary(rows, weights, minimum=1):
     """The level for these rows, each counted by its weight for the player's position.
-    When fewer than MIN_FOR_OVERALL of them matter for the position (the rest carry no
-    weight), every judged row counts instead, by its source's weight — so one weighted
-    test can't outvote five clips that say otherwise."""
+    When fewer than `minimum` of them matter for the position (the rest carry no weight),
+    every judged row counts instead, by its source's weight. The overall level asks for
+    MIN_FOR_OVERALL, so one weighted test can't outvote five clips that say otherwise."""
     judged = [r for r in rows if r["level"] is not None]
     pairs = [(r["level"], (weights or {}).get(r["key"], 0) * SOURCE_WEIGHT[r["source"]]) for r in judged]
     counted = [(level, w) for level, w in pairs if w > 0]
-    if len(counted) < min(MIN_FOR_OVERALL, len(judged)):
+    if len(counted) < min(minimum, len(judged)):
         counted = [(r["level"], SOURCE_WEIGHT[r["source"]]) for r in judged]
     return {"level": _weighted_median(counted) if counted else None, "measures": len(counted)}
 
@@ -131,11 +132,12 @@ def read_out(sport, values, category, card_category=None, card_format=None, weig
             nxt = {"level": level + 1, "target": target, "gap": round(target - value, 3)}
         entry = DEFAULTS[sport][key]
         rows.append({"key": key, **meta, "value": value, "ladder": steps, "level": level, "next": nxt,
-                     "custom": key in (overrides or {}), "basis": entry["basis"]})
+                     "custom": key in (overrides or {}), "basis": entry["basis"],
+                     "tip": TRAINING_TIPS.get(key)})
 
     groups = {g: _summary([r for r in rows if group_of(r["source"]) == g], weights)
               for g in ("test", "card", "match")}
-    overall = _summary(rows, weights)
+    overall = _summary(rows, weights, MIN_FOR_OVERALL)
     if overall["measures"] < MIN_FOR_OVERALL:
         overall["level"] = None
     return {"levels": LEVEL_WORDS, "category": category, "categoryFrom": category_from,
