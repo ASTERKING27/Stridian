@@ -94,17 +94,51 @@ def _weighted_median(pairs):
     return None
 
 
-def _summary(rows, weights, minimum=1):
-    """The level for these rows, each counted by its weight for the player's position.
-    When fewer than `minimum` of them matter for the position (the rest carry no weight),
-    every judged row counts instead, by its source's weight. The overall level asks for
-    MIN_FOR_OVERALL, so one weighted test can't outvote five clips that say otherwise."""
+def _counted(rows, weights, minimum=1):
+    """(level, weight) for each judged row, weighted by how much it matters for the
+    player's position. When fewer than `minimum` of them matter (the rest carry no
+    weight), every judged row counts instead, by its source's weight. The overall level
+    asks for MIN_FOR_OVERALL, so one weighted test can't outvote five clips that say
+    otherwise."""
     judged = [r for r in rows if r["level"] is not None]
     pairs = [(r["level"], (weights or {}).get(r["key"], 0) * SOURCE_WEIGHT[r["source"]]) for r in judged]
     counted = [(level, w) for level, w in pairs if w > 0]
     if len(counted) < min(minimum, len(judged)):
         counted = [(r["level"], SOURCE_WEIGHT[r["source"]]) for r in judged]
+    return counted
+
+
+def _summary(rows, weights, minimum=1):
+    counted = _counted(rows, weights, minimum)
     return {"level": _weighted_median(counted) if counted else None, "measures": len(counted)}
+
+
+def standing(counted):
+    """For each level, how many of the counted measures meet it and what share of their
+    weight that is. The level a player plays at is the highest one met by more than half."""
+    total = sum(w for _, w in counted)
+    if not total:
+        return []
+    # `meets` is decided on the unrounded weights, with the same tolerance as the median,
+    # so the highest level it marks is always the level they play at
+    return [{"met": sum(1 for level, _ in counted if level >= i), "of": len(counted),
+             "share": round(sum(w for level, w in counted if level >= i) / total, 3),
+             "meets": sum(w for level, w in counted if level < i) < total / 2 - 1e-9}
+            for i in range(len(LEVELS))]
+
+
+def scales(sport, category, card_category=None, card_format=None, overrides=None):
+    """{metric key: five level targets} for every measure of `sport` with a usable
+    ladder for this player: tests and footage for their team, card measures for the team
+    and format of their cards. Scores are read off these instead of poor → elite."""
+    out = {}
+    for key, meta in catalogue(sport).items():
+        card = meta["source"] == "card"
+        steps = ladder(targets(sport, key, overrides), card_category if card else category,
+                       card_format if card else None)
+        if steps and steps[0] != steps[-1]:
+            out[key] = list(steps)
+    return out
 
 
 def read_out(sport, values, category, card_category=None, card_format=None, weights=None,
@@ -137,12 +171,13 @@ def read_out(sport, values, category, card_category=None, card_format=None, weig
 
     groups = {g: _summary([r for r in rows if group_of(r["source"]) == g], weights)
               for g in ("test", "card", "match")}
-    overall = _summary(rows, weights, MIN_FOR_OVERALL)
-    if overall["measures"] < MIN_FOR_OVERALL:
-        overall["level"] = None
+    counted = _counted(rows, weights, MIN_FOR_OVERALL)
+    overall = {"level": _weighted_median(counted) if len(counted) >= MIN_FOR_OVERALL else None,
+               "measures": len(counted)}
     return {"levels": LEVEL_WORDS, "category": category, "categoryFrom": category_from,
             "cardCategory": card_category, "cardFormat": card_format,
-            "overall": overall, "groups": groups, "rows": rows}
+            "overall": overall, "groups": groups, "rows": rows,
+            "standing": standing(counted) if overall["level"] is not None else []}
 
 
 def check(sport, key, spec):
@@ -181,6 +216,8 @@ def check(sport, key, spec):
 
 
 if __name__ == "__main__":
+    from scoring import level_of, normalize_ladder
+
     # every built-in ladder passes the same check a coach's edit must
     for sport_name, measures in DEFAULTS.items():
         for metric_key in measures:
@@ -206,4 +243,28 @@ if __name__ == "__main__":
             "matchSprintMetresPerMin": 0.1, "matchAccelPerMin": 0.1}
     alone = read_out("Football", {"sprint30m": 4.05, **slow}, "M", weights=keeper)
     assert alone["overall"]["level"] == -1, alone["overall"]
+    # the level they play at is the highest one the standing marks as met — for any weights
+    import random
+    rng = random.Random(7)
+    for _ in range(5000):
+        pairs = [(rng.randint(-1, 4), rng.choice([0.5, 1.0, rng.random()]) * rng.random())
+                 for _ in range(rng.randint(1, 12))]
+        pairs = [(lv_, w) for lv_, w in pairs if w > 0] or [(0, 1.0)]
+        met = [i for i, x in enumerate(standing(pairs)) if x["meets"]]
+        assert (met[-1] if met else -1) == _weighted_median(pairs), (pairs, standing(pairs))
+    # and a score never names a level its value hasn't reached, however it rounds
+    for sport_name in DEFAULTS:
+        for metric_key, meta in catalogue(sport_name).items():
+            for cat in CATEGORIES:
+                steps = ladder(targets(sport_name, metric_key), cat, (formats_of(sport_name, metric_key) or [None])[0])
+                if not steps or steps[0] == steps[-1]:
+                    continue
+                lo, hi = sorted((steps[0] - (steps[-1] - steps[0]), steps[-1] + (steps[-1] - steps[0])))
+                for n in range(401):
+                    v = round(lo + (hi - lo) * n / 400, 3)
+                    got = level_of(normalize_ladder(v, steps, meta["better"]))
+                    want = reached(v, steps, meta["better"])
+                    assert (LEVEL_WORDS.index(got) if got else -1) == want, (sport_name, metric_key, v, got, want)
+    assert "card_bowlAvg" not in scales("Cricket", "M", "M", "t20")      # a flat ladder: no scale
+    assert scales("Football", "W")["sprint30m"] == targets("Football", "sprint30m")["W"]
     print("levels: ok")

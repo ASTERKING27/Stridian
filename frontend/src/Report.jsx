@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, band, bandWord, download, formatValue, shortLabel, utc, wrapLabel } from './api'
+import {
+  LEVEL_NAMES, api, band, bandWord, download, formatValue, scoreLevel, shortLabel, utc, wrapLabel,
+} from './api'
 import { Radar, Sparkline } from './charts'
 import Diet from './Diet'
 import Icon from './Icon'
@@ -147,8 +149,10 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
             <div>
               <h2>Measurements</h2>
               <p className="muted">
-                Test battery and physique, each scored 0–100 against the poor → elite range
-                for {data.sport}. Match footage and match cards have tabs of their own.
+                Test battery and physique, each scored 0–100 on the level ladder for their team —
+                University 20, Zonal 40, State 60, National 80, International 100. A measure with no
+                ladder for them is scored against the poor → elite range for {data.sport}. Match
+                footage and match cards have tabs of their own.
               </p>
             </div>
           </div>
@@ -473,7 +477,7 @@ function Overview({ data }) {
           <div style={{ marginTop: 'auto', paddingTop: 16 }}>
             <h3>Standout results</h3>
             {strengths.length === 0
-              ? <p className="muted">Nothing above 65/100 yet.</p>
+              ? <p className="muted">Nothing at State level (60/100) or better yet.</p>
               : <div className="chips">
                   {strengths.map(s => (
                     <span className="pill good" key={s.key}><i className="dot" />{s.label} {s.score}</span>
@@ -615,18 +619,30 @@ const LEVEL_GROUPS = [
 const TEAM_OF = { M: "men's", W: "women's" }
 const FORMAT_WORDS = { t20: 'T20', odi: '50-over', mat: 'mat', traditional: 'traditional' }
 
+// a ladder cell's second line: met, or how far off it is ("+2 cm", "−0.08 sec")
+function gapText(r, target) {
+  const met = (r.value - target) * (r.better === 'lower' ? -1 : 1) >= -1e-9
+  if (met) return '✓'
+  if (r.unit === 'level') return 'not yet'           // Yo-Yo levels don't subtract
+  const d = target - r.value
+  // decimals from the size of the gap, so a small one never reads as "+0"
+  const n = Number(Math.abs(d).toFixed(Math.abs(d) < 1 ? 2 : Math.abs(d) < 10 ? 1 : 0))
+  return `${d > 0 ? '+' : '−'}${n}${r.unit === '%' ? '%' : r.unit ? ` ${r.unit}` : ''}`
+}
+
 function LevelsTab({ data, readOnly }) {
   const lv = data.levels
   if (!lv) return null
   const { position } = lv
   const plain = (v, r) => formatValue(v, { key: r.key })     // no unit in the ladder cells
+  const they = readOnly ? 'you' : 'they'
 
   return (
     <>
       <div className="card">
         <div className="hero">
           <div>
-            <div className="label">{lv.overall.level >= 0 ? 'Plays at' : 'Level'}</div>
+            <div className="label">{lv.overall.level != null && lv.overall.level >= 0 ? 'Plays at' : 'Level'}</div>
             <div className="big">
               {lv.overall.level != null ? `${levelName(lv, lv.overall.level)} level` : 'Not enough measured yet'}
             </div>
@@ -641,13 +657,13 @@ function LevelsTab({ data, readOnly }) {
           ))}
         </div>
         <p className="muted" style={{ marginTop: 12 }}>
-          Each level&apos;s target is what players at that level typically post. A measure reaches the
-          highest level whose target it matches. The overall level is where half the evidence sits,
-          each measure counted by how much it matters{position ? ` for ${position}` : ''}
-          {lv.overall.level == null && lv.overall.measures > 0 ? ` — it needs at least 3 measures that can be compared (${lv.overall.measures} so far)` : ''}.
+          Each level&apos;s target is what players at that level typically post, and every score in
+          this report is read off the same ladder: University 20, Zonal 40, State 60, National 80,
+          International 100.
+          {lv.overall.level == null && lv.overall.measures > 0 ? ` A level needs at least 3 measures that can be compared (${lv.overall.measures} so far).` : ''}
           {lv.category && ` Tests and footage are read against ${TEAM_OF[lv.category]} targets${lv.categoryFrom !== 'card' ? ''
             : readOnly ? ' (from your latest match card)' : ' (from their latest match card — set their team on the Profile tab)'}.`}
-          {lv.cardCategory && ` Match cards use ${TEAM_OF[lv.cardCategory]}${lv.cardFormat ? ` ${FORMAT_WORDS[lv.cardFormat] ?? lv.cardFormat}` : ''} targets, from the cards ${readOnly ? 'you' : 'they'} played.`}
+          {lv.cardCategory && ` Match cards use ${TEAM_OF[lv.cardCategory]}${lv.cardFormat ? ` ${FORMAT_WORDS[lv.cardFormat] ?? lv.cardFormat}` : ''} targets, from the cards ${they} played.`}
         </p>
         {!lv.category && (
           <div className="banner" style={{ marginBottom: 0 }}>
@@ -657,6 +673,35 @@ function LevelsTab({ data, readOnly }) {
         )}
       </div>
 
+      {lv.standing.length > 0 && (
+        <div className="card standing">
+          <div className="card-head">
+            <div>
+              <h2>{readOnly ? 'Where you stand at every level' : 'Where they stand at every level'}</h2>
+              <p className="muted">
+                How much of what matters{position ? ` for ${position}` : ''} already meets each
+                level&apos;s target, International at the top. {readOnly ? 'You play' : 'They play'} at
+                the highest level that more than half of it meets.
+              </p>
+            </div>
+          </div>
+          {lv.standing.map((x, i) => ({ ...x, i })).reverse().map(x => (
+            <div className="metric" key={x.i}>
+              <div className="mtop">
+                <span className="mname">
+                  {lv.levels[x.i]}
+                  {x.i === lv.overall.level && <span className="pill accent" style={{ marginLeft: 8 }}>plays here</span>}
+                </span>
+                <span className="mval"><b>{Math.round(x.share * 100)}%</b> · {x.met} of {x.of} measures</span>
+              </div>
+              <div className="track">
+                <i className={x.meets ? 'good' : x.share > 0 ? 'warn' : ''} style={{ width: `${x.share * 100}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {LEVEL_GROUPS.map(([key, title, match, hint]) => {
         const rows = lv.rows.filter(match)
         if (rows.length === 0) return null
@@ -665,14 +710,17 @@ function LevelsTab({ data, readOnly }) {
             <div className="card-head">
               <div>
                 <h2>{title}</h2>
-                {hint && <p className="muted">{hint}</p>}
+                <p className="muted">
+                  Each level&apos;s target, with ✓ where {they} already meet it and how far off {they} are where not.
+                  {hint && ` ${hint}`}
+                </p>
               </div>
             </div>
             <div className="sheetwrap">
               <table className="data levels">
                 <thead>
                   <tr>
-                    <th>Measure</th><th className="num">Value</th><th>Reaches</th><th>Next level</th>
+                    <th>Measure</th><th className="num">Value</th><th>Reaches</th>
                     {lv.levels.map(l => <th key={l} className="num">{l}</th>)}
                   </tr>
                 </thead>
@@ -689,15 +737,15 @@ function LevelsTab({ data, readOnly }) {
                           ? <span className={`pill ${levelTone(r.level)}`}>{levelName(lv, r.level)}</span>
                           : <span className="muted">{r.ladder ? '—' : 'Not compared'}</span>}
                       </td>
-                      <td>
-                        {r.next ? `${lv.levels[r.next.level]}: ${formatValue(r.next.target, r)}`
-                          : r.level === lv.levels.length - 1 ? 'Top level' : ''}
-                      </td>
-                      {lv.levels.map((l, i) => (
-                        <td key={l} className={`num${r.level != null && i <= r.level ? ' hit' : ''}`}>
-                          {r.ladder ? plain(r.ladder[i], r) : ''}
-                        </td>
-                      ))}
+                      {lv.levels.map((l, i) => {
+                        const gap = r.ladder && r.level != null ? gapText(r, r.ladder[i]) : ''
+                        return (
+                          <td key={l} className={`num ladcell${r.level != null && i <= r.level ? ' hit' : ''}`}>
+                            {r.ladder ? plain(r.ladder[i], r) : ''}
+                            {gap && <small className={gap === '✓' ? 'ok' : ''}>{gap}</small>}
+                          </td>
+                        )
+                      })}
                     </tr>
                   ))}
                 </tbody>
@@ -891,7 +939,11 @@ function CardsTab({ data }) {
           <div className="card-head">
             <div>
               <h2>Card metrics</h2>
-              <p className="muted">Scored 0–100: meeting the University target is 60, the Elite target is 100.</p>
+              <p className="muted">
+                Scored on the level ladder: University 20, Zonal 40, State 60, National 80,
+                International 100. A measure with no ladder keeps the card&apos;s own scale, where the
+                University target is 60 and the Elite target 100.
+              </p>
             </div>
           </div>
           {quality.map(m => <MetricRow key={m.key} metric={m} />)}
@@ -959,18 +1011,23 @@ function MetricRow({ metric: m, series }) {
         </span>
         <span className="mval">
           {formatValue(m.value, m)}
-          {m.score != null && <> · <b>{m.score}</b>/100 · {bandWord(m.score)}</>}
+          {m.score != null && <> · <b>{m.score}</b>/100 · {m.ladder ? scoreLevel(m.score) : bandWord(m.score)}</>}
         </span>
       </div>
       <div className="track"><i className={band(m.score)} style={{ width: `${m.score ?? 0}%` }} /></div>
+      {m.ladder && (
+        <span className="mscale ladderline">
+          {LEVEL_NAMES.map((l, i) => `${l} ${formatValue(m.ladder[i], { key: m.key })}`).join(' · ')}
+        </span>
+      )}
       <div className="mscale">
-        <span>{formatValue(m.poor, m)}</span>
+        <span>{m.ladder ? 'short of University' : formatValue(m.poor, m)}</span>
         <span title={m.note || undefined}>
           {m.source === 'profile' ? 'from profile'
             : m.direction === 'lower' ? 'lower is better' : 'higher is better'}
           {m.authority ? ` · ${m.authority}` : ''}
         </span>
-        <span>{formatValue(m.elite, m)}</span>
+        <span>{m.ladder ? 'International' : formatValue(m.elite, m)}</span>
       </div>
       {m.note && <p className="muted" style={{ marginTop: 4 }}>{m.note}</p>}
       {points.length > 1 && (

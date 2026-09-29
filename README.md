@@ -393,10 +393,16 @@ treats cards as their own pool of weight, like the tests and the footage.
 
 Everything rests on one idea, so the output is always explainable.
 
-1. **Normalise.** Each measurement is scored 0–100 against a `poor → elite` reference
-   range defined per sport in `sports_config.py`. A 30 m sprint of 5.20 s scores 0,
-   3.90 s scores 100. Timed tests need no special case — `poor` is simply the larger
-   number, so the same arithmetic runs both directions.
+1. **Normalise.** Each measurement is scored 0–100 on the **level ladder** for the
+   player's team (see *Levels* below): University 20, Zonal 40, State 60, National 80,
+   International 100, a straight line between two targets, and 0 one average step short
+   of University. So a score says the level at a glance — 64 is just past State — and it
+   never disagrees with the Levels tab (a score is capped just short of a target it
+   hasn't reached). A measure with no ladder for them (no team set, a stat that isn't
+   compared across levels, uncalibrated footage) is scored against the `poor → elite`
+   range in `sports_config.py` instead: a 30 m sprint of 5.20 s scores 0, 3.90 s scores
+   100. Timed tests need no special case in either — the arithmetic runs both directions.
+   A strength is 60 or more (State level), a weak link under 40 (short of Zonal).
 2. **Weight.** Each position is a weight profile over those metrics. A football winger
    is `sprint30m 0.40, agilityTtest 0.30, yoyoLevel 0.15, cmj 0.10, heightCm 0.05`.
 3. **Rank.** Position fit = weighted average of the scores that have values.
@@ -446,16 +452,15 @@ not have to sum to 1 — the engine divides by the total it actually used.
 
 ### Levels: University to International
 
-Beside the 0–100 scores, every report has a **Levels** tab: each number against what
-players typically post at **University, Zonal (AIU zone), State, National and
-International** level, for the men's or the women's team. A measure *reaches* the highest
-level whose target it matches, and the tab says how far the next level is. The overall
-"plays at" level is where half the evidence sits (a weighted median), each measure
-counted by its weight for the player's position (their verified one, else the suggested
-one) — the tests and the match cards lead, match footage counts half. At least three
-comparable measures are needed before it names an overall level. The scores, the
-position engine and the trainer never read the levels; they are a second, plainer
-reading of the same numbers.
+Every report has a **Levels** tab: each number against what players typically post at
+**University, Zonal (AIU zone), State, National and International** level, for the men's
+or the women's team, with a ✓ at every level it meets and how far off it is at every level
+it doesn't. **Where they stand at every level** shows, for each level, how much of what
+matters for their position already meets it (each measure counted by its weight for the
+position — their verified one, else the suggested one — with the tests and the match
+cards leading and footage counting half). They *play at* the highest level more than half
+of it meets; at least three comparable measures are needed before it names one. The
+0–100 scores are read off the same ladders (above), so the two never disagree.
 
 * **Which team.** Students pick Men's or Women's team when they enrol (once — their coach
   can change it; the Profile tab has it next to the jersey number). Tests and footage

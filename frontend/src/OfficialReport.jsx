@@ -22,9 +22,9 @@ export default function OfficialReport({ data, onBack }) {
 
   const levelName = i => (i == null ? '—' : i < 0 ? 'Below University' : lv.levels[i])
   const rowOf = Object.fromEntries((lv?.rows ?? []).map(r => [r.key, r]))
-  // "National: 173 cm" — what the next level asks for
-  const nextStep = (r, m) => (!r?.next ? (r?.level === lv.levels.length - 1 ? 'Top level' : '—')
-    : `${lv.levels[r.next.level]}: ${formatValue(r.next.target, m)}`)
+  // how far from the top: ✓, or the International target they are working towards
+  const toTop = r => (!r?.ladder || r.level == null ? '—'
+    : r.level === r.ladder.length - 1 ? '✓' : formatValue(r.ladder[r.ladder.length - 1], r))
   const tests = data.metrics.filter(m => (m.source === 'test' || m.source === 'profile') && m.value != null)
   const cards = (lv?.rows ?? []).filter(r => r.source === 'card')
   const verified = (achievements ?? []).filter(a => a.status === 'verified')
@@ -110,7 +110,7 @@ export default function OfficialReport({ data, onBack }) {
 
           <div className="or-head">
             <div>
-              <span>Plays at</span>
+              <span>{lv?.overall.level != null && lv.overall.level >= 0 ? 'Plays at' : 'Level'}</span>
               <b>{lv?.overall.level != null ? `${levelName(lv.overall.level)} level` : 'Not enough measured yet'}</b>
               {groups.length > 0 && (
                 <small>{groups.map(([k, word]) => `${word}: ${levelName(lv.groups[k].level)}`).join(' · ')}</small>
@@ -127,6 +127,20 @@ export default function OfficialReport({ data, onBack }) {
               <small>the more of each, the firmer the picture</small>
             </div>
           </div>
+          {lv?.standing.length > 0 && (
+            <table className="or-standing">
+              <tbody>
+                <tr>
+                  <th>Standing</th>
+                  {lv.standing.map((x, i) => (
+                    <td key={i} className={i === lv.overall.level ? 'here' : ''}>
+                      {lv.levels[i]} <b>{Math.round(x.share * 100)}%</b> <small>({x.met}/{x.of})</small>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          )}
           {data.reconciliation?.text && <p className="or-note">{data.reconciliation.text}</p>}
 
           <div className="or-cols">
@@ -134,12 +148,12 @@ export default function OfficialReport({ data, onBack }) {
               <h3>Test results{lv?.category ? ` (${lv.category === 'M' ? "men's" : "women's"} targets)` : ''}</h3>
               {tests.length === 0 ? <p className="or-empty">No test results recorded yet.</p> : (
                 <table>
-                  <thead><tr><th>Measure</th><th>Result</th><th>Level</th><th>Next level</th></tr></thead>
+                  <thead><tr><th>Measure</th><th>Result</th><th>Level</th><th>International</th></tr></thead>
                   <tbody>
                     {tests.slice(0, MAX.tests).map(m => (
                       <tr key={m.key}>
                         <td>{m.label}</td><td className="n">{formatValue(m.value, m)}</td>
-                        <td>{levelName(rowOf[m.key]?.level)}</td><td>{nextStep(rowOf[m.key], m)}</td>
+                        <td>{levelName(rowOf[m.key]?.level)}</td><td>{toTop(rowOf[m.key])}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -153,11 +167,12 @@ export default function OfficialReport({ data, onBack }) {
               </h3>
               {cards.length === 0 ? <p className="or-empty">No finished match cards yet.</p> : (
                 <table>
-                  <thead><tr><th>Measure</th><th>Value</th><th>Level</th></tr></thead>
+                  <thead><tr><th>Measure</th><th>Value</th><th>Level</th><th>International</th></tr></thead>
                   <tbody>
                     {cards.slice(0, MAX.cards).map(r => (
                       <tr key={r.key}>
-                        <td>{r.label}</td><td className="n">{formatValue(r.value, r)}</td><td>{levelName(r.level)}</td>
+                        <td>{r.label}</td><td className="n">{formatValue(r.value, r)}</td>
+                        <td>{levelName(r.level)}</td><td>{toTop(r)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -223,10 +238,10 @@ export default function OfficialReport({ data, onBack }) {
           </div>
 
           <footer className="ct-foot">
-            Prepared with Stridian on {day(new Date())} from the tests, match cards and footage recorded
-            for this player. Levels compare each result with what players typically post at University,
-            Zonal, State, National and International level; position fit is out of 100 against
-            the position&apos;s needs. Student ID {s.id}.
+            Prepared with Stridian on {day(new Date())} from this player&apos;s tests, match cards and footage.
+            Levels compare each result with what players typically post at each level; Standing is the share
+            of what matters for the position that meets each level, and they play at the highest one more
+            than half meets. Position fit uses the same ladder (University 20 … International 100). ID {s.id}.
           </footer>
         </article>
       </div>

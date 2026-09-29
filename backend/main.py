@@ -187,11 +187,23 @@ def card_entries(student: Student) -> list:
             if line.card.status == "final" and line.card.sport == student.sport]
 
 
+def score_inputs(db: Session, student: Student, entries: list):
+    """(card values, ranges, card context) for a student's scores. The ranges are the
+    level targets wherever there are any for their team (University 20 ... International
+    100 — levels.py), and otherwise the match cards' own anchors or the sport's poor →
+    elite. Tests and footage use the team on their profile, or else their latest card's."""
+    card_values, ranges, context = match_cards.player_values(student.sport, entries)
+    card_category, card_format = (context["category"], context["format"]) if context else (None, None)
+    ranges.update(levels.scales(student.sport, student.category or card_category, card_category,
+                                card_format, get_state(db, f"levels:{student.sport}")))
+    return card_values, ranges, context
+
+
 def metric_rows(db: Session, student: Student) -> list:
     """A student's 0-100 score on every metric — what the trainer learns from."""
     match_values = match_metrics.aggregate(
         [a.metrics for a in student.match_assignments if a.metrics])
-    card_values, ranges, _ = match_cards.player_values(student.sport, card_entries(student))
+    card_values, ranges, _ = score_inputs(db, student, card_entries(student))
     values = scoring.build_metric_values(
         student.sport, {"height_cm": student.height_cm, "weight_kg": student.weight_kg},
         latest_results(db, student.id), match_values, card_values)
@@ -292,7 +304,7 @@ def build_report(db: Session, student: Student) -> dict:
         [a.metrics for a in student.match_assignments if a.metrics]
     )
     entries = card_entries(student)
-    card_values, ranges, card_context = match_cards.player_values(student.sport, entries)
+    card_values, ranges, card_context = score_inputs(db, student, entries)
 
     def run(sources):
         return scoring.analyse(student.sport, profile, tests, weights, match_values=match_values,
@@ -530,6 +542,23 @@ def split_racket_sports():
         db.close()
 
 
+# what a cached squad-sheet row holds; a new value drops every cached row once, and the
+# worker (or the next export) builds them again
+SHEET_ROWS = "level-scale"
+
+
+def rebuild_sheet_rows_once():
+    """Scores moved to the level scale, so rows cached before it are rebuilt, once."""
+    db = SessionLocal()
+    try:
+        if get_state(db, "sheet_rows").get("version") == SHEET_ROWS:
+            return
+        db.execute(text("UPDATE students SET sheet_row = NULL"))
+        set_state(db, "sheet_rows", {"version": SHEET_ROWS})       # commits both
+    finally:
+        db.close()
+
+
 def init_db():
     """Tables, missing columns, default weights. Safe to run on every start."""
     Base.metadata.create_all(bind=engine)
@@ -541,6 +570,10 @@ def init_db():
         split_racket_sports()
     except Exception:  # noqa: BLE001 — never block start-up; it is retried on the next one
         log.warning("could not move Badminton / Tennis data across", exc_info=True)
+    try:
+        rebuild_sheet_rows_once()
+    except Exception:  # noqa: BLE001 — retried on the next start
+        log.warning("could not reset the cached sheet rows", exc_info=True)
     try:
         # one student per RA number, even if two enrolments race (the app checks first,
         # for a friendly message); partial, because most rows predate RA numbers
@@ -1075,7 +1108,9 @@ def put_level(sport: str, key: str, payload: LevelTargetsIn, db: Session = Depen
             overrides.pop(key, None)      # the built-in numbers again: nothing to keep
         else:
             overrides[key] = clean
-    return edit_levels(db, name, key, change)
+    out = edit_levels(db, name, key, change)
+    sync_sheet(db, sport_students(db, name))      # scores are read off the ladder
+    return out
 
 
 @app.delete("/api/sports/{sport}/levels/{key}")
@@ -1084,7 +1119,9 @@ def reset_level(sport: str, key: str, db: Session = Depends(get_db),
     name = level_sport(sport, coach)
     if key not in levels.catalogue(name):
         raise HTTPException(404, f"'{key}' has no level targets in {name}")
-    return edit_levels(db, name, key, lambda overrides: overrides.pop(key, None))
+    out = edit_levels(db, name, key, lambda overrides: overrides.pop(key, None))
+    sync_sheet(db, sport_students(db, name))
+    return out
 
 
 # --------------------------------- students -------------------------------- #

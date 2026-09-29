@@ -88,6 +88,15 @@ function ResultsPanel({ student, sports, onSaved }) {
   const [status, setStatus] = useState(null)
   const [busy, setBusy] = useState(false)
   const [videos, setVideos] = useState([])
+  const [ladders, setLadders] = useState({})     // {metric: [University … International]} for their team
+
+  useEffect(() => {
+    if (!student.category) return
+    api.levels(sport.slug)
+      .then(d => setLadders(Object.fromEntries(d.metrics.filter(m => !m.formats && m.targets[student.category])
+        .map(m => [m.key, m.targets[student.category]]))))
+      .catch(() => {})
+  }, [sport.slug, student.category])
 
   const loadVideos = () => api.videos(student.id).then(setVideos).catch(() => {})
   usePoll(videos.some(v => inFlight(v.status)), loadVideos)
@@ -166,15 +175,18 @@ function ResultsPanel({ student, sports, onSaved }) {
                 </em>
               </label>
               <input id={t.key} inputMode="decimal"
-                     placeholder={t.key === 'timeTrial2km' ? 'e.g. 8:30' : `${t.poor} → ${t.elite}`}
+                     placeholder={t.key === 'timeTrial2km' ? 'e.g. 8:30'
+                       : ladders[t.key] ? `${ladders[t.key][0]} → ${ladders[t.key][4]}` : `${t.poor} → ${t.elite}`}
                      value={values[t.key] ?? ''}
                      onChange={e => setValues(v => ({ ...v, [t.key]: e.target.value }))} />
             </div>
           ))}
         </div>
         <p className="muted">
-          Placeholders show the poor → elite range each score is measured against. Leave a
-          field blank if it wasn't tested — the prediction just reports lower confidence.
+          {student.category
+            ? `Placeholders show the University → International targets for the ${student.category === 'M' ? "men's" : "women's"} team. `
+            : 'Placeholders show the poor → elite range until their team is set on their Profile tab. '}
+          Leave a field blank if it wasn&apos;t tested — the prediction just reports lower confidence.
         </p>
 
         <div className="grid2" style={{ marginTop: 14 }}>

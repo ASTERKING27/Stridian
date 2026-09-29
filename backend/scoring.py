@@ -13,9 +13,14 @@ weights and the built-in defaults go through identical code.
 
 from sports_config import TRAINING_TIPS, get_sport, metric_map
 
-# A metric is only called a strength / weakness past these score lines.
-STRENGTH_LINE = 65.0
+# A metric is only called a strength / weakness past these score lines. On the level
+# scale (below) that is State level or better, and short of Zonal level.
+STRENGTH_LINE = 60.0
 WEAKNESS_LINE = 40.0
+
+# Where a metric has level targets for the player's team, its score is read off them:
+# University 20, Zonal 40, State 60, National 80, International 100.
+LEVEL_WORDS = ("University", "Zonal", "State", "National", "International")
 
 
 def normalize(value, poor, elite):
@@ -30,6 +35,37 @@ def normalize(value, poor, elite):
         return 50.0
     score = (value - poor) / (elite - poor) * 100.0
     return round(max(0.0, min(100.0, score)), 1)
+
+
+def ladder_floor(steps):
+    """Where the level scale starts (0): one average step short of University."""
+    return steps[0] - (steps[-1] - steps[0]) / 4
+
+
+def normalize_ladder(value, steps, better):
+    """Map a raw measurement onto 0-100 by the five level targets in `steps`
+    (University ... International): 20 per level, a straight line between two targets,
+    so 64 reads as "just past State". A value at or past International is 100."""
+    if value is None:
+        return None
+    sign = 1 if better == "higher" else -1
+    points = [ladder_floor(steps), *steps]           # scores 0, 20, 40, 60, 80, 100
+    reached = [i for i, p in enumerate(points) if (value - p) * sign >= -1e-9]
+    if not reached:
+        return 0.0
+    k = reached[-1]
+    if k == len(points) - 1:
+        return 100.0
+    a, b = points[k], points[k + 1]      # a <= value < b (in the better direction), so a != b
+    # capped short of the next target, so rounding never lifts a score into a level it hasn't reached
+    return round(20.0 * k + min(19.9, 20.0 * (value - a) / (b - a)), 1)
+
+
+def level_of(score):
+    """The level a score on the level scale stands for; None below University."""
+    if score is None or score < 20:
+        return None
+    return LEVEL_WORDS[min(4, int(score // 20) - 1)]
 
 
 def confidence_label(coverage):
@@ -77,15 +113,20 @@ def score_metrics(sport_name, values, sources=None, ranges=None):
     what lets the same engine produce a tests-only verdict and a match-only verdict.
     `ranges` replaces a metric's (poor, elite) for this student — a match card's targets
     depend on whether they played in the women's or men's team — and None there means
-    the metric has no target to be scored against.
+    the metric has no target to be scored against. Five numbers instead of two are the
+    level targets for their team (levels.py), and the score is read off those.
     """
     rows = []
     for meta in get_sport(sport_name)["metrics"]:
         raw = values.get(meta["key"])
         if sources is not None and meta["source"] not in sources:
             raw = None
+        steps = None
         if ranges and meta["key"] in ranges:
             span = ranges[meta["key"]]
+            if span and len(span) == 5:
+                steps = list(span)
+                span = (ladder_floor(steps), steps[-1])
             meta = {**meta, "poor": span[0] if span else None, "elite": span[1] if span else None}
             if not span:
                 raw = None
@@ -98,7 +139,9 @@ def score_metrics(sport_name, values, sources=None, ranges=None):
             "poor": meta["poor"],
             "elite": meta["elite"],
             "value": raw,
-            "score": normalize(raw, meta["poor"], meta["elite"]),
+            "score": (normalize_ladder(raw, steps, meta["direction"]) if steps
+                      else normalize(raw, meta["poor"], meta["elite"])),
+            "ladder": steps,
             # describes what a player does rather than how well, so it is never a
             # strength, a weakness or something to train
             "role": meta.get("role", False),
@@ -106,14 +149,18 @@ def score_metrics(sport_name, values, sources=None, ranges=None):
     return rows
 
 
-def _phrase(label, score, direction):
+def _phrase(label, score, ladder=False):
+    if ladder:
+        level = level_of(score)
+        return (f"{label} is at {level} level ({score:.0f}/100)" if level
+                else f"{label} is short of University level ({score:.0f}/100)")
     if score >= 85:
         return f"{label} is elite-level ({score:.0f}/100)"
     if score >= STRENGTH_LINE:
         return f"{label} is a clear strength ({score:.0f}/100)"
     if score <= 15:
         return f"{label} is well below the level this role needs ({score:.0f}/100)"
-    if score <= WEAKNESS_LINE:
+    if score < WEAKNESS_LINE:
         return f"{label} is the weak link for this role ({score:.0f}/100)"
     return f"{label} is around average ({score:.0f}/100)"
 
@@ -155,7 +202,7 @@ def rank_positions(sport_name, metric_rows, weights_by_position, in_scope=None):
                 "weight": round(weight, 4),
                 # how far this metric pulled the fit away from a flat 50
                 "impact": round(weight * (row["score"] - 50.0), 2),
-                "text": _phrase(row["label"], row["score"], row["direction"]),
+                "text": _phrase(row["label"], row["score"], bool(row.get("ladder"))),
             })
 
         coverage = used_weight / total_weight
@@ -208,7 +255,7 @@ def development_plan(metric_rows, top_position_weights):
     """What to train, weakest-and-most-relevant first."""
     plan = []
     for row in metric_rows:
-        if row["score"] is None or row["score"] > WEAKNESS_LINE or row["role"]:
+        if row["score"] is None or row["score"] >= WEAKNESS_LINE or row["role"]:
             continue
         weight = top_position_weights.get(row["key"], 0.0)
         plan.append({
@@ -270,7 +317,7 @@ def analyse(sport_name, student_profile, test_values, weights_by_position,
         ],
         "weaknesses": [
             {"key": r["key"], "label": r["label"], "score": r["score"], "source": r["source"]}
-            for r in metric_rows if r["score"] is not None and r["score"] <= WEAKNESS_LINE and not r["role"]
+            for r in metric_rows if r["score"] is not None and r["score"] < WEAKNESS_LINE and not r["role"]
         ],
         "developmentPlan": plan,
         "missingMetrics": [

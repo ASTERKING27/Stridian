@@ -322,12 +322,19 @@ export function formatValue(value, metric) {
   return `${value}${metric?.unit ? ' ' + metric.unit : ''}`
 }
 
+// strong from 60 (State level on the level scale), weak below 40 (short of Zonal)
 export const band = score =>
-  score === null || score === undefined ? '' : score >= 65 ? 'good' : score <= 40 ? 'bad' : 'warn'
+  score === null || score === undefined ? '' : score >= 60 ? 'good' : score < 40 ? 'bad' : 'warn'
 
 export const bandWord = score =>
   score === null || score === undefined ? 'not measured'
-    : score >= 85 ? 'elite' : score >= 65 ? 'strong' : score > 40 ? 'average' : 'needs work'
+    : score >= 85 ? 'elite' : score >= 60 ? 'strong' : score >= 40 ? 'average' : 'needs work'
+
+// a score on the level scale: University 20, Zonal 40, State 60, National 80, International 100
+export const LEVEL_NAMES = ['University', 'Zonal', 'State', 'National', 'International']
+export const scoreLevel = score =>
+  score === null || score === undefined ? 'not measured'
+    : score < 20 ? 'below University' : `${LEVEL_NAMES[Math.min(4, Math.floor(score / 20) - 1)]} level`
 
 // Radar axis labels. A bracketed ACRONYM is the better short form
 // ("Countermovement Jump (CMJ)" -> "CMJ"); a bracketed aside is not

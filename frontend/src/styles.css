@@ -701,11 +701,11 @@ table.ladder td { vertical-align: middle; }
 .officialpreview { overflow-x: auto; padding: 4px 0 20px; }
 .officialsheet {
   background: #fff; width: 210mm; min-height: 297mm; padding: 12mm 13mm; margin: 0 auto;
-  box-shadow: var(--shadow-2); display: flex; flex-direction: column; font-size: 9.5pt; line-height: 1.3;
+  box-shadow: var(--shadow-2); display: flex; flex-direction: column; font-size: 9pt; line-height: 1.25;
 }
-.officialsheet h3 { font-size: 9.5pt; margin: 8px 0 3px; color: #000; text-transform: uppercase; letter-spacing: .05em; }
+.officialsheet h3 { font-size: 9pt; margin: 6px 0 2px; color: #000; text-transform: uppercase; letter-spacing: .05em; }
 .officialsheet table { width: 100%; border-collapse: collapse; }
-.officialsheet th, .officialsheet td { border: 1px solid #000; padding: 2px 5px; text-align: left; color: #000; font-size: 9pt; }
+.officialsheet th, .officialsheet td { border: 1px solid #000; padding: 1.5px 4px; text-align: left; color: #000; font-size: 8.5pt; }
 .officialsheet th { background: #e6e6e6; font-weight: 700; }
 .officialsheet td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .officialsheet ul { margin: 2px 0; padding-left: 16px; }
@@ -722,10 +722,10 @@ table.ladder td { vertical-align: middle; }
 .or-note { font-size: 8.5pt; font-style: italic; margin: 2mm 0 0; }
 .or-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
 .or-empty { font-style: italic; margin: 2px 0; }
-.or-lines i { display: block; border-bottom: 1px solid #000; height: 7mm; }
-.or-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 14mm; margin-top: 10mm; }
+.or-lines i { display: block; border-bottom: 1px solid #000; height: 6.5mm; }
+.or-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 14mm; margin-top: 6mm; }
 .or-sign div { text-align: center; font-weight: 700; }
-.or-sign i { display: block; border-bottom: 1px solid #000; height: 12mm; margin-bottom: 2px; }
+.or-sign i { display: block; border-bottom: 1px solid #000; height: 11mm; margin-bottom: 2px; }
 .or-sign small { display: block; font-weight: 400; font-size: 8pt; }
 
 @page officialsheet { size: A4 portrait; margin: 12mm; }
@@ -736,3 +736,11 @@ table.ladder td { vertical-align: middle; }
     print-color-adjust: exact; -webkit-print-color-adjust: exact;
   }
 }
+table.levels td.ladcell small { display: block; font-size: .72rem; font-weight: 400; color: var(--ink-3); }
+table.levels td.ladcell small.ok { color: var(--good); }
+.mscale.ladderline { display: block; font-size: .78rem; color: var(--ink-3); margin-top: 4px; }
+.or-standing { margin-top: 2mm; }
+.or-standing th { width: 13%; }
+.or-standing td { text-align: center; font-size: 8.5pt; }
+.or-standing td.here { background: #e6e6e6; font-weight: 700; }
+.or-standing small { font-size: 7.5pt; }
