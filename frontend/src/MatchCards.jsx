@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, authedImage, openAuthed, parseValue } from './api'
+import { Seg, Switcher } from './fx'
 import Icon from './Icon'
-import { shrinkImage } from './people'
+import { TEAM_CHOICE, shrinkImage } from './people'
 import BlankCard from './BlankCard'
 
 const MARK_INDEX = { '+': 0, '0': 1, '-': 2 }
@@ -24,17 +25,29 @@ export default function MatchCards({ coach, version, onChanged }) {
   const [list, setList] = useState(null)
   const [openId, setOpenId] = useState(null)
   const [mode, setMode] = useState('list')
+  const [lastCard, setLastCard] = useState(null)   // so closing a card slides back the way it came
   const [error, setError] = useState('')
 
   const load = () => api.cards().then(setList).catch(e => setError(e.message))
   useEffect(() => { load() }, [version]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (openId) {
-    return <CardEditor id={openId} onBack={() => { setOpenId(null); load() }} onChanged={onChanged} />
+  const open = id => {
+    setLastCard(`c${id}`)
+    setOpenId(id)
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }
-  if (mode === 'print') return <PrintSetup sport={coach.sport} onBack={() => setMode('list')} />
+  const view = openId ? `c${openId}` : mode === 'print' ? 'print' : 'list'
 
   return (
+    <Switcher value={view} order={['list', 'print', lastCard]}>
+      {v => (v === 'print' ? <PrintSetup sport={coach.sport} onBack={() => setMode('list')} />
+        : v === 'list' ? cards()
+          : <CardEditor id={Number(v.slice(1))} onBack={() => { setOpenId(null); load() }} onChanged={onChanged} />)}
+    </Switcher>
+  )
+
+  function cards() {
+    return (
     <>
       <div className="pagehead">
         <h1>Match cards</h1>
@@ -54,7 +67,7 @@ export default function MatchCards({ coach, version, onChanged }) {
         </div>
         {mode === 'new' && (
           <NewCard onCancel={() => setMode('list')}
-                   onCreated={card => { setMode('list'); setOpenId(card.id) }} />
+                   onCreated={card => { setMode('list'); open(card.id) }} />
         )}
       </div>
 
@@ -67,7 +80,7 @@ export default function MatchCards({ coach, version, onChanged }) {
       ) : (
         <div className="card flush rows">
           {list.map(c => (
-            <button key={c.id} className="rowitem" onClick={() => setOpenId(c.id)}>
+            <button key={c.id} className="rowitem" onClick={() => open(c.id)}>
               <div className="who">
                 <b>{c.tournament || 'Untitled match'}{c.opponent ? ` vs ${c.opponent}` : ''}</b>
                 <span>
@@ -85,14 +98,15 @@ export default function MatchCards({ coach, version, onChanged }) {
         </div>
       )}
     </>
-  )
+    )
+  }
 }
 
 /* ------------------------------------------------------------------ new card */
 
 function NewCard({ onCreated, onCancel }) {
   const [cfg, setCfg] = useState(null)
-  const [form, setForm] = useState({ category: 'W', format: '', tournament: '', opponent: '',
+  const [form, setForm] = useState({ category: 'M', format: '', tournament: '', opponent: '',
                                      date: new Date().toISOString().slice(0, 10) })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -115,15 +129,12 @@ function NewCard({ onCreated, onCancel }) {
   }
 
   return (
-    <form onSubmit={create} style={{ marginTop: 16 }}>
+    <form className="swap" onSubmit={create} style={{ marginTop: 16 }}>
       <div className="grid3">
         <div className="field">
           <label>Team</label>
-          <div className="seg" style={{ marginBottom: 0 }}>
-            {[['W', 'Women'], ['M', 'Men']].map(([k, label]) => (
-              <button type="button" key={k} aria-pressed={form.category === k} onClick={() => set('category', k)}>{label}</button>
-            ))}
-          </div>
+          <Seg options={TEAM_CHOICE} value={form.category} onChange={k => set('category', k)}
+               label="Team" style={{ marginBottom: 0 }} />
         </div>
         {cfg?.formats.length > 0 && (
           <div className="field">
@@ -562,12 +573,8 @@ function HeaderForm({ cfg, draft, setHeader, update }) {
       <div className="grid3">
         <div className="field">
           <label>Team</label>
-          <div className="seg" style={{ marginBottom: 0 }}>
-            {cfg.categories.map(c => (
-              <button type="button" key={c.key} aria-pressed={draft.category === c.key}
-                      onClick={() => update(d => { d.category = c.key; return d })}>{c.label}</button>
-            ))}
-          </div>
+          <Seg options={cfg.categories.map(c => [c.key, c.label])} value={draft.category}
+               onChange={k => update(d => { d.category = k; return d })} label="Team" style={{ marginBottom: 0 }} />
         </div>
         {cfg.formats.length > 0 && (
           <div className="field">
@@ -850,7 +857,7 @@ function Photos({ card, cfg, onCard, onReading, setStatus }) {
 /* --------------------------------------------------------------- blank card */
 
 function PrintSetup({ sport, onBack }) {
-  const [category, setCategory] = useState('W')
+  const [category, setCategory] = useState('M')
   const [format, setFormat] = useState('')
   const [cfg, setCfg] = useState(null)
   const [picked, setPicked] = useState(null)
@@ -885,11 +892,8 @@ function PrintSetup({ sport, onBack }) {
           <div className="grid3">
             <div className="field">
               <label>Team</label>
-              <div className="seg" style={{ marginBottom: 0 }}>
-                {cfg.categories.map(c => (
-                  <button key={c.key} aria-pressed={category === c.key} onClick={() => setCategory(c.key)}>{c.label}</button>
-                ))}
-              </div>
+              <Seg options={cfg.categories.map(c => [c.key, c.label])} value={category} onChange={setCategory}
+                   label="Team" style={{ marginBottom: 0 }} />
             </div>
             {cfg.formats.length > 0 && (
               <div className="field">

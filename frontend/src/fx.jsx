@@ -91,7 +91,7 @@ export function Toaster() {
   return (
     <div className="toaster" aria-live="polite">
       {items.map(t => (
-        <div key={t.id} className="toast">
+        <div key={t.id} className="toast" style={{ '--ms': `${t.ms ?? 5000}ms` }}>
           {t.icon && <span className="toast-ico">{t.icon}</span>}
           <span><b>{t.title}</b>{t.body && <small>{t.body}</small>}</span>
         </div>
@@ -154,6 +154,20 @@ export function Tabs({ tabs, value, onChange, label, id, className = '' }) {
         <button key={t} role="tab" type="button" id={`${id}-tab-${i}`} aria-controls={`${id}-panel`}
                 aria-selected={value === t} tabIndex={i === Math.max(0, at) ? 0 : -1}
                 onClick={() => onChange(t)}>{t}</button>
+      ))}
+    </div>
+  )
+}
+
+/* A segmented choice (Men / Women, Position weights / Level targets): a pill slides
+   behind the chosen option. `options` is [[value, label], …]. */
+export function Seg({ options, value, onChange, label, className = '', style }) {
+  const [ref, pill] = useIndicator('[aria-pressed="true"]', [value, options.length])
+  return (
+    <div className={`seg slide ${className}`} role="group" aria-label={label} ref={ref} style={style}>
+      <i className="seg-pill" style={pill} aria-hidden="true" />
+      {options.map(([key, text]) => (
+        <button key={key} type="button" aria-pressed={value === key} onClick={() => onChange(key)}>{text}</button>
       ))}
     </div>
   )

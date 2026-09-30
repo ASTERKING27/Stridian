@@ -2270,7 +2270,7 @@ def cards_changed(db: Session, sport: str, students):
 
 
 @app.get("/api/cards/config")
-def cards_config(category: str = "W", format: str | None = None, db: Session = Depends(get_db),
+def cards_config(category: str = "M", format: str | None = None, db: Session = Depends(get_db),
                  coach: Coach = Depends(auth.current_coach)):
     """The coach's sport's card — for printing it blank, filling it in and reading it —
     with the squad whose names and jersey numbers go on it."""

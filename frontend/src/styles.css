@@ -142,7 +142,7 @@ body {
 
 .navlist { position: relative; display: flex; flex-direction: column; gap: 2px; }
 /* the marker behind the page you are on (fx.jsx useIndicator) slides between items */
-.nav-ind, .tab-ind, .seg-ind {
+.nav-ind, .tab-ind, .seg-ind, .seg-pill {
   position: absolute; top: 0; left: 0; pointer-events: none; border-radius: var(--r-sm);
   transition: transform .32s var(--ease), width .32s var(--ease), height .32s var(--ease), opacity .15s;
 }
@@ -854,7 +854,8 @@ table.levels td.ladcell small.ok { color: var(--good); }
 :root[data-theme='neon'] :is(.track > i:not(.good, .warn, .bad), .progress span, .hbar .track span) {
   background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
 }
-:root[data-theme='neon'] .seg:not(.tabs) button[aria-pressed='true'] { background: var(--surface-3); }
+:root[data-theme='neon'] .seg:not(.tabs, .slide) button[aria-pressed='true'] { background: var(--surface-3); }
+:root[data-theme='neon'] .seg-pill { background: var(--surface-3); }
 :root[data-theme='neon'] .rowitem:hover { background: rgba(148, 163, 255, 0.06); }
 :root[data-theme='neon'] .banner { background: rgba(148, 163, 255, 0.06); }
 :root[data-theme='neon'] .ring-fill { filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.35)); }
@@ -886,6 +887,16 @@ table.levels td.ladcell small.ok { color: var(--good); }
 }
 
 .authcard { animation: lift .45s var(--ease) backwards; }
+
+/* a segmented choice (fx.jsx Seg): the pill behind the chosen option slides to it */
+.seg.slide { position: relative; }
+.seg.slide button { position: relative; z-index: 1; transition: color var(--fast); }
+.seg.slide button[aria-pressed='true'] { background: none; box-shadow: none; }
+.seg-pill { background: var(--surface); box-shadow: var(--shadow-1); border-radius: 6px; }
+
+/* something that appears in place — the next sign-in step, a new card's form, a student's
+   results, a filtered list — rises in rather than popping */
+.authcard form, .swap { animation: lift .3s var(--ease) backwards; }
 
 /* page tabs: words on a hairline, the chosen one underlined, the underline sliding */
 .seg.tabs {
@@ -967,7 +978,7 @@ table.levels td.ladcell small.ok { color: var(--good); }
 }
 .lvl-ladder li { min-width: 0; }
 .lvl-ladder .bar { display: block; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
-.lvl-ladder .bar i { display: block; height: 100%; border-radius: inherit; background: var(--ink-3); opacity: .45; }
+.lvl-ladder .bar i { display: block; height: 100%; border-radius: inherit; background: var(--ink-3); opacity: .45; transition: width .6s var(--ease); }
 .lvl-ladder li.reached .bar i { background: linear-gradient(90deg, var(--grad-a), var(--grad-b)); opacity: 1; }
 .lvl-ladder li.next .bar i { background: var(--accent); opacity: .6; }
 .lvl-ladder b {
@@ -1104,7 +1115,8 @@ dialog.record::backdrop { background: rgba(3, 6, 16, 0.72); backdrop-filter: blu
   display: flex; align-items: center; gap: 12px; max-width: 380px; justify-self: end;
   padding: 11px 16px 11px 12px; border-radius: var(--r);
   background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-2);
-  animation: lift .3s var(--ease) backwards, fade-out .4s var(--ease) 4.5s forwards;
+  /* it fades as it goes: --ms is how long this one stays (fx.jsx toast) */
+  animation: lift .3s var(--ease) backwards, fade-out .4s var(--ease) calc(var(--ms, 5000ms) - 400ms) forwards;
 }
 @keyframes fade-out { to { opacity: 0; } }
 .toast b { display: block; font-size: .88rem; font-weight: 600; }

@@ -388,7 +388,7 @@ word; the others follow its five parts at the same depth, with their own skills:
 
 | Part | What it is |
 |---|---|
-| **A** — live match sheet | the header (tournament, round, level, date, venue, opponent, result, score, recorded by, coach, match no., women / men) and a row per player: a + / 0 / − tally for every skill |
+| **A** — live match sheet | the header (tournament, round, level, date, venue, opponent, result, score, recorded by, coach, match no., men / women) and a row per player: a + / 0 / − tally for every skill |
 | **B** — scoring key | what counts as + / 0 / −, the formulas with worked examples and University / Elite targets, the 1–5 rating scale, elite add-ons |
 | **C** — post-match review | per player: the sport's key numbers, coordination and overall (1–5), key strength, area to improve; and a team summary |
 | **D** — progress tracker | one player across a tournament, a trend arrow per match (overall rating vs the match before), and an average / total row |

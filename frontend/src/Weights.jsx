@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
+import { Seg, Switcher } from './fx'
+import { TEAM_CHOICE as TEAMS } from './people'
 
 const slugify = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -25,15 +27,16 @@ const GROUPS = [
   },
 ]
 
+const VIEWS = [['weights', 'Position weights'], ['levels', 'Level targets']]
+
 export default function Weights({ coach, onSaved }) {
   const [view, setView] = useState('weights')
   return (
     <>
-      <div className="seg" role="group" aria-label="What to tune" style={{ maxWidth: 420 }}>
-        <button aria-pressed={view === 'weights'} onClick={() => setView('weights')}>Position weights</button>
-        <button aria-pressed={view === 'levels'} onClick={() => setView('levels')}>Level targets</button>
-      </div>
-      {view === 'weights' ? <PositionWeights coach={coach} onSaved={onSaved} /> : <LevelTargets coach={coach} />}
+      <Seg options={VIEWS} value={view} onChange={setView} label="What to tune" style={{ maxWidth: 420 }} />
+      <Switcher value={view} order={VIEWS.map(([k]) => k)}>
+        {v => (v === 'weights' ? <PositionWeights coach={coach} onSaved={onSaved} /> : <LevelTargets coach={coach} />)}
+      </Switcher>
     </>
   )
 }
@@ -158,7 +161,6 @@ function PositionWeights({ coach, onSaved }) {
 
 /* ---------------------------------------------------------- level targets */
 
-const TEAMS = [['M', 'Men'], ['W', 'Women']]
 const BASIS = { published: 'published', mixed: 'published + estimated', estimated: 'estimated' }
 
 // the five numbers for one team (and format) out of a measure's targets
@@ -186,9 +188,11 @@ function LevelTargets({ coach }) {
 
   if (!data) return error ? <div className="banner bad">{error}</div> : <div className="skeleton">Loading level targets…</div>
 
-  const draftKey = m => `${m.key}|${team}|${m.formats ? fmt : ''}`
-  const shown = m => drafts[draftKey(m)] ?? (ladderOf(m, team, fmt) ?? ['', '', '', '', '']).map(v => String(v))
-  const dirty = m => drafts[draftKey(m)] !== undefined
+  // t and f default to the team and format on show; the table sliding out passes its own
+  const draftKey = (m, t = team, f = fmt) => `${m.key}|${t}|${m.formats ? f : ''}`
+  const shown = (m, t = team, f = fmt) =>
+    drafts[draftKey(m, t, f)] ?? (ladderOf(m, t, f) ?? ['', '', '', '', '']).map(v => String(v))
+  const dirty = (m, t = team, f = fmt) => drafts[draftKey(m, t, f)] !== undefined
   const setCell = (m, i, v) => setDrafts(d => ({ ...d, [draftKey(m)]: shown(m).map((x, j) => (j === i ? v : x)) }))
   const replace = metric => setData(d => ({ ...d, metrics: d.metrics.map(m => (m.key === metric.key ? metric : m)) }))
   // a save keeps unsaved edits to the other team's (or format's) ladder; a reset drops them
@@ -245,17 +249,10 @@ function LevelTargets({ coach }) {
 
       <div className="card">
         <div className="row">
-          <div className="seg" role="group" aria-label="Team" style={{ marginBottom: 0 }}>
-            {TEAMS.map(([k, label]) => (
-              <button key={k} aria-pressed={team === k} onClick={() => setTeam(k)}>{label}</button>
-            ))}
-          </div>
+          <Seg options={TEAMS} value={team} onChange={setTeam} label="Team" style={{ marginBottom: 0 }} />
           {data.formats.length > 0 && (
-            <div className="seg" role="group" aria-label="Format" style={{ marginBottom: 0 }}>
-              {data.formats.map(f => (
-                <button key={f.key} aria-pressed={fmt === f.key} onClick={() => setFmt(f.key)}>{f.label}</button>
-              ))}
-            </div>
+            <Seg options={data.formats.map(f => [f.key, f.label])} value={fmt} onChange={setFmt} label="Format"
+                 style={{ marginBottom: 0 }} />
           )}
         </div>
         <p className="muted" style={{ marginTop: 10, marginBottom: 0 }}>
@@ -264,8 +261,18 @@ function LevelTargets({ coach }) {
         </p>
       </div>
 
-      {/* footage last: it counts least */}
-      {[GROUPS[0], GROUPS[2], GROUPS[1]].map(group => {
+      {/* a new team or format slides its numbers in, like a tab */}
+      <Switcher value={`${team}|${fmt ?? ''}`}
+                order={(data.formats.length ? data.formats.map(f => f.key) : ['']).flatMap(f => TEAMS.map(([t]) => `${t}|${f}`))}>
+        {k => tables(...k.split('|'))}
+      </Switcher>
+    </>
+  )
+
+  function tables(t, f) {
+    f = f || null
+    // footage last: it counts least
+    return [GROUPS[0], GROUPS[2], GROUPS[1]].map(group => {
         const metrics = data.metrics.filter(group.match)
         if (metrics.length === 0) return null
         return (
@@ -289,7 +296,7 @@ function LevelTargets({ coach }) {
                 </thead>
                 <tbody>
                   {metrics.map(m => {
-                    const cells = shown(m)
+                    const cells = shown(m, t, f)
                     const note = notes[m.key]
                     return (
                       <tr key={m.key}>
@@ -314,7 +321,7 @@ function LevelTargets({ coach }) {
                         ))}
                         <td>
                           <div className="row" style={{ flexWrap: 'nowrap' }}>
-                            <button className="btn sm" disabled={busy === m.key || !dirty(m)} onClick={() => save(m)}>
+                            <button className="btn sm" disabled={busy === m.key || !dirty(m, t, f)} onClick={() => save(m)}>
                               {busy === m.key ? 'Saving…' : 'Save'}
                             </button>
                             {m.custom && (
@@ -330,7 +337,6 @@ function LevelTargets({ coach }) {
             </div>
           </div>
         )
-      })}
-    </>
-  )
+    })
+  }
 }

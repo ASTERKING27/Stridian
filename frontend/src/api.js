@@ -220,7 +220,7 @@ export const api = {
   clearCalibration: clipId => send('DELETE', `/api/matches/${clipId}/calibrate`),
 
   // match cards: the paper sheet, typed in or read off a photo
-  cardsConfig: (category = 'W', format = '') =>
+  cardsConfig: (category = 'M', format = '') =>
     get(`/api/cards/config?category=${encodeURIComponent(category)}${format ? `&format=${encodeURIComponent(format)}` : ''}`),
   cards: () => get('/api/cards'),
   card: id => get(`/api/cards/${id}`),

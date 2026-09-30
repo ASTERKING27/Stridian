@@ -3,7 +3,7 @@ import {
   LEVEL_NAMES, api, band, bandWord, download, formatValue, scoreLevel, shortLabel, utc, wrapLabel,
 } from './api'
 import { Radar, Sparkline } from './charts'
-import { Switcher, Tabs } from './fx'
+import { Seg, Switcher, Tabs } from './fx'
 import Diet from './Diet'
 import Icon from './Icon'
 import OfficialReport from './OfficialReport'
@@ -50,7 +50,6 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
 
   if (error) return <div className="banner bad">{error}</div>
   if (!data) return <div className="skeleton">Building report…</div>
-  if (official) return <OfficialReport data={data} onBack={() => setOfficial(false)} />
 
   const { student, recommended, metrics, positions, developmentPlan, videos, diet } = data
   const videoDrills = (videos ?? []).flatMap(v => v.metrics?.drills ?? [])
@@ -89,114 +88,123 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
     }
   }
 
+  // the official one-page report slides in over the tabs, and back
   return (
-    <>
-      {onBack && (
-        <button className="linkbtn noprint" onClick={onBack} style={{ marginBottom: 12 }}>
-          <Icon name="back" size={13} /> All students
-        </button>
-      )}
-
-      {/* the Profile tab carries its own header, photo included, when printed */}
-      <div className={`pagehead${tab === 'Profile' ? ' noprint' : ''}`}>
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div className="row" style={{ gap: 14, flexWrap: 'nowrap', minWidth: 0 }}>
-          {!readOnly && <Photo url={`/api/students/${id}/photo`} version={student.photo_version} name={student.name} size={56} />}
-          <div style={{ minWidth: 0 }}>
-            <h1>{student.name}</h1>
-            <p className="muted">
-              {data.sport}
-              {student.ra_number ? ` · ${student.ra_number}` : ''}
-              {student.email ? ` · ${student.email}` : ''}
-              {student.age ? ` · ${student.age} yrs` : ''}
-              {student.height_cm ? ` · ${student.height_cm} cm` : ''}
-              {student.weight_kg ? ` · ${student.weight_kg} kg` : ''}
-              {student.blood_group ? ` · ${student.blood_group}` : ''}
-            </p>
-          </div>
-          </div>
-          {!readOnly && (
-            <div className="row noprint">
-              <button className="btn sec sm" onClick={() => setOfficial(true)}>Official report</button>
-              <button className="btn sec sm" disabled={saving} onClick={saveExcel}>
-                {saving ? 'Preparing…' : 'Download Excel'}
-              </button>
-              <button className="linkbtn danger" onClick={remove}>Delete student</button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <VerifyCard student={student} positions={positions} recommended={recommended} readOnly={readOnly}
-                  onChange={setStudent} />
-
-      <Tabs id={tabsId} tabs={tabs} value={tab} onChange={setTab} label="Report sections" className="noprint" />
-
-      <Switcher id={tabsId} value={tab} order={tabs}>
-        {t => (
-          <>
-            {t === 'Overview' && <Overview data={data} />}
-
-            {t === 'Levels' && <LevelsTab data={data} readOnly={readOnly} />}
-
-            {t === 'Profile' && (
-              <ProfileTab student={student} isAdmin={isAdmin} sports={sports} onStudent={setStudent}
-                          onMoved={onDeleted} />
-            )}
-
-            {t === 'Measurements' && (
-              <div className="card">
-                <div className="card-head">
-                  <div>
-                    <h2>Measurements</h2>
-                    <p className="muted">
-                      Test battery and physique, each scored 0–100 on the level ladder for their team —
-                      University 20, Zonal 40, State 60, National 80, International 100. A measure with no
-                      ladder for them is scored against the poor → elite range for {data.sport}. Match
-                      footage and match cards have tabs of their own.
-                    </p>
-                  </div>
-                </div>
-                {metrics.filter(physical).map(m => (
-                  <MetricRow key={m.key} metric={m} series={byMetric[m.key]} />
-                ))}
-              </div>
-            )}
-
-            {t === 'Positions' && (
-              <div className="card">
-                <div className="card-head">
-                  <div>
-                    <h2>Every position, ranked</h2>
-                    <p className="muted">Open one to see exactly which results drove its score.</p>
-                  </div>
-                </div>
-                {positions.map(p => <PositionRow key={p.position} pos={p} />)}
-              </div>
-            )}
-
-            {t === 'Footage' && <MatchTab data={data} />}
-
-            {t === 'Match cards' && <CardsTab data={data} />}
-
-            {t === 'Training' && (
-              <Training plan={developmentPlan} drills={videoDrills}
-                        role={data.levels?.position ?? recommended?.position} hasVideo={(videos ?? []).length > 0} />
-            )}
-
-            {t === 'Diet' && <Diet diet={diet} name={student.name} />}
-
-            {t === 'Video' && (
-              <div className="card">
-                <div className="card-head"><div><h2>Video analysis</h2></div></div>
-                {videos.map(v => <VideoCard key={v.id} video={v} />)}
-              </div>
-            )}
-          </>
-        )}
-      </Switcher>
-    </>
+    <Switcher value={official ? 'official' : 'report'} order={['report', 'official']}>
+      {v => (v === 'official' ? <OfficialReport data={data} onBack={() => setOfficial(false)} /> : report())}
+    </Switcher>
   )
+
+  function report() {
+    return (
+      <>
+        {onBack && (
+          <button className="linkbtn noprint" onClick={onBack} style={{ marginBottom: 12 }}>
+            <Icon name="back" size={13} /> All students
+          </button>
+        )}
+
+        {/* the Profile tab carries its own header, photo included, when printed */}
+        <div className={`pagehead${tab === 'Profile' ? ' noprint' : ''}`}>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="row" style={{ gap: 14, flexWrap: 'nowrap', minWidth: 0 }}>
+            {!readOnly && <Photo url={`/api/students/${id}/photo`} version={student.photo_version} name={student.name} size={56} />}
+            <div style={{ minWidth: 0 }}>
+              <h1>{student.name}</h1>
+              <p className="muted">
+                {data.sport}
+                {student.ra_number ? ` · ${student.ra_number}` : ''}
+                {student.email ? ` · ${student.email}` : ''}
+                {student.age ? ` · ${student.age} yrs` : ''}
+                {student.height_cm ? ` · ${student.height_cm} cm` : ''}
+                {student.weight_kg ? ` · ${student.weight_kg} kg` : ''}
+                {student.blood_group ? ` · ${student.blood_group}` : ''}
+              </p>
+            </div>
+            </div>
+            {!readOnly && (
+              <div className="row noprint">
+                <button className="btn sec sm" onClick={() => setOfficial(true)}>Official report</button>
+                <button className="btn sec sm" disabled={saving} onClick={saveExcel}>
+                  {saving ? 'Preparing…' : 'Download Excel'}
+                </button>
+                <button className="linkbtn danger" onClick={remove}>Delete student</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <VerifyCard student={student} positions={positions} recommended={recommended} readOnly={readOnly}
+                    onChange={setStudent} />
+
+        <Tabs id={tabsId} tabs={tabs} value={tab} onChange={setTab} label="Report sections" className="noprint" />
+
+        <Switcher id={tabsId} value={tab} order={tabs}>
+          {t => (
+            <>
+              {t === 'Overview' && <Overview data={data} />}
+
+              {t === 'Levels' && <LevelsTab data={data} readOnly={readOnly} />}
+
+              {t === 'Profile' && (
+                <ProfileTab student={student} isAdmin={isAdmin} sports={sports} onStudent={setStudent}
+                            onMoved={onDeleted} />
+              )}
+
+              {t === 'Measurements' && (
+                <div className="card">
+                  <div className="card-head">
+                    <div>
+                      <h2>Measurements</h2>
+                      <p className="muted">
+                        Test battery and physique, each scored 0–100 on the level ladder for their team —
+                        University 20, Zonal 40, State 60, National 80, International 100. A measure with no
+                        ladder for them is scored against the poor → elite range for {data.sport}. Match
+                        footage and match cards have tabs of their own.
+                      </p>
+                    </div>
+                  </div>
+                  {metrics.filter(physical).map(m => (
+                    <MetricRow key={m.key} metric={m} series={byMetric[m.key]} />
+                  ))}
+                </div>
+              )}
+
+              {t === 'Positions' && (
+                <div className="card">
+                  <div className="card-head">
+                    <div>
+                      <h2>Every position, ranked</h2>
+                      <p className="muted">Open one to see exactly which results drove its score.</p>
+                    </div>
+                  </div>
+                  {positions.map(p => <PositionRow key={p.position} pos={p} />)}
+                </div>
+              )}
+
+              {t === 'Footage' && <MatchTab data={data} />}
+
+              {t === 'Match cards' && <CardsTab data={data} />}
+
+              {t === 'Training' && (
+                <Training plan={developmentPlan} drills={videoDrills}
+                          role={data.levels?.position ?? recommended?.position} hasVideo={(videos ?? []).length > 0} />
+              )}
+
+              {t === 'Diet' && <Diet diet={diet} name={student.name} />}
+
+              {t === 'Video' && (
+                <div className="card">
+                  <div className="card-head"><div><h2>Video analysis</h2></div></div>
+                  {videos.map(v => <VideoCard key={v.id} video={v} />)}
+                </div>
+              )}
+            </>
+          )}
+        </Switcher>
+      </>
+    )
+  }
 }
 
 /* Who the student is — their details, photo and achievements. Coaches verify or reject
@@ -917,11 +925,8 @@ function CardsTab({ data }) {
                   'Trend compares each match’s overall rating with the one before.'].filter(Boolean).join(' · ')}
               </p>
             </div>
-            <div className="seg noprint" style={{ marginBottom: 0 }}>
-              {['University', 'Elite'].map(l => (
-                <button key={l} aria-pressed={level === l} onClick={() => setLevel(l)}>{l} targets</button>
-              ))}
-            </div>
+            <Seg options={[['University', 'University targets'], ['Elite', 'Elite targets']]} value={level}
+                 onChange={setLevel} label="Targets to compare with" className="noprint" style={{ marginBottom: 0 }} />
           </div>
           <div className="sheetwrap">
             <table className="data partd">

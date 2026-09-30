@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api, token } from './api'
+import { Seg } from './fx'
 import { LookPicker } from './Theme'
 
 /* Each step is its own <form>, with the autocomplete words password managers look for:
@@ -103,14 +104,8 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
           </div>
 
           {(mode === 'login' || mode === 'signup') && (
-            <div className="seg" role="group" aria-label="Sign in or create an account">
-              <button type="button" aria-pressed={mode === 'login'} onClick={() => go('login')}>
-                Sign in
-              </button>
-              <button type="button" aria-pressed={mode === 'signup'} onClick={() => go('signup')}>
-                Create account
-              </button>
-            </div>
+            <Seg options={[['login', 'Sign in'], ['signup', 'Create account']]} value={mode} onChange={go}
+                 label="Sign in or create an account" />
           )}
 
           {mode === 'login' && (

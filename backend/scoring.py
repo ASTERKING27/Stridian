@@ -112,7 +112,7 @@ def score_metrics(sport_name, values, sources=None, ranges=None):
     value for display but scores None, so it drops out of the ranking maths — that is
     what lets the same engine produce a tests-only verdict and a match-only verdict.
     `ranges` replaces a metric's (poor, elite) for this student — a match card's targets
-    depend on whether they played in the women's or men's team — and None there means
+    depend on whether they played in the men's or women's team — and None there means
     the metric has no target to be scored against. Five numbers instead of two are the
     level targets for their team (levels.py), and the score is read off those.
     """

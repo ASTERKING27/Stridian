@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, download, initials } from './api'
-import { Switcher } from './fx'
+import { Seg, Switcher } from './fx'
 import Icon from './Icon'
 import { levelWord } from './people'
 import Report from './Report'
@@ -145,13 +145,8 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach, 
         <div className="row" style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', gap: 10 }}>
           <input placeholder="Search by name or RA number…" aria-label="Search students" style={{ flex: '1 1 200px' }}
                  value={search} onChange={e => setSearch(e.target.value)} />
-          <div className="toggles" role="group" aria-label="Show">
-            {['all', 'pending', 'verified'].map(k => (
-              <button key={k} type="button" aria-pressed={show === k} onClick={() => setShow(k)}>
-                {k[0].toUpperCase() + k.slice(1)}
-              </button>
-            ))}
-          </div>
+          <Seg options={[['all', 'All'], ['pending', 'Pending'], ['verified', 'Verified']]} value={show}
+               onChange={setShow} label="Show" style={{ marginBottom: 0 }} />
         </div>
 
         {visible.length === 0 ? (
@@ -162,7 +157,7 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach, 
               : 'Try a different name or filter.'}
           </p>
         ) : (
-          <div className="rows">
+          <div className="rows swap" key={show}>
             {visible.map(s => (
               <button key={s.id} className="rowitem" onClick={() => openReport({ id: s.id })}>
                 <span className="avatar" aria-hidden="true">{initials(s.name)}</span>
@@ -215,7 +210,7 @@ function CoachCorner({ version, onOpen, onGo }) {
   }, [version])
   if (!feed?.length) return null
   return (
-    <section className="card corner">
+    <section className="card corner swap">
       <div className="card-head">
         <div>
           <span className="eyebrow">Your second coach</span>

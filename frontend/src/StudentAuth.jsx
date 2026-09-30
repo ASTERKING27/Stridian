@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, token } from './api'
+import { Seg } from './fx'
 import { LookPicker } from './Theme'
 
 /* Students sign in with their university email and a password they choose for
@@ -93,14 +94,8 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
           </div>
 
           {mode !== 'code' && (
-            <div className="seg" role="group" aria-label="Sign in or create an account">
-              <button type="button" aria-pressed={mode === 'login'} onClick={() => go('login')}>
-                Sign in
-              </button>
-              <button type="button" aria-pressed={mode === 'email'} onClick={() => go('email')}>
-                New here
-              </button>
-            </div>
+            <Seg options={[['login', 'Sign in'], ['email', 'New here']]} value={mode} onChange={go}
+                 label="Sign in or create an account" />
           )}
 
           {mode === 'login' && (

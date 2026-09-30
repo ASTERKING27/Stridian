@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, authedImage, initials, openAuthed, utc } from './api'
+import { Seg } from './fx'
 
 /* The pieces the student portal, the enrol form and the coach's Profile tab share:
    photos, the details form, the read-only details, and achievements. */
@@ -11,6 +12,8 @@ export const LEVELS = [
 export const levelWord = key => LEVELS.find(([k]) => k === key)?.[1] ?? ''
 // the team a student plays in — which level targets (men's or women's) they are read against
 export const TEAMS = [['M', "Men's team"], ['W', "Women's team"]]
+// the same, as a short choice (Men / Women) — Men first everywhere
+export const TEAM_CHOICE = [['M', 'Men'], ['W', 'Women']]
 export const teamWord = key => TEAMS.find(([k]) => k === key)?.[1] ?? ''
 
 const BLOOD = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
@@ -330,13 +333,9 @@ export function DetailsForm({ student, mode, sports, sport: fixedSport, sportLoc
           {fieldOf('training_hours_per_day', 'Training hours / day', { type: 'number', min: 0, max: 8, step: 0.5 })}
         </div>
         <div className="field">
-          <label id="dietlbl">Diet preference</label>
-          <div className="toggles" role="group" aria-labelledby="dietlbl">
-            {DIETS.map(([key, label]) => (
-              <button key={key} type="button" aria-pressed={form.diet_preference === key}
-                      onClick={() => set('diet_preference', key)}>{label}</button>
-            ))}
-          </div>
+          <label>Diet preference</label>
+          <Seg options={DIETS} value={form.diet_preference} onChange={k => set('diet_preference', k)}
+               label="Diet preference" style={{ marginBottom: 0, maxWidth: 440 }} />
         </div>
         <div className="field">
           <label id="allglbl">Allergies / foods to avoid</label>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, authedImage, inFlight, statusPill, statusWord, usePoll, utc } from './api'
+import { Seg, Switcher } from './fx'
 import Icon from './Icon'
 import { UploadButton, WorkerNote } from './VideoCard'
 
@@ -10,6 +11,7 @@ import { UploadButton, WorkerNote } from './VideoCard'
 export default function Matches({ version, onChanged }) {
   const [clips, setClips] = useState(null)
   const [openId, setOpenId] = useState(null)
+  const [lastClip, setLastClip] = useState(null)   // so closing a clip slides back the way it came
   const [error, setError] = useState('')
 
   const load = () => api.matches().then(c => { setClips(c); setError('') }).catch(e => setError(e.message))
@@ -19,15 +21,24 @@ export default function Matches({ version, onChanged }) {
   if (error) return <div className="banner bad">{error}</div>
   if (!clips) return <div className="skeleton">Loading match clips…</div>
 
-  if (openId) {
-    return (
-      <ClipDetail id={openId} onBack={() => { setOpenId(null); load() }}
-                  onChanged={onChanged}
-                  onDeleted={() => { setOpenId(null); load(); onChanged() }} />
-    )
+  const open = id => {
+    setLastClip(`c${id}`)
+    setOpenId(id)
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
   return (
+    <Switcher value={openId ? `c${openId}` : 'list'} order={['list', lastClip]}>
+      {v => (v === 'list' ? clipList() : (
+        <ClipDetail id={Number(v.slice(1))} onBack={() => { setOpenId(null); load() }}
+                    onChanged={onChanged}
+                    onDeleted={() => { setOpenId(null); load(); onChanged() }} />
+      ))}
+    </Switcher>
+  )
+
+  function clipList() {
+    return (
     <>
       <div className="pagehead">
         <h1>Match footage</h1>
@@ -50,7 +61,7 @@ export default function Matches({ version, onChanged }) {
         ) : (
           <div className="rows">
             {clips.map(c => (
-              <button key={c.id} className="rowitem" onClick={() => setOpenId(c.id)}>
+              <button key={c.id} className="rowitem" onClick={() => open(c.id)}>
                 <span className="who">
                   <b>{c.label || c.original_name}</b>
                   <span>
@@ -68,7 +79,8 @@ export default function Matches({ version, onChanged }) {
         )}
       </div>
     </>
-  )
+    )
+  }
 }
 
 function MatchUploader({ onUploaded }) {
@@ -118,15 +130,9 @@ function MatchUploader({ onUploaded }) {
                  value={label} onChange={e => setLabel(e.target.value)} />
         </div>
         <div className="field">
-          <label id="dirlbl">Which way is your team attacking?</label>
-          <div className="toggles" role="group" aria-labelledby="dirlbl">
-            <button type="button" aria-pressed={direction === 'left'} onClick={() => setDirection('left')}>
-              ← Left
-            </button>
-            <button type="button" aria-pressed={direction === 'right'} onClick={() => setDirection('right')}>
-              Right →
-            </button>
-          </div>
+          <label>Which way is your team attacking?</label>
+          <Seg options={[['left', '← Left'], ['right', 'Right →']]} value={direction} onChange={setDirection}
+               label="Which way is your team attacking?" style={{ marginBottom: 0, maxWidth: 260 }} />
           <p className="muted" style={{ marginTop: 6 }}>
             Positioning is measured against where the other players are, so this is all the
             calibration it needs.

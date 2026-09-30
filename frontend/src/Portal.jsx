@@ -276,7 +276,7 @@ function Brief({ c, s, busy, onRefresh, onGo }) {
   const progress = lv == null ? 0 : next == null ? 1 : Math.min(1, (c.standing[next]?.share ?? 0) / 0.5)
   const name = lv == null ? '—' : lv < 0 ? 'Starter' : c.levels[lv]
   return (
-    <section className="card brief">
+    <section className="card brief swap">
       <div className="brief-text">
         <span className="eyebrow">{c.verified ? 'Your second coach' : 'Getting you set up'}</span>
         <p className="headline">{c.headline}</p>
@@ -347,7 +347,7 @@ function Focus({ f, busy, onTick, onGo }) {
   const n = f.sessions.length
   const left = Math.max(0, f.target - n)
   return (
-    <section className={`card focus${f.complete ? ' complete' : ''}`}>
+    <section className={`card focus swap${f.complete ? ' complete' : ''}`}>
       <div className="focus-top">
         <div style={{ minWidth: 0 }}>
           <span className="eyebrow">This week&apos;s focus</span>

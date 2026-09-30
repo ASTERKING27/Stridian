@@ -15,13 +15,13 @@ numbers are worked out, and how they turn into the 0–100 scores the position e
 uses. main.py stores the cards; this file never touches the database.
 
 The targets are Stridian's starting values, a University one and an Elite one per
-category (women / men) and, for cricket, per format. Elite values come from published
+category (men / women) and, for cricket, per format. Elite values come from published
 competition statistics; University values sit a step below.
 """
 
 from datetime import date
 
-CATEGORIES = {"W": "Women", "M": "Men"}
+CATEGORIES = {"M": "Men", "W": "Women"}       # in this order wherever a choice is shown
 # Part A's "Level" boxes, as printed on the hardcopy
 LEVELS = ["University", "Inter-University", "National / Intercollegiate"]
 MAX_COUNT = 999          # no tally or count on a card is ever this big
@@ -1720,11 +1720,11 @@ def install(sports):
             pos_cfg["weights"].update({f"card_{k}": round(w / total, 4) for k, w in weights.items()})
 
 
-def public(sport, category="W", fmt=None):
+def public(sport, category="M", fmt=None):
     """Everything the app needs to show, print and edit this sport's card — no formulas'
     code, just their words — with Part B's targets for this category and format."""
     cfg = SPORTS[sport]
-    category = category if category in CATEGORIES else "W"
+    category = category if category in CATEGORIES else "M"
     fmt = pick_format(sport, fmt)
     skills = [{k: s[k] for k in ("key", "label", "sheet", "legend", "plus", "zero", "minus", "who", "marks",
                                  "merged")} for s in cfg["skills"]]
@@ -1961,7 +1961,7 @@ null for a cell you cannot read.
 
 Read the header too: tournament, round / stage, level, date, venue, opponent, result, the
 {cfg['score']['label'].lower()} ({', '.join(cfg['score']['parts'])}), recorded by, coach, match number,
-and whether it is the women's or men's team if the card says.
+and whether it is the men's or women's team if the card says.
 
 Use null for anything not written on the sheet. Never guess a jersey number, a name or a count."""
 

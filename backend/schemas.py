@@ -415,7 +415,7 @@ class AchievementOut(BaseModel):
 # -------------------------------- match cards ------------------------------- #
 
 class CardNew(Form):
-    category: Literal["W", "M"] = "W"
+    category: Literal["M", "W"] = "M"
     format: str | None = Field(default=None, max_length=20)
     header: dict = Field(default_factory=dict)
 

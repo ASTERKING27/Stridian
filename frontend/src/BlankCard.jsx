@@ -276,7 +276,7 @@ function PartD({ cfg, player }) {
 }
 
 export default function BlankCard({ cfg, players, parts }) {
-  const team = cfg.categories.find(c => c.key === cfg.category)?.label ?? 'Women'
+  const team = cfg.categories.find(c => c.key === cfg.category)?.label ?? 'Men'
   const footer = `${ORG}  |  ${cfg.sport} ${team} Team – Individual Players Performance Database`
   const racket = cfg.layout === 'player'
   const sheets = []

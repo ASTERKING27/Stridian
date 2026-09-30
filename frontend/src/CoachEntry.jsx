@@ -103,12 +103,14 @@ function ResultsPanel({ student, sports, onSaved }) {
 
   useEffect(() => {
     api.results(student.id)
-      .then(r => setValues(Object.fromEntries(
-        Object.entries(r.results).map(([k, v]) => {
+      // anything typed while the saved numbers were loading wins over them
+      .then(r => setValues(typed => ({
+        ...Object.fromEntries(Object.entries(r.results).map(([k, v]) => {
           const metric = tests.find(t => t.key === k)
           return [k, metric?.key === 'timeTrial2km' ? formatValue(v, metric) : String(v)]
-        })
-      )))
+        })),
+        ...typed,
+      })))
       .catch(() => {})
     loadVideos()
   }, [student.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -149,7 +151,7 @@ function ResultsPanel({ student, sports, onSaved }) {
 
   return (
     <>
-      <form className="card" onSubmit={submit}>
+      <form className="card swap" onSubmit={submit}>
         <div className="card-head">
           <div>
             <h2>{student.name}</h2>
