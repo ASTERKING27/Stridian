@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { api, token } from './api'
-import Icon from './Icon'
+import { LookPicker } from './Theme'
 
 /* Students sign in with their university email and a password they choose for
    Stridian. Creating an account and resetting a forgotten password are the same two
    steps: get a code by email, then type it with the password you want. */
-export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
+export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
   const [mode, setMode] = useState('login')   // login | email | code
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -77,10 +77,13 @@ export default function StudentAuth({ onAuthed, onCoach, theme, onTheme }) {
     <div className="authpage">
       <div className="authcard">
         <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 6 }}>
-          <button className="iconbtn" onClick={onTheme} aria-label={`Theme: ${theme}. Click to change.`}
-                  title={`Theme: ${theme}`}>
-            <Icon name={theme === 'system' ? 'laptop' : theme === 'dark' ? 'moon' : 'sun'} size={16} />
-          </button>
+          <LookPicker look={look} onLook={onLook} />
+        </div>
+
+        <div className="authhero">
+          <span className="eyebrow">Stridian for athletes</span>
+          <h1>Your second coach.</h1>
+          <p>Where you stand at every level, what to work on this week, and how close the next level is.</p>
         </div>
 
         <div className="card">

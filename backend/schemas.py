@@ -534,3 +534,11 @@ class VideoOut(BaseModel):
     has_thumbnail: bool
     video_deleted_at: datetime | None
     created_at: datetime
+
+
+class SeenIn(BaseModel):
+    """What the student's dashboard showed them (the `snapshot` it was given): the level
+    of each measure, the milestones, the level they play at."""
+    levels: dict[str, int] = Field(default_factory=dict, max_length=100)
+    badges: list[str] = Field(default_factory=list, max_length=50)
+    overall: int | None = Field(default=None, ge=-1, le=4)

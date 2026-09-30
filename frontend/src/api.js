@@ -148,6 +148,11 @@ export const api = {
   addMyAchievement: (blob, name) => sendFile('POST', '/api/student/achievements', blob, name),
   editMyAchievement: (id, body) => send('PATCH', `/api/student/achievements/${id}`, body),
   deleteMyAchievement: id => send('DELETE', `/api/student/achievements/${id}`),
+  // the second coach: what the dashboard says, the celebrations seen, a focus session done
+  studentCoach: () => get('/api/student/coach'),
+  studentCoachSeen: snapshot => send('POST', '/api/student/coach/seen', snapshot),
+  focusTick: () => send('POST', '/api/student/focus/tick'),
+  coachFeed: () => get('/api/coach/feed'),
 
   signup: body => send('POST', '/api/auth/signup', body),
   login: body => send('POST', '/api/auth/login', body),

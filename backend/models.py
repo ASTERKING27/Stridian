@@ -109,6 +109,9 @@ class Student(Base):
     jersey_number: Mapped[int | None] = mapped_column(Integer)
     # the team they play in, "M" (men's) or "W" (women's): which level targets apply
     category: Mapped[str | None] = mapped_column(String(1))
+    # what their dashboard last celebrated: {"levels": {metric: level}, "badges": [ids]},
+    # so a level reached or a badge earned since is celebrated once (coach.py)
+    coach_seen: Mapped[dict | None] = mapped_column(JSON)
 
     # nutrition inputs
     diet_preference: Mapped[str] = mapped_column(String(20), default="nonveg")
@@ -149,6 +152,9 @@ class Student(Base):
         back_populates="student", cascade="all, delete-orphan"
     )
     card_lines: Mapped[list["MatchCardLine"]] = relationship(
+        back_populates="student", cascade="all, delete-orphan"
+    )
+    focus_weeks: Mapped[list["FocusWeek"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"
     )
 
@@ -479,3 +485,21 @@ class AppState(Base):
     key: Mapped[str] = mapped_column(String(40), primary_key=True)
     value: Mapped[dict | None] = mapped_column(JSON)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
+
+
+class FocusWeek(Base):
+    """A student's weekly focus: the one measure their dashboard asks them to work on
+    that week (picked when the week's first visit happens, so it doesn't change mid-week),
+    and the days they ticked off a session. Weeks done in a row make their streak."""
+
+    __tablename__ = "focus_weeks"
+    __table_args__ = (UniqueConstraint("student_id", "week", name="uq_focus_week"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id", ondelete="CASCADE"), index=True)
+    week: Mapped[str] = mapped_column(String(10), nullable=False)          # ISO week, "2026-W40"
+    metric_key: Mapped[str] = mapped_column(String(60), nullable=False)
+    sessions: Mapped[list] = mapped_column(JSON, default=list)             # ["2026-09-29", ...]
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    student: Mapped["Student"] = relationship(back_populates="focus_weeks")

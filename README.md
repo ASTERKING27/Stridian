@@ -93,9 +93,10 @@ it goes up. Indian mobile numbers are accepted in any common form (`+91 98765-43
 
 A student's space then has four tabs:
 
-- **Dashboard** — whether the coach has verified them, how complete their profile is
-  (with links to what's missing), their achievements at a glance, and recent updates
-  (verified, an achievement verified or sent back with the reason).
+- **Dashboard** — the *second coach* (below): what their numbers say today, this week's
+  focus, how close each result is to its next level, milestones — then how complete
+  their profile is (with links to what's missing) and recent updates (verified, an
+  achievement verified or sent back with the reason).
 - **My report** — once a coach verifies them: best position and why, measurements,
   positions, match, training and diet, with nothing they can change. The coach's
   private notes are never sent to them. Un-verifying hides it again.
@@ -110,6 +111,39 @@ A student's space then has four tabs:
   changes them; sport is admin-only.
 
 Deleting a student leaves the login in place so they can enrol again.
+
+### The second coach
+
+The dashboards talk, without AI and without costing anything: `backend/coach.py` turns
+the numbers Stridian already has into a few sentences, from templates. Which wording is
+used is picked from the student and the day, so a message reads the same all day and
+changes tomorrow. Students hear it the way a teammate would say it; coaches get it short
+and practical.
+
+- **The brief** — the level they play at as a ring (how far they are towards the next
+  one), the ladder under it (how many of their measures reach each level), and a
+  headline.
+- **What the coach says** — at most five cards: a level crossed, a result that improved
+  or dipped since the test before, the result closest to its next level, the weak spot
+  that matters most for their position (with the drill for it), their best weapon, a
+  test not done yet, and anything they still have to do themselves. Each links to the
+  right tab of the report.
+- **This week's focus** — one measure a week (the training plan's first item), picked on
+  their first visit of the week so it stays put. They tick each day they trained it;
+  three sessions complete the week, and completed weeks in a row are their streak.
+- **Next-level rings** — every measure with a ladder: how far through its level it is,
+  and how much is still needed for the next one.
+- **Milestones** — thirteen, from the first test result to an eight-week streak.
+- **Level reached** — the first time their level is known, and every time it goes up,
+  it is put on record: a card with the level, what it rests on, the date and the next
+  target. New milestones get a quiet note in the corner. Each is shown once
+  (`Student.coach_seen` remembers what has been shown); a level going down is never
+  announced.
+
+Coaches get **Today's brief** on top of their Dashboard: players waiting to be verified,
+certificates to check, players without a team, who is close to a level-up, who improved,
+whose results dipped (worth a check-in), who has never been tested or not in 30 days,
+and who is on a focus streak. Each name opens that player's report.
 
 The codes are sent through a Gmail account over SMTP with an **app password**: turn on
 2-Step Verification for that Google account, create an app password at
@@ -728,6 +762,10 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `GET` `POST` | `/api/student/me` `/logout` | student | own account and enrolment, revoke this token |
 | `POST` | `/api/student/enrol` | student | join a sport with its enrolment code |
 | `GET` | `/api/student/report` | student | own report, read-only, once verified |
+| `GET` | `/api/student/coach` | student | the dashboard's second coach: headline, messages, rings, milestones, this week's focus |
+| `POST` | `/api/student/coach/seen` | student | the level reached and new milestones have been shown |
+| `POST` | `/api/student/focus/tick` | student | today's session of this week's focus is done (once a day) |
+| `GET` | `/api/coach/feed` | coach | Today's brief for the coach's sport |
 | `PATCH` | `/api/student/profile` | student | edit own details (not sport; RA number, DOB and team only if empty) |
 | `PUT` `GET` | `/api/student/photo` | student | set / fetch own photo (JPEG body) |
 | `GET` `POST` | `/api/student/achievements` | student | list / upload a certificate (raw body, `X-Filename`) — comes back as a draft, AI-filled |
@@ -785,7 +823,12 @@ for the progress sparklines, while the analysis always uses the newest value per
 ## The interface
 
 Six coach screens (seven for an admin) behind a rail on desktop and a bottom tab bar on
-phones, with a light / dark / follow-system theme toggle that persists. Signed out, the
+phones. Moving between pages and tabs is a short slide — the new page comes in from the
+side of the tab you chose while the old one fades away, and the marker under the menu
+and the tabs slides with it; anyone whose device asks for reduced motion gets instant
+changes instead. A **look** picker (the palette button) switches between whole designs:
+**Neon** (the default — deep navy with a cyan-to-violet accent) and the classic light,
+dark and follow-your-device looks; the choice is remembered in the browser. Signed out, the
 site opens on the student sign-in, with a link across to the coach one. A student gets
 the enrolment form, then their own space (Dashboard, My report, Achievements, Profile).
 
@@ -855,6 +898,7 @@ backend/
                     archetypes, nutrition profiles
   scoring.py        the prediction engine (no DB access — pure logic)
   levels.py         the University → International read-out (pure logic)
+  coach.py          the second coach: the dashboards' words, rings, milestones, weekly focus
   levels.json       every sport's level ladders, men's and women's, with sources
   nutrition.py      diet engine + food table
   video.py          MediaPipe drill pipeline, metric maths, drill rules
@@ -866,18 +910,20 @@ backend/
   models/           YOLO weights, downloaded on first use
 
 frontend/src/
-  App.jsx           app shell, nav, theme, auth state
+  App.jsx           app shell, nav, auth state
+  Theme.jsx         the looks and the look picker
+  fx.jsx            motion: page/tab slides, sliding markers, rings, toasts
   Login.jsx         coach sign in / create account / forgot password
   OfficialReport.jsx  the one-page report for the Directorate of Sports
   StudentAuth.jsx   student sign in, email code, new password
   StudentForm.jsx   student enrolment (and an admin's Add Student)
-  Portal.jsx        a student's space: dashboard, report, achievements, profile
+  Portal.jsx        a student's space: the second coach's dashboard, report, achievements, profile
   people.jsx        shared: details form and view, photos, achievements
   CoachEntry.jsx    roster, test results, drill-video upload
   Matches.jsx       match clips, the click-to-identify frame, per-player table
   MatchCards.jsx    match cards: list, editor, photos and the AI read, print setup
   BlankCard.jsx     the printable blank card, Parts A–D and the player card
-  Dashboard.jsx     squad overview, roster, achievements to check, Excel, your details
+  Dashboard.jsx     Today's brief, squad overview, roster, achievements to check, Excel, your details
   Report.jsx        the tabbed report, the three source verdicts, reconciliation, Part D
   Diet.jsx          fuelling targets and the day's menu
   VideoCard.jsx     clip metrics, drills, skeleton thumbnail

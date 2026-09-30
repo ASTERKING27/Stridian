@@ -11,37 +11,13 @@ import Dashboard, { MyDetails } from './Dashboard'
 import Portal from './Portal'
 import Weights from './Weights'
 import Training from './Training'
+import { Switcher, Toaster, useIndicator } from './fx'
+import { LookPicker, useLook } from './Theme'
 
-const THEMES = ['system', 'light', 'dark']
-
-function useTheme() {
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('stridian.theme') || 'system' } catch { return 'system' }
-  })
-  useEffect(() => {
-    const root = document.documentElement
-    if (theme === 'system') root.removeAttribute('data-theme')
-    else root.setAttribute('data-theme', theme)
-    try { localStorage.setItem('stridian.theme', theme) } catch { /* private mode */ }
-  }, [theme])
-  const cycle = () => setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length])
-  return [theme, cycle]
-}
-
-function ThemeButton({ theme, onClick }) {
-  const icon = theme === 'system' ? 'laptop' : theme === 'dark' ? 'moon' : 'sun'
-  return (
-    <button className="iconbtn" onClick={onClick} title={`Theme: ${theme} — click to change`}
-            aria-label={`Theme: ${theme}. Click to change.`}>
-      <Icon name={icon} size={16} />
-    </button>
-  )
-}
-
-const Brand = () => (
+const Brand = ({ sub }) => (
   <div className="brand">
     <span className="mark" aria-hidden="true">S</span>
-    <b>Stridian<span>Sports talent intelligence</span></b>
+    <b>Stridian<span>{sub}</span></b>
   </div>
 )
 
@@ -52,7 +28,11 @@ export default function App() {
   const [sports, setSports] = useState(null)
   const [error, setError] = useState('')
   const [view, setView] = useState('home')
-  const [theme, cycleTheme] = useTheme()
+  const [look, setLook] = useLook()
+  const go = key => {
+    setView(key)
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
   const [version, setVersion] = useState(0)
   const bump = useCallback(() => setVersion(v => v + 1), [])
 
@@ -97,9 +77,9 @@ export default function App() {
   if (!coach && !me) {
     return view === 'login'
       ? <Login sports={sports} onAuthed={c => { setCoach(c); setView('dashboard') }}
-               onCancel={() => setView('home')} theme={theme} onTheme={cycleTheme} />
-      : <StudentAuth onAuthed={m => { setMe(m); setView('mine') }} onCoach={() => setView('login')}
-                     theme={theme} onTheme={cycleTheme} />
+               onCancel={() => go('home')} look={look} onLook={setLook} />
+      : <StudentAuth onAuthed={m => { setMe(m); setView('mine') }} onCoach={() => go('login')}
+                     look={look} onLook={setLook} />
   }
 
   const nav = coach ? [
@@ -133,43 +113,45 @@ export default function App() {
     </select>
   )
 
-  // keyed by sport: an admin switching sport gets every page fresh
+  // keyed by sport: an admin switching sport gets every page fresh; within a sport the
+  // Switcher slides one page out and the next in
   const body = (
     <div key={coach?.sport ?? 'student'}>
-      {view === 'mine' && me && <Portal me={me} sports={sports} onChange={setMe} />}
-      {view === 'me' && coach && <MyDetails coach={coach} onSaved={setCoach} />}
-      {view === 'student' && coach?.is_admin && <StudentForm sports={sports} coach={coach} onSaved={bump} />}
-      {view === 'coach' && coach && (
-        <CoachEntry coach={coach} sports={sports} version={version} onSaved={bump} />
-      )}
-      {view === 'matches' && coach && (
-        <Matches version={version} onChanged={bump} />
-      )}
-      {view === 'cards' && coach && <MatchCards coach={coach} version={version} onChanged={bump} />}
-      {view === 'dashboard' && coach && (
-        <Dashboard coach={coach} sports={sports} version={version} onChanged={bump} onCoach={setCoach} />
-      )}
-      {view === 'weights' && coach && <Weights coach={coach} onSaved={bump} />}
-      {view === 'training' && coach && <Training coach={coach} />}
+      <Switcher value={view} order={[...nav.map(n => n.key), 'me']}>
+        {v => (
+          <>
+            {v === 'mine' && me && <Portal me={me} sports={sports} onChange={setMe} />}
+            {v === 'me' && coach && <MyDetails coach={coach} onSaved={setCoach} />}
+            {v === 'student' && coach?.is_admin && <StudentForm sports={sports} coach={coach} onSaved={bump} />}
+            {v === 'coach' && coach && (
+              <CoachEntry coach={coach} sports={sports} version={version} onSaved={bump} />
+            )}
+            {v === 'matches' && coach && (
+              <Matches version={version} onChanged={bump} />
+            )}
+            {v === 'cards' && coach && <MatchCards coach={coach} version={version} onChanged={bump} />}
+            {v === 'dashboard' && coach && (
+              <Dashboard coach={coach} sports={sports} version={version} onChanged={bump} onCoach={setCoach}
+                         onGo={go} />
+            )}
+            {v === 'weights' && coach && <Weights coach={coach} onSaved={bump} />}
+            {v === 'training' && coach && <Training coach={coach} />}
+          </>
+        )}
+      </Switcher>
     </div>
   )
 
   return (
     <div className="shell">
       <aside className="rail">
-        <Brand />
-        {nav.map(item => (
-          <button key={item.key} className="navitem" onClick={() => setView(item.key)}
-                  aria-current={view === item.key ? 'page' : undefined}>
-            <Icon name={item.icon} />
-            {item.label}
-          </button>
-        ))}
+        <Brand sub={coach ? 'Coach console' : 'Your second coach'} />
+        <Nav items={nav} view={view} onGo={go} />
 
         <div className="spacer" />
 
         {sportPicker}
-        <button className="whoami" disabled={!coach} onClick={() => setView('me')}
+        <button className="whoami" disabled={!coach} onClick={() => go('me')}
                 title={coach ? 'Your details' : undefined}>
           <span className="avatar" aria-hidden="true">{initials(who.name)}</span>
           <span style={{ minWidth: 0 }}>
@@ -181,18 +163,18 @@ export default function App() {
           <button className="navitem" onClick={signOut} style={{ flex: 1 }}>
             <Icon name="logout" /> Sign out
           </button>
-          <ThemeButton theme={theme} onClick={cycleTheme} />
+          <LookPicker look={look} onLook={setLook} />
         </div>
       </aside>
 
       <div>
         <header className="topbar">
-          <Brand />
+          <Brand sub={coach ? 'Coach console' : 'Your second coach'} />
           <div className="row" style={{ gap: 8, flexWrap: 'nowrap' }}>
             {sportPicker}
-            {coach && <button className="btn sec sm" onClick={() => setView('me')}>Me</button>}
+            {coach && <button className="btn sec sm" onClick={() => go('me')}>Me</button>}
             <button className="btn sec sm" onClick={signOut}>Sign out</button>
-            <ThemeButton theme={theme} onClick={cycleTheme} />
+            <LookPicker look={look} onLook={setLook} />
           </div>
         </header>
 
@@ -201,18 +183,43 @@ export default function App() {
           <footer className="sitefoot"><a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of use</a></footer>
         </main>
 
-        {nav.length > 1 && (
-          <nav className="tabbar" aria-label="Sections">
-            {nav.map(item => (
-              <button key={item.key} onClick={() => setView(item.key)}
-                      aria-current={view === item.key ? 'page' : undefined}>
-                <Icon name={item.icon} size={19} />
-                {item.short}
-              </button>
-            ))}
-          </nav>
-        )}
+        {nav.length > 1 && <TabBar items={nav} view={view} onGo={go} />}
       </div>
+      <Toaster />
     </div>
+  )
+}
+
+/* The side menu, with a marker that slides to the page you are on. */
+function Nav({ items, view, onGo }) {
+  const [ref, style] = useIndicator('[aria-current="page"]', [view, items.length])
+  return (
+    <nav className="navlist" ref={ref} aria-label="Sections">
+      <i className="nav-ind" style={style} aria-hidden="true" />
+      {items.map(item => (
+        <button key={item.key} className="navitem" onClick={() => onGo(item.key)}
+                aria-current={view === item.key ? 'page' : undefined}>
+          <Icon name={item.icon} />
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+/* The phone's bottom bar, same idea. */
+function TabBar({ items, view, onGo }) {
+  const [ref, style] = useIndicator('[aria-current="page"]', [view, items.length])
+  return (
+    <nav className="tabbar" aria-label="Sections" ref={ref}>
+      <i className="tab-ind" style={style} aria-hidden="true" />
+      {items.map(item => (
+        <button key={item.key} onClick={() => onGo(item.key)}
+                aria-current={view === item.key ? 'page' : undefined}>
+          <Icon name={item.icon} size={19} />
+          {item.short}
+        </button>
+      ))}
+    </nav>
   )
 }

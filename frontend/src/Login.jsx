@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { api, token } from './api'
-import Icon from './Icon'
+import { LookPicker } from './Theme'
 
 /* Each step is its own <form>, with the autocomplete words password managers look for:
    "username" + "current-password" is a sign-in, "username" + "new-password" is a new
    account or a reset. One form flipping between them made browsers offer a new password
    on sign-in. */
-export default function Login({ sports, onAuthed, onCancel, theme, onTheme }) {
+export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
   const [mode, setMode] = useState('login')   // login | signup | forgot | reset
   const [form, setForm] = useState({
     name: '', email: '', password: '', sport: sports[0].name, signup_code: '',
@@ -87,10 +87,13 @@ export default function Login({ sports, onAuthed, onCancel, theme, onTheme }) {
     <div className="authpage">
       <div className="authcard">
         <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 6 }}>
-          <button className="iconbtn" onClick={onTheme} aria-label={`Theme: ${theme}. Click to change.`}
-                  title={`Theme: ${theme}`}>
-            <Icon name={theme === 'system' ? 'laptop' : theme === 'dark' ? 'moon' : 'sun'} size={16} />
-          </button>
+          <LookPicker look={look} onLook={onLook} />
+        </div>
+
+        <div className="authhero">
+          <span className="eyebrow">Stridian for coaches</span>
+          <h1>Your squad, read for you.</h1>
+          <p>Who is close to a level-up, who needs a check-in, and what needs you today.</p>
         </div>
 
         <div className="card">

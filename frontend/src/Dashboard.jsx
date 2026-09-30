@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, download, initials } from './api'
+import { Switcher } from './fx'
+import Icon from './Icon'
 import { levelWord } from './people'
 import Report from './Report'
 
-export default function Dashboard({ coach, sports, version, onChanged, onCoach }) {
+export default function Dashboard({ coach, sports, version, onChanged, onCoach, onGo }) {
   const [students, setStudents] = useState(null)
   const [waiting, setWaiting] = useState([])
   const [open, setOpen] = useState(null)          // { id, tab }
+  const [lastOpen, setLastOpen] = useState(null)  // so closing a report slides back the way it came
   const [search, setSearch] = useState('')
   const [show, setShow] = useState('all')
   const [error, setError] = useState('')
@@ -49,17 +52,25 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach }
 
   if (error) return <div className="banner bad">{error}</div>
 
-  if (open) {
-    return (
-      <Report id={open.id} initialTab={open.tab} isAdmin={coach.is_admin} sports={sports}
-              onBack={() => { setOpen(null); onChanged() }} onChanged={onChanged}
-              onDeleted={() => { setOpen(null); onChanged() }} />
-    )
+  const openReport = o => {
+    setLastOpen(`r${o.id}`)
+    setOpen(o)
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }
-
-  if (!students) return <div className="skeleton">Loading your squad…</div>
+  const close = () => { setOpen(null); onChanged() }
 
   return (
+    <Switcher value={open ? `r${open.id}` : 'list'} order={['list', lastOpen]}>
+      {k => (k === 'list' ? squad() : (
+        <Report id={Number(k.slice(1))} initialTab={open?.tab} isAdmin={coach.is_admin} sports={sports}
+                onBack={close} onChanged={onChanged} onDeleted={close} />
+      ))}
+    </Switcher>
+  )
+
+  function squad() {
+    if (!students) return <div className="skeleton">Loading your squad…</div>
+    return (
     <>
       <div className="pagehead row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
@@ -82,6 +93,8 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach }
       </div>
 
       {(!coach.employee_id || !coach.phone) && <MyDetails coach={coach} onSaved={onCoach} missing />}
+
+      <CoachCorner version={version} onOpen={openReport} onGo={onGo} />
 
       <div className="tiles">
         <div className="tile">
@@ -114,7 +127,7 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach }
           </div>
           <div className="rows">
             {waiting.map(a => (
-              <button key={a.id} className="rowitem" onClick={() => setOpen({ id: a.student_id, tab: 'Profile' })}>
+              <button key={a.id} className="rowitem" onClick={() => openReport({ id: a.student_id, tab: 'Profile' })}>
                 <span className="who">
                   <b>{a.title}</b>
                   <span>{a.student_name} · {[levelWord(a.level), a.year, a.result].filter(Boolean).join(' · ')}</span>
@@ -151,7 +164,7 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach }
         ) : (
           <div className="rows">
             {visible.map(s => (
-              <button key={s.id} className="rowitem" onClick={() => setOpen({ id: s.id })}>
+              <button key={s.id} className="rowitem" onClick={() => openReport({ id: s.id })}>
                 <span className="avatar" aria-hidden="true">{initials(s.name)}</span>
                 <span className="who">
                   <b>{s.name}</b>
@@ -182,6 +195,61 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach }
         )}
       </div>
     </>
+    )
+  }
+}
+
+/* The second coach, for coaches: what needs them today and who to talk to, from the
+   squad's own numbers (backend/coach.py coach_feed). Each name opens that player. */
+const FEED = {
+  verify: ['shield', 'Overview'], certs: ['card', 'Profile'], team: ['student', 'Profile'],
+  near: ['target', 'Levels'], movers: ['trend', 'Levels'], drops: ['down', 'Levels'],
+  untested: ['clipboard', 'Overview'], stale: ['clipboard', 'Overview'], streaks: ['flame', 'Overview'],
+  clear: ['check', 'Overview'],
+}
+
+function CoachCorner({ version, onOpen, onGo }) {
+  const [feed, setFeed] = useState(null)
+  useEffect(() => {
+    api.coachFeed().then(r => setFeed(r.feed)).catch(() => setFeed([]))
+  }, [version])
+  if (!feed?.length) return null
+  return (
+    <section className="card corner">
+      <div className="card-head">
+        <div>
+          <span className="eyebrow">Your second coach</span>
+          <h2>Today&apos;s brief</h2>
+        </div>
+      </div>
+      <div className="feed">
+        {feed.map(f => {
+          const [icon, tab] = FEED[f.kind] ?? ['chart', 'Overview']
+          return (
+            <article key={f.kind} className={`feeditem ${f.kind}`}>
+              <span className="say-ico"><Icon name={icon} size={16} /></span>
+              <div style={{ minWidth: 0 }}>
+                <h3>{f.title}</h3>
+                <p>{f.body}</p>
+                {f.people.length > 0 && (
+                  <div className="people">
+                    {f.people.slice(0, 6).map(p => (
+                      <button key={p.id} className="person" onClick={() => onOpen({ id: p.id, tab })}>
+                        <b>{p.name}</b>{p.text && <small>{p.text}</small>}
+                      </button>
+                    ))}
+                    {f.people.length > 6 && <span className="muted">+{f.people.length - 6} more</span>}
+                  </div>
+                )}
+                {f.tab === 'coach' && onGo && (
+                  <button className="linkbtn" onClick={() => onGo('coach')}>Open Coach Entry →</button>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 

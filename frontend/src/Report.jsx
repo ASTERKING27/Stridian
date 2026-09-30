@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import {
   LEVEL_NAMES, api, band, bandWord, download, formatValue, scoreLevel, shortLabel, utc, wrapLabel,
 } from './api'
 import { Radar, Sparkline } from './charts'
+import { Switcher, Tabs } from './fx'
 import Diet from './Diet'
 import Icon from './Icon'
 import OfficialReport from './OfficialReport'
@@ -27,6 +28,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
   const [tab, setTab] = useState(initialTab)
   const [saving, setSaving] = useState(false)
   const [official, setOfficial] = useState(false)     // the one-page print for the directorate
+  const tabsId = useId()
 
   useEffect(() => {
     setData(null)
@@ -128,69 +130,71 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
       <VerifyCard student={student} positions={positions} recommended={recommended} readOnly={readOnly}
                   onChange={setStudent} />
 
-      <div className="seg noprint" role="tablist" style={{ maxWidth: 700 }}>
-        {tabs.map(t => (
-          <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{t}</button>
-        ))}
-      </div>
+      <Tabs id={tabsId} tabs={tabs} value={tab} onChange={setTab} label="Report sections" className="noprint" />
 
-      {tab === 'Overview' && <Overview data={data} />}
+      <Switcher id={tabsId} value={tab} order={tabs}>
+        {t => (
+          <>
+            {t === 'Overview' && <Overview data={data} />}
 
-      {tab === 'Levels' && <LevelsTab data={data} readOnly={readOnly} />}
+            {t === 'Levels' && <LevelsTab data={data} readOnly={readOnly} />}
 
-      {tab === 'Profile' && (
-        <ProfileTab student={student} isAdmin={isAdmin} sports={sports} onStudent={setStudent}
-                    onMoved={onDeleted} />
-      )}
+            {t === 'Profile' && (
+              <ProfileTab student={student} isAdmin={isAdmin} sports={sports} onStudent={setStudent}
+                          onMoved={onDeleted} />
+            )}
 
-      {tab === 'Measurements' && (
-        <div className="card">
-          <div className="card-head">
-            <div>
-              <h2>Measurements</h2>
-              <p className="muted">
-                Test battery and physique, each scored 0–100 on the level ladder for their team —
-                University 20, Zonal 40, State 60, National 80, International 100. A measure with no
-                ladder for them is scored against the poor → elite range for {data.sport}. Match
-                footage and match cards have tabs of their own.
-              </p>
-            </div>
-          </div>
-          {metrics.filter(physical).map(m => (
-            <MetricRow key={m.key} metric={m} series={byMetric[m.key]} />
-          ))}
-        </div>
-      )}
+            {t === 'Measurements' && (
+              <div className="card">
+                <div className="card-head">
+                  <div>
+                    <h2>Measurements</h2>
+                    <p className="muted">
+                      Test battery and physique, each scored 0–100 on the level ladder for their team —
+                      University 20, Zonal 40, State 60, National 80, International 100. A measure with no
+                      ladder for them is scored against the poor → elite range for {data.sport}. Match
+                      footage and match cards have tabs of their own.
+                    </p>
+                  </div>
+                </div>
+                {metrics.filter(physical).map(m => (
+                  <MetricRow key={m.key} metric={m} series={byMetric[m.key]} />
+                ))}
+              </div>
+            )}
 
-      {tab === 'Positions' && (
-        <div className="card">
-          <div className="card-head">
-            <div>
-              <h2>Every position, ranked</h2>
-              <p className="muted">Open one to see exactly which results drove its score.</p>
-            </div>
-          </div>
-          {positions.map(p => <PositionRow key={p.position} pos={p} />)}
-        </div>
-      )}
+            {t === 'Positions' && (
+              <div className="card">
+                <div className="card-head">
+                  <div>
+                    <h2>Every position, ranked</h2>
+                    <p className="muted">Open one to see exactly which results drove its score.</p>
+                  </div>
+                </div>
+                {positions.map(p => <PositionRow key={p.position} pos={p} />)}
+              </div>
+            )}
 
-      {tab === 'Footage' && <MatchTab data={data} />}
+            {t === 'Footage' && <MatchTab data={data} />}
 
-      {tab === 'Match cards' && <CardsTab data={data} />}
+            {t === 'Match cards' && <CardsTab data={data} />}
 
-      {tab === 'Training' && (
-        <Training plan={developmentPlan} drills={videoDrills}
-                  role={recommended?.position} hasVideo={(videos ?? []).length > 0} />
-      )}
+            {t === 'Training' && (
+              <Training plan={developmentPlan} drills={videoDrills}
+                        role={data.levels?.position ?? recommended?.position} hasVideo={(videos ?? []).length > 0} />
+            )}
 
-      {tab === 'Diet' && <Diet diet={diet} name={student.name} />}
+            {t === 'Diet' && <Diet diet={diet} name={student.name} />}
 
-      {tab === 'Video' && (
-        <div className="card">
-          <div className="card-head"><div><h2>Video analysis</h2></div></div>
-          {videos.map(v => <VideoCard key={v.id} video={v} />)}
-        </div>
-      )}
+            {t === 'Video' && (
+              <div className="card">
+                <div className="card-head"><div><h2>Video analysis</h2></div></div>
+                {videos.map(v => <VideoCard key={v.id} video={v} />)}
+              </div>
+            )}
+          </>
+        )}
+      </Switcher>
     </>
   )
 }

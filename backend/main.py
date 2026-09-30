@@ -23,7 +23,7 @@ import logging
 import os
 import re
 import secrets
-from collections import Counter
+from collections import Counter, defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -38,6 +38,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 import auth
+import coach as second_coach
 import docreader
 import export
 import levels
@@ -52,14 +53,14 @@ import sports_config as sc
 import storage
 import trainer
 from db import Base, SessionLocal, engine, get_db
-from models import (LEVELS, Achievement, AppState, Coach, CoachSession, MatchAssignment,
+from models import (LEVELS, Achievement, AppState, Coach, CoachSession, FocusWeek, MatchAssignment,
                     MatchCard, MatchCardLine, MatchClip, ModelVersion, PositionWeight, Student,
                     StudentAccount, StudentSession, TestResult, VideoAnalysis)
 from models import _now as utcnow
 from models import admin_emails
 from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CardIn,
                      CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, EmailCodeIn, EmailIn,
-                     LevelTargetsIn, MatchAssignIn, MatchClipOut, MatchUploadIn, ResultsIn, ReviewIn, SportIn,
+                     LevelTargetsIn, MatchAssignIn, MatchClipOut, MatchUploadIn, ResultsIn, ReviewIn, SeenIn, SportIn,
                      StudentCreate, StudentEnrol, StudentListItem, StudentLogin, StudentOut,
                      StudentSelfUpdate, StudentUpdate, TokenOut, UploadIn, VerifyIn, VideoOut,
                      WeightsIn)
@@ -328,6 +329,9 @@ def build_report(db: Session, student: Student) -> dict:
     report["levels"] = level_read_out(db, student, tests, match_values, entries,
                                       weights.get(position) if position else None)
     report["levels"]["position"] = position      # whose weights the overall level used
+    if student.status == "verified" and position:
+        # once the coach has confirmed a position, what to train is ranked for that one
+        report["developmentPlan"] = scoring.development_plan(report["metrics"], weights.get(position, {}))
     report["matchClips"] = [
         {"clipId": a.clip_id, "trackId": a.track_id, "label": a.clip.label,
          "originalName": a.clip.original_name, "metrics": a.metrics, "context": a.context,
@@ -951,6 +955,135 @@ def student_report(db: Session = Depends(get_db),
     report["student"].pop("coach_notes", None)
     report["history"] = history_rows(db, student.id)
     return report
+
+
+# ------------------------------ the second coach ---------------------------- #
+#
+# What the dashboards say (coach.py): plain rules over the numbers, no AI. Students get
+# it once their coach has verified them; before that, only their to-dos and badges.
+
+def profile_done(student: Student) -> bool:
+    """Everything the student dashboard's checklist asks for is filled in."""
+    return all([student.photo_key, student.ra_number, student.dob, student.phone,
+                student.father_phone or student.mother_phone, student.aadhaar, student.blood_group,
+                student.category, student.height_cm, student.weight_kg,
+                not student.highest_level or any(a.status != "draft" for a in student.achievements)])
+
+
+def focus_weeks(db: Session, student: Student, report: dict | None, today) -> list:
+    """The student's focus weeks, oldest first. This week's is made on its first visit,
+    with the measure it asks them to work on, so it stays put all week."""
+    def load():
+        return db.scalars(select(FocusWeek).where(FocusWeek.student_id == student.id)
+                          .order_by(FocusWeek.week)).all()
+    week = second_coach.week_of(today)
+    rows = load()
+    if report is not None and not any(w.week == week for w in rows):
+        key = second_coach.focus_metric(report)
+        if key:
+            db.add(FocusWeek(student_id=student.id, week=week, metric_key=key, sessions=[]))
+            try:
+                db.commit()
+            except IntegrityError:        # another tab made it a moment ago
+                db.rollback()
+            rows = load()
+    return [{"week": w.week, "metric_key": w.metric_key, "sessions": list(w.sessions or [])} for w in rows]
+
+
+def coach_payload(db: Session, student: Student) -> dict:
+    report = build_report(db, student) if student.status == "verified" else None
+    history = history_rows(db, student.id) if report else []
+    today = second_coach.today_ist(utcnow())
+    weeks = focus_weeks(db, student, report, today)
+    achievements = [{"status": a.status, "level": a.level, "title": a.title} for a in student.achievements]
+    return second_coach.student_coach(StudentOut.model_validate(student).model_dump(), report, history,
+                                      achievements, weeks, student.coach_seen, today, profile_done(student))
+
+
+@app.get("/api/student/coach")
+def get_student_coach(db: Session = Depends(get_db),
+                      account: StudentAccount = Depends(auth.current_student)):
+    """The student's dashboard: what to know, what to do next, rings, badges, the week's focus."""
+    student = my_student(account)
+    payload = coach_payload(db, student)
+    # nothing to celebrate: what is on screen now joins the baseline the next level-up is
+    # measured from (with something to celebrate, /seen does that once it has been shown)
+    party = payload["celebrate"]
+    if not party["level"] and not party["levelUps"] and not party["badges"]:
+        seen = second_coach.merge_seen(student.coach_seen, payload["snapshot"])
+        if seen != student.coach_seen:
+            student.coach_seen = seen
+            db.commit()
+    return payload
+
+
+@app.post("/api/student/coach/seen", status_code=204)
+def student_coach_seen(body: SeenIn | None = None, db: Session = Depends(get_db),
+                       account: StudentAccount = Depends(auth.current_student)):
+    """The level reached and the milestones on screen have been seen. The body is the
+    snapshot the dashboard was given, so a level reached while the record was open is
+    still announced next time; it is capped at what is true now, so it can only ever
+    mark as seen what the student has. No body: everything as it is now."""
+    student = my_student(account)
+    now = coach_payload(db, student)["snapshot"]
+    shown = now if body is None else {
+        "levels": {k: min(v, now["levels"][k]) for k, v in body.levels.items() if k in now["levels"]},
+        "badges": [b for b in body.badges if b in now["badges"]],
+        "overall": None if body.overall is None or now["overall"] is None else min(body.overall, now["overall"]),
+    }
+    student.coach_seen = second_coach.merge_seen(student.coach_seen, shown)
+    db.commit()
+
+
+@app.post("/api/student/focus/tick")
+def focus_tick(db: Session = Depends(get_db), account: StudentAccount = Depends(auth.current_student)):
+    """Today's session of this week's focus is done — once a day counts."""
+    student = my_student(account)
+    if student.status != "verified":
+        raise HTTPException(403, "Your weekly focus starts once your coach has verified you.")
+    today = second_coach.today_ist(utcnow())
+    this_week = select(FocusWeek).where(FocusWeek.student_id == student.id,
+                                        FocusWeek.week == second_coach.week_of(today))
+    if db.scalar(this_week) is None:
+        # a new week began while the dashboard was open (Monday, just past midnight)
+        focus_weeks(db, student, build_report(db, student), today)
+    week = db.scalar(this_week.with_for_update())
+    if week is None:
+        raise HTTPException(409, "There's nothing to focus on yet — your coach hasn't recorded a test with a level.")
+    if today.isoformat() not in (week.sessions or []):
+        week.sessions = [*(week.sessions or []), today.isoformat()]
+    db.commit()
+    return coach_payload(db, student)
+
+
+@app.get("/api/coach/feed")
+def coach_feed(db: Session = Depends(get_db), who: Coach = Depends(auth.current_coach)):
+    """What the coach should know about their squad today (coach.coach_feed)."""
+    sport = who.sport
+    students = sport_students(db, sport)
+    ids = [s.id for s in students]
+    history, weeks = defaultdict(list), defaultdict(list)
+    if ids:
+        for r in db.scalars(select(TestResult).where(TestResult.student_id.in_(ids))
+                            .order_by(TestResult.recorded_at.asc(), TestResult.id.asc())):
+            history[r.student_id].append({"metric_key": r.metric_key, "value": r.value,
+                                          "recorded_at": r.recorded_at})
+        for w in db.scalars(select(FocusWeek).where(FocusWeek.student_id.in_(ids))):
+            weeks[w.student_id].append({"week": w.week, "sessions": list(w.sessions or [])})
+    pending = db.scalar(select(func.count()).select_from(Achievement).where(
+        Achievement.status == "pending", Achievement.student_id.in_(ids))) if ids else 0
+    today = second_coach.today_ist(utcnow())
+    overrides = get_state(db, f"levels:{sport}")
+    players = []
+    for s in students:
+        h = history[s.id]
+        latest = {r["metric_key"]: r["value"] for r in h}
+        rows = levels.read_out(sport, {**latest, "heightCm": s.height_cm}, s.category,
+                               overrides=overrides)["rows"]
+        players.append({"id": s.id, "name": s.name, "status": s.status, "category": s.category,
+                        "has_results": bool(h), "last_test": h[-1]["recorded_at"].date() if h else None,
+                        "rows": rows, "history": h, "streak": second_coach.streak(weeks[s.id], today)})
+    return {"feed": second_coach.coach_feed(players, pending or 0, today)}
 
 
 # ----------------------- enrolment codes (for coaches) ---------------------- #
