@@ -705,7 +705,12 @@ function ZoneEditor({ zones, value, onChange }) {
   )
 }
 
+const isNum = cell => /^[-+]?[\d.:%—]+$/.test(cell)
+
 function PartC({ part, stale }) {
+  // a column of numbers (blanks allowed) is right-aligned, heading included, so the
+  // heading sits over its numbers
+  const numeric = part.columns.map((_, j) => part.rows.some(r => isNum(r[j])) && part.rows.every(r => !r[j] || isNum(r[j])))
   return (
     <div className="card">
       <div className="card-head">
@@ -716,10 +721,10 @@ function PartC({ part, stale }) {
       </div>
       <div className="sheetwrap">
         <table className="data">
-          <thead><tr>{part.columns.map(c => <th key={c}>{c}</th>)}</tr></thead>
+          <thead><tr>{part.columns.map((c, j) => <th key={c} className={numeric[j] ? 'num' : undefined}>{c}</th>)}</tr></thead>
           <tbody>
             {part.rows.map((row, i) => (
-              <tr key={i}>{row.map((cell, j) => <td key={j} className={/^[-+]?[\d.:%—]+$/.test(cell) ? 'num' : ''}>{cell}</td>)}</tr>
+              <tr key={i}>{row.map((cell, j) => <td key={j} className={numeric[j] ? 'num' : undefined}>{cell}</td>)}</tr>
             ))}
           </tbody>
         </table>

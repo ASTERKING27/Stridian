@@ -239,6 +239,9 @@ NEAR = [("{gap} off {N}", "{label}: you're at {L}. One locked-in session could f
         ("{label} is knocking on {N}", "{gap} away from {N}. Stay consistent and it's yours.")]
 WEAK = [("Your weak spot: {label}", "It's at {L}, and it matters for {pos}. {tip}"),
         ("{label} needs some love", "Currently {L}. {tip} Hit it 2–3 times a week and watch it move.")]
+# no weak spot as such (nothing below 40/100): the lowest level is simply the next job
+STEP = [("Next project: {label}", "It's your lowest level right now, at {L}. {tip}"),
+        ("{label} is your next level-up", "Currently {L}, the lowest of your numbers. {tip}")]
 WIN = [("{label} up {d}", "Better than {since}. That's real progress — no cap."),
        ("Look at you — {label} improved", "{d} better than {since}. Keep stacking sessions.")]
 LEVEL_WIN = [("New level unlocked: {N} in {label}", "You crossed into {N} since {since}. Earned it."),
@@ -337,8 +340,9 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
         focus_key = focus_metric(report)
         if focus_key and focus_key in rows_by_key:
             row = rows_by_key[focus_key]
-            t, b = say(WEAK, "weak")
-            cards.append(_card("focus", t.format(label=row["label"]),
+            weak = any(p["key"] == focus_key for p in report.get("developmentPlan") or [])
+            t, b = say(WEAK if weak else STEP, "weak")
+            cards.append(_card("focus" if weak else "step", t.format(label=row["label"]),
                                b.format(L=level_name(row["level"]), pos=position,
                                         tip=TRAINING_TIPS.get(focus_key, "Work on it with your coach.")),
                                "My report", focus_key))

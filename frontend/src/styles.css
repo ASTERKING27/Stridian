@@ -428,6 +428,7 @@ table.data { width: 100%; border-collapse: collapse; font-size: .85rem; }
 table.data th, table.data td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line); }
 table.data th { font-size: .74rem; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data th.num { text-align: right; }      /* a number column's heading sits over its numbers */
 
 /* video */
 .clip { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 14px; }
@@ -833,6 +834,8 @@ table.levels td.ladcell small.ok { color: var(--good); }
 }
 :root[data-theme='neon'] :is(.card, .tile, .rail, .say) { background: var(--glass); }
 :root[data-theme='neon'] .card { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), var(--shadow-1); }
+/* a bar that floats over the page needs a solid back, or the page shows through it */
+:root[data-theme='neon'] .card.savebar { background: var(--surface); }
 :root[data-theme='neon'] :is(.brand .mark, .avatar) {
   background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color: var(--accent-ink);
 }
@@ -958,27 +961,27 @@ table.levels td.ladcell small.ok { color: var(--good); }
 .brief .ring-in small { font-size: .64rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 .brief .ring-in b { font-family: var(--display); font-size: 1.22rem; margin: 3px 0; }
 
-.ladder {
+.lvl-ladder {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
 }
-.ladder li { min-width: 0; }
-.ladder .bar { display: block; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
-.ladder .bar i { display: block; height: 100%; border-radius: inherit; background: var(--ink-3); opacity: .45; }
-.ladder li.reached .bar i { background: linear-gradient(90deg, var(--grad-a), var(--grad-b)); opacity: 1; }
-.ladder li.next .bar i { background: var(--accent); opacity: .6; }
-.ladder b {
+.lvl-ladder li { min-width: 0; }
+.lvl-ladder .bar { display: block; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.lvl-ladder .bar i { display: block; height: 100%; border-radius: inherit; background: var(--ink-3); opacity: .45; }
+.lvl-ladder li.reached .bar i { background: linear-gradient(90deg, var(--grad-a), var(--grad-b)); opacity: 1; }
+.lvl-ladder li.next .bar i { background: var(--accent); opacity: .6; }
+.lvl-ladder b {
   display: block; margin-top: 6px; font-size: .74rem; font-weight: 600; color: var(--ink-3);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.ladder li.reached b { color: var(--ink-2); }
-.ladder li.here b { color: var(--ink); }
-.ladder small { font-size: .7rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.lvl-ladder li.reached b { color: var(--ink-2); }
+.lvl-ladder li.here b { color: var(--ink); }
+.lvl-ladder small { font-size: .7rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 @media (max-width: 520px) {
-  .ladder b span { display: none; }
-  .ladder b::after { content: attr(data-short); }
+  .lvl-ladder b span { display: none; }
+  .lvl-ladder b::after { content: attr(data-short); }
 }
-.ladder.fresh li.here .bar i { animation: fill-step .9s 1s var(--ease) backwards; transform-origin: left; }
+.lvl-ladder.fresh li.here .bar i { animation: fill-step .9s 1s var(--ease) backwards; transform-origin: left; }
 @keyframes fill-step { from { transform: scaleX(0); } }
 
 /* what the coach says */
@@ -1002,7 +1005,7 @@ table.levels td.ladcell small.ok { color: var(--good); }
   border: 1px solid color-mix(in srgb, var(--tone, var(--accent)) 40%, transparent);
 }
 :is(.say, .feeditem):is(.levelup, .win, .strength, .movers, .streaks, .clear) { --tone: var(--good); }
-:is(.say, .feeditem):is(.near, .todo) { --tone: var(--accent); }
+:is(.say, .feeditem):is(.near, .todo, .step) { --tone: var(--accent); }
 :is(.say, .feeditem):is(.focus, .verify, .certs, .team) { --tone: var(--warning); }
 :is(.say, .feeditem).drop, .feeditem.drops { --tone: var(--serious); }
 :is(.say, .feeditem):is(.missing, .untested, .stale) { --tone: var(--ink-3); }
@@ -1082,7 +1085,7 @@ dialog.record::backdrop { background: rgba(3, 6, 16, 0.72); backdrop-filter: blu
 .record-ups { list-style: none; margin: 0 0 12px; padding: 0; font-size: .88rem; color: var(--ink-2); animation: fade .6s .95s var(--ease) backwards; }
 .record-ups li { padding: 2px 0; }
 .record-note { margin: 0 0 16px; max-width: 38ch; font-size: .86rem; color: var(--ink-3); animation: fade .6s 1.05s var(--ease) backwards; }
-.record .ladder { width: 100%; margin: 4px 0 18px; text-align: left; }
+.record .lvl-ladder { width: 100%; margin: 4px 0 18px; text-align: left; }
 .record-meta {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin: 0 0 16px; padding: 12px 0;
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
@@ -1134,6 +1137,6 @@ dialog.record::backdrop { background: rgba(3, 6, 16, 0.72); backdrop-filter: blu
 .authhero p { margin: 0; color: var(--ink-2); font-size: .92rem; }
 .brief-status { margin-top: 18px; }
 /* the record is narrow: its ladder uses the short level names */
-.record .ladder b span { display: none; }
-.record .ladder b::after { content: attr(data-short); }
+.record .lvl-ladder b span { display: none; }
+.record .lvl-ladder b::after { content: attr(data-short); }
 @media (max-width: 900px) { .toast { max-width: none; justify-self: stretch; } }

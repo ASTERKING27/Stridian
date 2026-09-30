@@ -125,7 +125,8 @@ and practical.
   headline.
 - **What the coach says** — at most five cards: a level crossed, a result that improved
   or dipped since the test before, the result closest to its next level, the weak spot
-  that matters most for their position (with the drill for it), their best weapon, a
+  that matters most for their position (with the drill for it) — or, with nothing weak,
+  their lowest level as the next project — their best weapon, a
   test not done yet, and anything they still have to do themselves. Each links to the
   right tab of the report.
 - **This week's focus** — one measure a week (the training plan's first item), picked on

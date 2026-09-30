@@ -250,7 +250,7 @@ function announce(badges) {
    marked. `fresh` fills that step in, for the record. */
 function Ladder({ levels, standing, level, fresh = false }) {
   return (
-    <ol className={`ladder${fresh ? ' fresh' : ''}`} aria-label="How many of your measures reach each level">
+    <ol className={`lvl-ladder${fresh ? ' fresh' : ''}`} aria-label="How many of your measures reach each level">
       {levels.map((word, i) => {
         const st = standing[i]
         const state = level != null && i <= level ? (i === level ? 'reached here' : 'reached')
@@ -315,6 +315,7 @@ const SAY = {
   drop: ['down', 'Levels', 'See it'],
   near: ['target', 'Levels', 'See how close'],
   focus: ['bolt', 'Training', 'See the drills'],
+  step: ['target', 'Levels', 'See how close'],
   strength: ['star', 'Levels', 'See it'],
   missing: ['clipboard', 'Measurements', 'See your tests'],
   todo: ['check', null, 'Do it now'],

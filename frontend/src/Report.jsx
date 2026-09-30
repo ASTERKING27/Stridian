@@ -913,8 +913,8 @@ function CardsTab({ data }) {
             <div>
               <h2>Part D — {t.tournament}</h2>
               <p className="muted">
-                {[t.jersey != null && `Jersey ${t.jersey}`, t.position].filter(Boolean).join(' · ')}
-                {' '}Trend compares each match&apos;s overall rating with the one before.
+                {[t.jersey != null && `Jersey ${t.jersey}`, t.position,
+                  'Trend compares each match’s overall rating with the one before.'].filter(Boolean).join(' · ')}
               </p>
             </div>
             <div className="seg noprint" style={{ marginBottom: 0 }}>
