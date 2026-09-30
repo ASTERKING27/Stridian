@@ -24,3 +24,7 @@ Thumbs.db
 .env.*
 !.env.example
 .vercel/
+
+# notes and screenshots kept beside the project, not part of the app
+Claude outputs/
+New Text Document*.txt
