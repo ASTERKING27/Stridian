@@ -253,6 +253,9 @@ STRONG = [("{label} is your superpower", "{L} level. Build your game around it."
 MISSING = [("No {label} result yet", "Ask your coach to test it so your report sees the full picture.")]
 
 
+SAY_FIRST = {"levelup": 0, "focus": 1, "near": 2, "drop": 3, "win": 4, "step": 5, "strength": 6, "missing": 7}
+
+
 def _card(kind, title, body, tab=None, key=None, ring_=None):
     return {"kind": kind, "title": title, "body": body, "tab": tab, "key": key, "ring": ring_}
 
@@ -348,8 +351,11 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
                                "My report", focus_key))
 
         # 4. their best weapon
-        best = max(rows, key=lambda r: (r["level"], r["source"] != "profile"), default=None)
-        if best and best["level"] >= 2 and best["source"] != "profile":
+        # (height isn't a weapon they built; and a measure already talked about comes last)
+        taken = {c["key"] for c in cards}
+        best = max((r for r in rows if r["source"] != "profile"),
+                   key=lambda r: (r["level"], r["key"] not in taken), default=None)
+        if best and best["level"] >= 2:
             t, b = say(STRONG, "strong")
             cards.append(_card("strength", t.format(label=best["label"], L=LEVEL_WORDS[best["level"]]),
                                b.format(L=LEVEL_WORDS[best["level"]]), "My report", best["key"]))
@@ -360,6 +366,16 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
         if missing:
             t, b = say(MISSING, "miss")
             cards.append(_card("missing", t.format(label=missing[0]["label"]), b, "My report", missing[0]["key"]))
+
+        # one message per measure — the one that matters most — so the same test isn't
+        # talked about three times over (a level crossed, then a weak spot, then how close
+        # the next level is, then what improved, ...)
+        said, kept = set(), []
+        for c in sorted(cards, key=lambda c: SAY_FIRST[c["kind"]]):
+            if c["key"] not in said:
+                said.add(c["key"])
+                kept.append(c)
+        cards = kept
 
     todos = profile_todos(student, achievements)
     cards = (cards + todos)[:CARDS_MAX] if report else todos

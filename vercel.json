@@ -4,14 +4,19 @@
   "installCommand": "cd frontend && npm ci",
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "regions": ["sin1"],
+  "regions": [
+    "sin1"
+  ],
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "excludeFiles": "{frontend/**,backend/uploads/**,backend/models/**,backend/*.db,backend/test_*.py,**/__pycache__/**,.venv/**}"
+      "excludeFiles": "{frontend/**,mobile/**,backend/uploads/**,backend/models/**,backend/*.db,backend/test_*.py,**/__pycache__/**,.venv/**}"
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    }
   ]
 }
