@@ -228,6 +228,9 @@ def rank_positions(sport_name, metric_rows, weights_by_position, in_scope=None):
             "blurb": blurb,
             "drivers": drivers,
             "drags": drags,
+            # every measure behind the fit, not just the top three each way: the app's
+            # "why" table shows each one's share of the weight and the points it adds
+            "contributions": contributions,
             "missing": missing,
             "why": _build_why(position, fit, drivers, drags, blurb),
         })

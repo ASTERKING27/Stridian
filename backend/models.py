@@ -394,9 +394,19 @@ class VideoAnalysis(UploadJob, Base):
 
     metrics: Mapped[dict | None] = mapped_column(JSON)
     thumb_key: Mapped[str | None] = mapped_column(String(255))
+    # the skeleton, frame by frame (video.pose_track), for the app's overlay; kept like the
+    # thumbnail after the video itself is deleted
+    pose_key: Mapped[str | None] = mapped_column(String(255))
+    # who sent it: a coach (the default) or the student from the app
+    uploaded_by: Mapped[str | None] = mapped_column(String(10))
+    label: Mapped[str | None] = mapped_column(String(80))          # which drill, e.g. "Countermovement jump"
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     student: Mapped["Student"] = relationship(back_populates="videos")
+
+    @property
+    def has_pose(self):
+        return bool(self.pose_key)
 
     @property
     def has_thumbnail(self):
@@ -500,6 +510,25 @@ class FocusWeek(Base):
     week: Mapped[str] = mapped_column(String(10), nullable=False)          # ISO week, "2026-W40"
     metric_key: Mapped[str] = mapped_column(String(60), nullable=False)
     sessions: Mapped[list] = mapped_column(JSON, default=list)             # ["2026-09-29", ...]
+    # a session the coach logged after the fact (the student forgot to tick it): who,
+    # when they did, and which day it was for — the dashboard says the streak was restored
+    restored_by: Mapped[str | None] = mapped_column(String(120))
+    restored_at: Mapped[datetime | None] = mapped_column(DateTime)
+    restored_day: Mapped[str | None] = mapped_column(String(10))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     student: Mapped["Student"] = relationship(back_populates="focus_weeks")
+
+
+class PushToken(Base):
+    """A phone that wants notifications: its Expo push token, whose it is (a student
+    account or a coach) and which kinds they switched on in the app's Settings."""
+
+    __tablename__ = "push_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    role: Mapped[str] = mapped_column(String(10), nullable=False)          # student | coach
+    owner_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)  # StudentAccount.id or Coach.id
+    prefs: Mapped[dict | None] = mapped_column(JSON)                      # {"video", "coach", "focus"}
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)

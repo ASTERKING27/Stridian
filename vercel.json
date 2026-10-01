@@ -18,5 +18,11 @@
       "source": "/api/(.*)",
       "destination": "/api/index"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/weekly-nudge",
+      "schedule": "30 12 * * 6"
+    }
   ]
 }

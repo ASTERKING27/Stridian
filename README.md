@@ -744,6 +744,62 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 
 ---
 
+## The phone app
+
+`mobile/` is the Android and iPhone app — React Native with Expo (SDK 57), Expo Router
+for the screens. It talks to the same hosted API as the website (`extra.apiUrl` in
+`mobile/app.json`) and covers all three kinds of account:
+
+- **Students** — the second coach's dashboard, the report (with the full *why* behind
+  every fit), achievements and the focus streak, their profile and settings, and drill
+  clips filmed on the phone: uploaded in pieces, then played back as a pose overlay
+  once the analysis computer has measured them.
+- **Coaches** — the squad with Today's brief, a student's page (verify, team and shirt
+  number, a missed focus session logged late, certificates to check, Excel), Coach Entry
+  with checks on every number, the weights, match footage (upload, then tap who's who on
+  the frame), match cards (start one, photograph the paper, have it read) and AI training.
+- **Admins** — everything a coach has, plus Add Student and switching sport.
+
+Pitch calibration and editing a match card's grid stay on the website: both need a big
+screen. Accounts can be deleted from the app (Settings → Delete account, password asked
+again), as the stores require.
+
+**Running it on a phone.** `cd mobile`, `npm install`, then `npx expo start`. Most of the
+app runs in Expo Go; notifications and the finer haptics need a development build:
+`npx eas-cli@latest build --profile development --platform android`.
+`npm run check` tests the app's pure logic (pose read-out, result checks, weights,
+match-card reading) with Node 22 or newer.
+
+### Phone notifications
+
+The server sends through Expo's push service (`backend/push.py`): a clip analysed,
+verified or a position changed, a certificate checked, a new enrolment or a certificate
+waiting for the coach, a streak restored, and a Saturday nudge when the week's focus
+isn't done. Each phone keeps its own on/off switches in Settings. Once, for Android:
+
+1. In `mobile/`: `npx eas-cli@latest login`, then `npx eas-cli@latest init` — it writes
+   the project ID into `app.json`, which the app needs for its push token.
+2. Firebase console → new project → add an Android app with the package
+   `com.arthabiswas.stridian` → download `google-services.json` into `mobile/` and add
+   `"googleServicesFile": "./google-services.json"` under `android` in `app.json`.
+3. Firebase → Project settings → Service accounts → **Generate new private key** (keep
+   that file out of git). Then `npx eas-cli@latest credentials` → Android → production →
+   Google Service Account → *Manage your Google Service Account Key for Push
+   Notifications (FCM V1)* → upload it.
+4. In Vercel, add `CRON_SECRET` (any long random string) for the weekly nudge.
+
+iPhone needs an Apple Developer account; `eas credentials` sets up its push key.
+
+### What the server added for the app
+
+Drill clips a student uploads themselves, the pose track behind the overlay, the full
+contribution of every measure to every fit (`contributions` on each ranked position),
+the streak's last eight weeks and who restored a week, push tokens, account deletion
+and the weekly cron. `backend/test_mobile_api.py` runs all of it against a throwaway
+database: `python backend/test_mobile_api.py`.
+
+---
+
 ## API reference
 
 | Method | Path | Auth | Purpose |
@@ -767,6 +823,14 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `POST` | `/api/student/coach/seen` | student | the level reached and new milestones have been shown |
 | `POST` | `/api/student/focus/tick` | student | today's session of this week's focus is done (once a day) |
 | `GET` | `/api/coach/feed` | coach | Today's brief for the coach's sport |
+| `POST` | `/api/students/{id}/focus/log` | own sport | a focus session the student forgot to tick (`day`, this week or last) |
+| `GET` `POST` | `/api/student/videos` | student | own drill clips / announce one filmed on the phone (`label`: the drill) |
+| `PUT` | `/api/student/videos/{id}/upload` | student | one piece, with `X-Chunk-Range` |
+| `GET` | `/api/student/videos/{id}/thumbnail` `/pose` | student | the skeleton keyframe / the pose track for the overlay |
+| `DELETE` | `/api/student/videos/{id}` | student | remove a clip they uploaded, before it is analysed |
+| `DELETE` | `/api/student/me`, `/api/auth/me` | student / coach | delete the account (`password` again) |
+| `POST` `DELETE` | `/api/push/token` | student / coach | this phone's Expo push token and its on/off switches / forget it |
+| `GET` | `/api/cron/weekly-nudge` | `CRON_SECRET` | Vercel's Saturday cron: remind students whose focus week isn't done |
 | `PATCH` | `/api/student/profile` | student | edit own details (not sport; RA number, DOB and team only if empty) |
 | `PUT` `GET` | `/api/student/photo` | student | set / fetch own photo (JPEG body) |
 | `GET` `POST` | `/api/student/achievements` | student | list / upload a certificate (raw body, `X-Filename`) — comes back as a draft, AI-filled |
@@ -793,6 +857,7 @@ recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
 | `POST` `GET` | `/api/students/{id}/videos` | own sport | announce an upload (name, size) / list drill clips |
 | `PUT` | `/api/videos/{id}/upload` | own sport | one piece, with `X-Chunk-Range: bytes a-b/total` |
 | `GET` | `/api/videos/{id}/thumbnail` | own sport | skeleton keyframe |
+| `GET` | `/api/videos/{id}/pose` | own sport | the pose track behind the phone's overlay |
 | `DELETE` | `/api/videos/{id}` | own sport | remove a drill clip |
 | `POST` `GET` | `/api/matches` | own sport | announce a match upload / list clips |
 | `PUT` | `/api/matches/{id}/upload` | own sport | one piece of the match video |
@@ -909,6 +974,15 @@ backend/
   requirements.txt  everything for the laptop / iMac
   requirements-match.txt   optional — the YOLO lane
   models/           YOLO weights, downloaded on first use
+
+mobile/             the Android / iPhone app (Expo)
+  app.json          name, icons, splash, package id, plugins, the API's address
+  scripts/check.mjs the app's pure logic, checked with Node
+  src/app/          every screen (Expo Router): sign-in, the tabs, pages pushed over them
+  src/tabs/         the tab screens — student/, coach/, admin/
+  src/report/       the report's front page, pitch drawings, the pages behind it
+  src/ui/           the design system: type, buttons, fields, tab bar, toasts, badges
+  src/lib/          API client, session, theme, haptics, uploads, pose maths, push
 
 frontend/src/
   App.jsx           app shell, nav, auth state

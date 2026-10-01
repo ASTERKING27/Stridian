@@ -475,6 +475,7 @@ class UploadIn(BaseModel):
     filename: str = Field(min_length=1, max_length=255)
     size: int = Field(gt=0)
     content_type: str | None = Field(default=None, max_length=120)
+    label: str | None = Field(default=None, max_length=80)     # a drill clip: which drill
 
 
 class MatchUploadIn(UploadIn):
@@ -532,8 +533,30 @@ class VideoOut(BaseModel):
     frames_detected: int | None
     metrics: dict | None
     has_thumbnail: bool
+    has_pose: bool = False
+    uploaded_by: str | None = None
+    label: str | None = None
     video_deleted_at: datetime | None
     created_at: datetime
+
+
+class PasswordIn(BaseModel):
+    """Deleting an account asks for its password again."""
+
+    password: str = Field(min_length=1, max_length=128)
+
+
+class PushTokenIn(BaseModel):
+    """A phone's Expo push token, and the notification kinds switched on in Settings."""
+
+    token: str = Field(min_length=10, max_length=255)
+    prefs: dict[str, bool] = Field(default_factory=dict, max_length=10)
+
+
+class FocusLogIn(BaseModel):
+    """A coach logging a weekly-focus session the student forgot to tick."""
+
+    day: date
 
 
 class SeenIn(BaseModel):

@@ -22,6 +22,7 @@ yesterday's data plus whatever arrived since.
 
 import argparse
 import logging
+import json
 import os
 import platform
 import sys
@@ -145,9 +146,19 @@ def run_video(db, job, tmp):
     }
     if thumb.exists():
         job.thumb_key = storage.save_bytes(f"video-{job.id}-thumb.jpg", thumb.read_bytes())
+    if result.get("pose"):
+        job.pose_key = storage.save_bytes(f"video-{job.id}-pose.json",
+                                          json.dumps(result["pose"], separators=(",", ":")).encode(),
+                                          "application/json")
     job.claimed_at = None
     db.commit()
     main.sync_sheet(db, [student])
+    done = job.status == "done"
+    main.push.notify(db, "video", "Your clip is ready" if done else "A clip couldn't be analysed",
+                     f"{job.original_name}: {'see what the pose analysis found' if done else (job.message or 'try filming it again')}.",
+                     students=main.push.student_account_ids(db, student), data={"tab": "report", "video": job.id})
+    main.push.notify(db, "video", f"{student.name}'s clip is ready" if done else f"{student.name}'s clip failed",
+                     job.original_name, coaches=main.push.sport_coach_ids(db, student.sport), data={"student": student.id})
 
 
 def run_match(db, job, tmp):

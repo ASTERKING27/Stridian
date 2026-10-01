@@ -47,6 +47,7 @@ import match_cards
 import match_metrics
 import migrate
 import nutrition
+import push
 import scoring
 import sheets
 import sports_config as sc
@@ -54,13 +55,14 @@ import storage
 import trainer
 from db import Base, SessionLocal, engine, get_db
 from models import (LEVELS, Achievement, AppState, Coach, CoachSession, FocusWeek, MatchAssignment,
-                    MatchCard, MatchCardLine, MatchClip, ModelVersion, PositionWeight, Student,
+                    MatchCard, MatchCardLine, MatchClip, ModelVersion, PositionWeight, PushToken, Student,
                     StudentAccount, StudentSession, TestResult, VideoAnalysis)
 from models import _now as utcnow
 from models import admin_emails
 from schemas import (ADMIN_ONLY, STUDENT_ONCE, AchievementIn, AchievementOut, CalibrationIn, CardIn,
-                     CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, EmailCodeIn, EmailIn,
-                     LevelTargetsIn, MatchAssignIn, MatchClipOut, MatchUploadIn, ResultsIn, ReviewIn, SeenIn, SportIn,
+                     CardNew, CoachDetails, CoachLogin, CoachOut, CoachSignup, EmailCodeIn, EmailIn, FocusLogIn,
+                     LevelTargetsIn, MatchAssignIn, MatchClipOut, MatchUploadIn, PasswordIn, PushTokenIn, ResultsIn,
+                     ReviewIn, SeenIn, SportIn,
                      StudentCreate, StudentEnrol, StudentListItem, StudentLogin, StudentOut,
                      StudentSelfUpdate, StudentUpdate, TokenOut, UploadIn, VerifyIn, VideoOut,
                      WeightsIn)
@@ -347,7 +349,8 @@ def build_report(db: Session, student: Student) -> dict:
         {"id": v.id, "original_name": v.original_name, "status": v.status,
          "message": v.message, "duration_sec": v.duration_sec,
          "frames_detected": v.frames_detected, "metrics": v.metrics,
-         "has_thumbnail": v.has_thumbnail,
+         "has_thumbnail": v.has_thumbnail, "has_pose": v.has_pose, "label": v.label,
+         "uploaded_by": v.uploaded_by,
          "video_deleted_at": v.video_deleted_at, "created_at": v.created_at}
         for v in sorted(student.videos, key=lambda x: x.created_at, reverse=True)
         if v.status != "uploading"
@@ -788,6 +791,19 @@ def list_coaches(db: Session = Depends(get_db), coach: Coach = Depends(auth.curr
     return db.scalars(select(Coach).order_by(Coach.sport, Coach.name)).all()
 
 
+@app.delete("/api/auth/me", status_code=204)
+def coach_delete_account(payload: PasswordIn, db: Session = Depends(get_db),
+                         coach: Coach = Depends(auth.current_coach)):
+    """A coach deletes their own account. Their squad stays: students, results and
+    finished cards belong to the sport, not to whoever recorded them."""
+    if not auth.verify_password(payload.password, coach.password_hash):
+        raise HTTPException(403, "That password isn't right.")
+    db.execute(PushToken.__table__.delete().where(PushToken.role == "coach", PushToken.owner_id == coach.id))
+    db.delete(coach)
+    db.commit()
+    sync_people(db, "coaches")
+
+
 @app.post("/api/auth/logout", status_code=204)
 def logout(authorization: str = Header(), db: Session = Depends(get_db),
            coach: Coach = Depends(auth.current_coach)):
@@ -888,6 +904,21 @@ def student_logout(authorization: str = Header(), db: Session = Depends(get_db),
     auth.revoke_token(db, authorization.split(" ", 1)[1].strip(), StudentSession)
 
 
+@app.delete("/api/student/me", status_code=204)
+def student_delete_account(payload: PasswordIn, db: Session = Depends(get_db),
+                           account: StudentAccount = Depends(auth.current_student)):
+    """The student deletes their account from the app: their login, and their record in
+    their sport with everything in it (results, certificates, videos, photo)."""
+    if not (account.password_hash and auth.verify_password(payload.password, account.password_hash)):
+        raise HTTPException(403, "That password isn't right.")
+    student = account.student
+    db.execute(PushToken.__table__.delete().where(PushToken.role == "student", PushToken.owner_id == account.id))
+    db.delete(account)
+    db.commit()
+    if student is not None:
+        remove_student(db, student)
+
+
 @app.post("/api/student/enrol", status_code=201)
 def student_enrol(payload: StudentEnrol, db: Session = Depends(get_db),
                   account: StudentAccount = Depends(auth.current_student)):
@@ -909,6 +940,8 @@ def student_enrol(payload: StudentEnrol, db: Session = Depends(get_db),
     sync_sheet(db, [student])
     sync_people(db, "profiles")
     db.refresh(account)
+    push.notify(db, "coach", "New in the squad", f"{student.name} enrolled in {sport}.",
+                coaches=push.sport_coach_ids(db, sport), data={"student": student.id})
     return student_view(account)
 
 
@@ -957,6 +990,58 @@ def student_report(db: Session = Depends(get_db),
     return report
 
 
+# ---------------------------- phone notifications --------------------------- #
+
+def push_owner(authorization: str | None, db: Session):
+    """Whoever is signed in — a student account or a coach — as (role, id)."""
+    for role, dep in (("student", auth.current_student), ("coach", auth.current_coach)):
+        try:
+            return role, dep(authorization=authorization, db=db).id
+        except HTTPException:
+            continue
+    raise HTTPException(401, "Sign in again.")
+
+
+@app.post("/api/push/token", status_code=204)
+def push_register(payload: PushTokenIn, authorization: str | None = Header(default=None),
+                  db: Session = Depends(get_db)):
+    """The app's Expo push token, and which kinds of notification are switched on. A token
+    moves with whoever signs in on that phone last."""
+    role, owner = push_owner(authorization, db)
+    row = db.scalar(select(PushToken).where(PushToken.token == payload.token))
+    if row is None:
+        row = PushToken(token=payload.token)
+        db.add(row)
+    row.role, row.owner_id, row.prefs = role, owner, payload.prefs
+    db.commit()
+
+
+@app.delete("/api/push/token", status_code=204)
+def push_unregister(payload: PushTokenIn, db: Session = Depends(get_db)):
+    """Signing out: this phone stops getting that account's notifications. Knowing the
+    token is enough — it only ever stops messages to that phone."""
+    db.execute(PushToken.__table__.delete().where(PushToken.token == payload.token))
+    db.commit()
+
+
+@app.get("/api/cron/weekly-nudge")
+def weekly_nudge(authorization: str | None = Header(default=None), db: Session = Depends(get_db)):
+    """Saturday evening (vercel.json "crons"): students whose weekly focus isn't done yet
+    get one reminder. Vercel calls it with the CRON_SECRET; nobody else can."""
+    secret = os.environ.get("CRON_SECRET", "")
+    if not secret or not hmac.compare_digest(authorization or "", f"Bearer {secret}"):
+        raise HTTPException(401, "Not allowed.")
+    week = second_coach.week_of(second_coach.today_ist(utcnow()))
+    behind = [(w.student, len(w.sessions or [])) for w in db.scalars(select(FocusWeek).where(FocusWeek.week == week))
+              if len(w.sessions or []) < second_coach.TARGET_SESSIONS]
+    for student, done in behind:
+        left = second_coach.TARGET_SESSIONS - done
+        push.notify(db, "focus", "Your week ends tomorrow",
+                    f"{left} focus session{'s' if left > 1 else ''} to go — log {'them' if left > 1 else 'it'} to keep your streak.",
+                    students=push.student_account_ids(db, student), data={"tab": "dash"})
+    return {"nudged": len(behind)}
+
+
 # ------------------------------ the second coach ---------------------------- #
 #
 # What the dashboards say (coach.py): plain rules over the numbers, no AI. Students get
@@ -987,7 +1072,9 @@ def focus_weeks(db: Session, student: Student, report: dict | None, today) -> li
             except IntegrityError:        # another tab made it a moment ago
                 db.rollback()
             rows = load()
-    return [{"week": w.week, "metric_key": w.metric_key, "sessions": list(w.sessions or [])} for w in rows]
+    return [{"week": w.week, "metric_key": w.metric_key, "sessions": list(w.sessions or []),
+             "restored_by": w.restored_by, "restored_at": w.restored_at, "restored_day": w.restored_day}
+            for w in rows]
 
 
 def coach_payload(db: Session, student: Student) -> dict:
@@ -1054,6 +1141,32 @@ def focus_tick(db: Session = Depends(get_db), account: StudentAccount = Depends(
         week.sessions = [*(week.sessions or []), today.isoformat()]
     db.commit()
     return coach_payload(db, student)
+
+
+@app.post("/api/students/{student_id}/focus/log")
+def coach_log_focus(student_id: int, payload: FocusLogIn, db: Session = Depends(get_db),
+                    coach: Coach = Depends(auth.current_coach)):
+    """A session the student trained but forgot to tick, logged by their coach — this
+    week or last, never ahead. If it completes a week, the student's dashboard says the
+    streak was restored."""
+    student = coach_student(student_id, coach, db)
+    today = second_coach.today_ist(utcnow())
+    if payload.day > today or (today - payload.day).days > 13:
+        raise HTTPException(400, "Log a session from this week or last week.")
+    week = db.scalar(select(FocusWeek).where(FocusWeek.student_id == student.id,
+                                             FocusWeek.week == second_coach.week_of(payload.day))
+                     .with_for_update())
+    if week is None:
+        raise HTTPException(409, f"{student.name} had no weekly focus that week, so there is nothing to log it against.")
+    day = payload.day.isoformat()
+    if day not in (week.sessions or []):
+        week.sessions = sorted([*(week.sessions or []), day])
+        week.restored_by, week.restored_at, week.restored_day = coach.name, utcnow(), day
+    db.commit()
+    if len(week.sessions) == second_coach.TARGET_SESSIONS:
+        push.notify(db, "coach", "Streak restored", f"{coach.name} logged {payload.day.strftime('%A')}'s session — that week counts.",
+                    students=push.student_account_ids(db, student), data={"tab": "dash"})
+    return {"week": week.week, "sessions": list(week.sessions)}
 
 
 @app.get("/api/coach/feed")
@@ -1334,8 +1447,14 @@ def update_student(student_id: int, payload: StudentUpdate, db: Session = Depend
 def delete_student(student_id: int, db: Session = Depends(get_db),
                    coach: Coach = Depends(auth.current_coach)):
     student = coach_student(student_id, coach, db)
+    remove_student(db, student)
+
+
+def remove_student(db: Session, student: Student) -> None:
+    """A student and everything of theirs, files included — a coach deleting them, or
+    the student deleting their own account from the app."""
     for v in student.videos:
-        forget_files(v.stored_name, thumb_of(v))
+        forget_files(v.stored_name, thumb_of(v), v.pose_key)
     forget_files(student.photo_key, *(a.cert_key for a in student.achievements))
     sport = student.sport
     carded = {line.card.sport for line in student.card_lines if line.card.status == "final"}
@@ -1354,6 +1473,7 @@ def verify_student(student_id: int, payload: VerifyIn, db: Session = Depends(get
     student = coach_student(student_id, coach, db)
     if payload.position not in sc.get_sport(student.sport)["positions"]:
         raise HTTPException(400, f"'{payload.position}' is not a position in {student.sport}")
+    first = student.status != "verified"
     student.status = "verified"
     student.verified_position = payload.position
     student.verified_by_id = coach.id
@@ -1361,6 +1481,9 @@ def verify_student(student_id: int, payload: VerifyIn, db: Session = Depends(get
     db.commit()
     db.refresh(student)
     sync_sheet(db, [student])
+    push.notify(db, "coach", "You're verified" if first else "Your position changed",
+                f"{coach.name} confirmed you as {payload.position}. Your report is ready.",
+                students=push.student_account_ids(db, student), data={"tab": "report"})
     return student
 
 
@@ -1564,7 +1687,7 @@ def stored_image(key: str | None, missing: str, mime: str = "image/jpeg") -> Res
 def start_video(student_id: int, payload: UploadIn, db: Session = Depends(get_db),
                 coach: Coach = Depends(auth.current_coach)):
     student = coach_student(student_id, coach, db)
-    record = VideoAnalysis(student_id=student.id, **open_upload(payload, MAX_VIDEO_BYTES))
+    record = VideoAnalysis(student_id=student.id, label=payload.label, **open_upload(payload, MAX_VIDEO_BYTES))
     db.add(record)
     db.commit()
     return {"id": record.id, "chunkSize": storage.CHUNK}
@@ -1604,10 +1727,95 @@ def delete_video(video_id: int, db: Session = Depends(get_db),
                  coach: Coach = Depends(auth.current_coach)):
     record = _coach_video(video_id, coach, db)
     student = record.student
-    forget_files(record.stored_name, thumb_of(record))
+    forget_files(record.stored_name, thumb_of(record), record.pose_key)
     db.delete(record)
     db.commit()
     sync_sheet(db, [student])
+
+
+def pose_file(key: str | None) -> Response:
+    """The skeleton track for the app's pose overlay (worker.run_video saves it)."""
+    if not key:
+        raise HTTPException(404, "No pose data for this clip — it was analysed before the app could draw it.")
+    try:
+        return Response(storage.read_bytes(key), media_type="application/json",
+                        headers={"Cache-Control": "private, max-age=86400"})
+    except FileNotFoundError as exc:
+        raise HTTPException(404, "No pose data for this clip") from exc
+    except storage.StorageError as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
+@app.get("/api/videos/{video_id}/pose")
+def video_pose(video_id: int, db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    return pose_file(_coach_video(video_id, coach, db).pose_key)
+
+
+# A student filming their own drills from the app: the same pieces and queue as a
+# coach's upload, but only ever into their own record, and only once they are enrolled.
+
+def _my_video(video_id: int, account: StudentAccount, db: Session) -> VideoAnalysis:
+    record = db.get(VideoAnalysis, video_id)
+    if record is None or account.student is None or record.student_id != account.student.id:
+        raise HTTPException(404, "Video not found")
+    return record
+
+
+@app.post("/api/student/videos", status_code=201)
+def student_start_video(payload: UploadIn, db: Session = Depends(get_db),
+                        account: StudentAccount = Depends(auth.current_student)):
+    student = my_student(account)
+    record = VideoAnalysis(student_id=student.id, uploaded_by="student", label=payload.label,
+                           **open_upload(payload, MAX_VIDEO_BYTES))
+    db.add(record)
+    db.commit()
+    return {"id": record.id, "chunkSize": storage.CHUNK}
+
+
+@app.put("/api/student/videos/{video_id}/upload")
+async def student_video_chunk(video_id: int, request: Request,
+                              x_chunk_range: str | None = Header(default=None),
+                              db: Session = Depends(get_db),
+                              account: StudentAccount = Depends(auth.current_student)):
+    record = _my_video(video_id, account, db)
+    out = await take_chunk(record, request, x_chunk_range, db)
+    if out["done"] and out["status"] == "queued":
+        student = record.student
+        push.notify(db, "coach", "New drill clip", f"{student.name} sent a drill clip for analysis.",
+                    coaches=push.sport_coach_ids(db, student.sport), data={"student": student.id})
+    return out
+
+
+@app.get("/api/student/videos", response_model=list[VideoOut])
+def student_videos(account: StudentAccount = Depends(auth.current_student)):
+    student = my_student(account)
+    return sorted((v for v in student.videos if v.status != "uploading" or v.uploaded_by == "student"),
+                  key=lambda v: v.created_at, reverse=True)
+
+
+@app.get("/api/student/videos/{video_id}/thumbnail")
+def student_video_thumbnail(video_id: int, db: Session = Depends(get_db),
+                            account: StudentAccount = Depends(auth.current_student)):
+    return stored_image(thumb_of(_my_video(video_id, account, db)), "No thumbnail for this clip")
+
+
+@app.get("/api/student/videos/{video_id}/pose")
+def student_video_pose(video_id: int, db: Session = Depends(get_db),
+                       account: StudentAccount = Depends(auth.current_student)):
+    return pose_file(_my_video(video_id, account, db).pose_key)
+
+
+@app.delete("/api/student/videos/{video_id}", status_code=204)
+def student_delete_video(video_id: int, db: Session = Depends(get_db),
+                         account: StudentAccount = Depends(auth.current_student)):
+    """A student can take back a clip they sent, while it is still waiting or unfinished;
+    once analysed it is part of their report and their coach decides."""
+    record = _my_video(video_id, account, db)
+    if record.uploaded_by != "student" or record.status in ("processing", "done"):
+        raise HTTPException(403, "Your coach looks after analysed clips — ask them to remove it.")
+    forget_files(record.stored_name, thumb_of(record), record.pose_key)
+    db.delete(record)
+    db.commit()
 
 
 # ------------------------------ match footage ------------------------------ #
@@ -2087,10 +2295,15 @@ def student_edit_achievement(achievement_id: int, payload: AchievementIn,
     achievement = my_achievement(achievement_id, account, db)
     if achievement.status == "verified":
         raise HTTPException(409, "This one is already verified — ask your coach if it needs changing.")
+    was = achievement.status
     edit_achievement(achievement, payload, "pending")
     db.commit()
     sync_people(db, "achievements")
     db.refresh(achievement)
+    if achievement.status == "pending" and was != "pending":
+        st = achievement.student
+        push.notify(db, "coach", "Certificate to check", f"{st.name} sent {achievement.title or 'a certificate'}.",
+                    coaches=push.sport_coach_ids(db, st.sport), data={"student": st.id})
     return AchievementOut.model_validate(achievement)
 
 
@@ -2179,6 +2392,10 @@ def review_achievement(achievement_id: int, payload: ReviewIn, db: Session = Dep
     db.commit()
     sync_people(db, "achievements", "profiles")
     db.refresh(achievement)
+    what = achievement.title or "Your certificate"
+    push.notify(db, "coach", "Certificate verified" if payload.decision == "verified" else "Certificate needs fixing",
+                f"{what} — checked by {coach.name}." if payload.decision == "verified" else f"{what}: {payload.note}",
+                students=push.student_account_ids(db, achievement.student), data={"tab": "ach"})
     return AchievementOut.model_validate(achievement)
 
 

@@ -437,6 +437,7 @@ def analyse_video(path, height_cm=None, thumbnail_path=None, sport=None):
 
         frames, detected = [], 0
         best_frame, best_y, index = None, None, 0
+        aspect, seen_left, seen_right = None, 0.0, 0.0   # for the app's pose overlay
 
         while True:
             ok, frame = cap.read()
@@ -448,9 +449,13 @@ def analyse_video(path, height_cm=None, thumbnail_path=None, sport=None):
 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             lms = run(rgb, (index / fps) * 1000.0)
+            if aspect is None:
+                aspect = frame.shape[1] / max(frame.shape[0], 1)
 
             if lms:
                 detected += 1
+                seen_left += sum(lms[i][2] for i in (11, 23, 25, 27))
+                seen_right += sum(lms[i][2] for i in (12, 24, 26, 28))
                 arr = np.array([[p[0], p[1]] for p in lms], dtype=float)
                 hip_y = float(np.nanmean([arr[L_HIP, 1], arr[R_HIP, 1]]))
                 if best_y is None or hip_y < best_y:      # highest position in the clip
@@ -497,6 +502,7 @@ def analyse_video(path, height_cm=None, thumbnail_path=None, sport=None):
             "drills": training_from_video(metrics, detection_rate)
                       + (sport_block.get("drills", []) if detection_rate >= 0.35 else []),
             "sportSpecific": sport_block,
+            "pose": pose_track(points, effective_fps, aspect or 1.0, seen_left >= seen_right) if detected else None,
         }
     finally:
         cap.release()
@@ -505,6 +511,25 @@ def analyse_video(path, height_cm=None, thumbnail_path=None, sport=None):
                 close()
             except Exception:
                 pass
+
+
+# nose, then left/right pairs: shoulder, elbow, wrist, hip, knee, ankle, heel, toe
+POSE_JOINTS = [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
+
+
+def pose_track(points, fps, aspect, left_near):
+    """The skeleton the app draws over its timeline: POSE_JOINTS for every sampled
+    frame as flat [x, y, x, y, ...] in 0–1 image coordinates (3 decimals, null where that
+    joint wasn't found), or null for a frame with nobody in it. ~60 KB for 300 frames."""
+    frames = []
+    for arr in points:
+        sel = arr[POSE_JOINTS]
+        if np.isnan(sel).all():
+            frames.append(None)
+            continue
+        frames.append([None if np.isnan(v) else round(float(v), 3) for v in sel.flatten()])
+    return {"fps": round(float(fps), 3), "aspect": round(float(aspect), 4), "joints": POSE_JOINTS,
+            "near": "left" if left_near else "right", "frames": frames}
 
 
 def _write_thumbnail(frame, landmarks, out_path):

@@ -148,6 +148,26 @@ def streak(weeks, today):
     return count
 
 
+def week_history(weeks, today, n=8):
+    """Sessions in each of the last `n` weeks, oldest first, ending with this one."""
+    count = {w["week"]: len(w.get("sessions") or []) for w in weeks}
+    monday = _monday(week_of(today))
+    labels = [week_of(monday - timedelta(days=7 * i)) for i in reversed(range(n))]
+    return [{"week": w, "sessions": count.get(w, 0)} for w in labels]
+
+
+def restored(weeks, today):
+    """A week the coach completed after the fact, in the last seven days — the
+    dashboard's "streak restored" moment."""
+    for w in sorted(weeks, key=lambda w: w["week"], reverse=True):
+        at = w.get("restored_at")
+        if at and (today - _as_date(at)).days <= 7 and len(w.get("sessions") or []) >= TARGET_SESSIONS:
+            day = w.get("restored_day")
+            return {"week": w["week"], "by": w.get("restored_by"),
+                    "day": date.fromisoformat(day).strftime("%A") if day else None}
+    return None
+
+
 def focus_view(week, report, today, weeks):
     rows = {r["key"]: r for r in (report.get("levels") or {}).get("rows", [])} if report else {}
     row = rows.get(week["metric_key"])
@@ -161,6 +181,9 @@ def focus_view(week, report, today, weeks):
         "doneToday": today.isoformat() in sessions,
         "complete": len(sessions) >= TARGET_SESSIONS,
         "streak": streak(weeks, today),
+        "best": longest_streak(weeks),
+        "history": week_history(weeks, today),
+        "restored": restored(weeks, today),
     }
 
 
@@ -548,6 +571,13 @@ if __name__ == "__main__":
             {"metric_key": "sprint30m", "value": 4.30, "recorded_at": datetime(2026, 9, 20)}]
     c = changes(hist, {"sprint30m": row})[0]
     assert c["better"] and c["crossed"] == 2 and amount(row, c["delta"]) == "0.15 sec", c
+    hist = week_history([{"week": "2026-W39", "sessions": ["a", "b", "c"]}], d, n=3)
+    assert hist == [{"week": "2026-W38", "sessions": 0}, {"week": "2026-W39", "sessions": 3},
+                    {"week": "2026-W40", "sessions": 0}], hist
+    late = [{"week": "2026-W39", "sessions": ["a", "b", "c"], "restored_by": "R. Krishnan",
+             "restored_at": datetime(2026, 9, 29, 10), "restored_day": "2026-09-25"}]
+    assert restored(late, d) == {"week": "2026-W39", "by": "R. Krishnan", "day": "Friday"}, restored(late, d)
+    assert restored(late, date(2026, 10, 9)) is None
     seen = merge_seen({"levels": {"a": 3, "b": 1}, "badges": ["x"], "overall": 2},
                       {"levels": {"a": 2, "c": 0}, "badges": ["y"], "overall": None})
     assert seen == {"levels": {"a": 3, "b": 1, "c": 0}, "badges": ["x", "y"], "overall": 2}, seen
