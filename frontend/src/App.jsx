@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, initials, setUnauthorizedHandler, token } from './api'
 import Icon from './Icon'
 import Login from './Login'
+import Home from './site/Home'
 import StudentAuth from './StudentAuth'
 import StudentForm from './StudentForm'
 import CoachEntry from './CoachEntry'
@@ -71,8 +72,12 @@ export default function App() {
     setView('home')
   }
 
+  // the home page needs nothing from the server, so a visitor sees it at once
+  if (!coach && !me && !token.get() && view === 'home') {
+    return <Home onSignIn={who => go(who === 'coach' ? 'login' : 'signin')} look={look} onLook={setLook} />
+  }
   if (error) return <main><div className="banner bad" style={{ marginTop: 24 }}>{error}</div></main>
-  if (!sports || !booted) return <div className="skeleton">Loading…</div>
+  if (!sports || !booted) return <div className="skeleton" style={{ textAlign: 'center' }}>Loading</div>
 
   if (!coach && !me) {
     return view === 'login'

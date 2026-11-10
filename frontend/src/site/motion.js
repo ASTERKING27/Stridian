@@ -1,0 +1,23 @@
+/* GSAP, set up once for the whole site. Motion here answers something the visitor did
+   (scrolled, pointed, arrived) and nothing moves for anyone who asked for less. */
+import { gsap } from 'gsap'
+import { useGSAP } from '@gsap/react'
+import { CustomEase } from 'gsap/CustomEase'
+import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
+import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { SplitText } from 'gsap/SplitText'
+
+gsap.registerPlugin(useGSAP, CustomEase, DrawSVGPlugin, ScrambleTextPlugin, ScrollTrigger, SplitText)
+
+// the house curves: `out` settles quickly, `io` is the slow-fast-slow of a wipe
+CustomEase.create('out', '.2,.8,.2,1')
+CustomEase.create('io', '.65,0,.15,1')
+gsap.defaults({ ease: 'out', duration: 0.8 })
+
+export const calm = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+export const MOTION = '(prefers-reduced-motion: no-preference)'
+export const DESKTOP = '(min-width: 1081px) and (min-height: 680px)'
+export const SCRAMBLE = '0123456789'
+
+export { gsap, useGSAP, ScrollTrigger, SplitText }
