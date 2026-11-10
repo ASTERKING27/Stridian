@@ -131,7 +131,7 @@ export function createSprinter(canvas, { onFrame } = {}) {
   /* what the page drives: the camera's place, how much of the scene has arrived, and the
      stride time. `yaw` 0 is the flat side-on view a drill video gives; turning it brings
      the depth out. */
-  const view = { yaw: 0, pitch: 0.1, dist: 5.9, shift: 0, reveal: 0, lookX: 0, lookY: 0, rate: 1, scrub: 0 }
+  const view = { yaw: 0, pitch: 0.1, dist: 5.9, shift: 0, aim: 0.94, reveal: 0, lookX: 0, lookY: 0, rate: 1, scrub: 0 }
 
   // ------------------------------------------------------------------ the floor
   const ground = new Mesh(
@@ -239,7 +239,7 @@ export function createSprinter(canvas, { onFrame } = {}) {
 
     // the camera: on the near side, turned towards the front of the runner
     const yaw = view.yaw + view.lookX * 0.1, pitch = view.pitch + view.lookY * 0.04
-    const tx = -0.3, ty = 0.94
+    const tx = -0.3, ty = view.aim
     camera.position.set(tx + Math.sin(yaw) * Math.cos(pitch) * view.dist, ty + Math.sin(pitch) * view.dist,
       -Math.cos(yaw) * Math.cos(pitch) * view.dist)
     camera.lookAt(tx, ty, 0)

@@ -17,7 +17,9 @@ gsap.defaults({ ease: 'out', duration: 0.8 })
 
 export const calm = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 export const MOTION = '(prefers-reduced-motion: no-preference)'
-export const DESKTOP = '(min-width: 1081px) and (min-height: 680px)'
+// room for a whole scene to hold still on screen while it plays
+export const DESKTOP = '(min-width: 1081px) and (min-height: 800px)'
+export const COMPACT = '(max-width: 1080px), (max-height: 799px)'
 export const SCRAMBLE = '0123456789'
 
 export { gsap, useGSAP, ScrollTrigger, SplitText }

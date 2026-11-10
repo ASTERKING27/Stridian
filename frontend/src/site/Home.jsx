@@ -5,7 +5,7 @@ import { LookPicker } from '../Theme'
 import Court from './Court'
 import { SPORTKIT } from './sportkit'
 import { BONES, JOINTS, pose } from './stride'
-import { DESKTOP, MOTION, SCRAMBLE, ScrollTrigger, SplitText, calm, gsap, useGSAP } from './motion'
+import { COMPACT, DESKTOP, MOTION, SCRAMBLE, ScrollTrigger, SplitText, calm, gsap, useGSAP } from './motion'
 import './home.css'
 
 const SPORTS = Object.keys(SPORTKIT)
@@ -154,7 +154,7 @@ function Hero({ onSignIn }) {
       const split = SplitText.create('.h1 .ln', { type: 'words', wordsClass: 'w' })
       gsap.timeline({ defaults: { ease: 'out' } })
         .from(split.words, { yPercent: 112, duration: 1.05, stagger: 0.085 }, 0.1)
-        .from('.hero .eyebrow', { opacity: 0, x: -14, duration: 0.7 }, 0.15)
+        .from('.sitehero .eyebrow', { opacity: 0, x: -14, duration: 0.7 }, 0.15)
         .from('.hero-sub > *', { opacity: 0, y: 22, duration: 0.8, stagger: 0.09 }, 0.5)
         .from('.hud-edge', { scaleX: 0, duration: 1.1, ease: 'io' }, 0.5)
         .from('.hud .k, .hud .ro-v, .hud-tag', { opacity: 0, duration: 0.6, stagger: 0.05 }, 0.9)
@@ -170,7 +170,7 @@ function Hero({ onSignIn }) {
     const mm = gsap.matchMedia()
     mm.add({ wide: '(min-width: 1081px)', narrow: '(max-width: 1080px)' }, ctx => {
       const wide = ctx.conditions.wide
-      gsap.set(v, { shift: wide ? 0.17 : 0, dist: wide ? 5.9 : 6.6 })
+      gsap.set(v, { shift: wide ? 0.17 : 0, dist: wide ? 5.9 : 6.6, aim: wide ? 0.8 : 0.94 })
       gsap.timeline()
         .to(v, { reveal: 1, duration: 1.4, ease: 'power2.out' }, 0.25)
         .fromTo(v, { yaw: 0.04, pitch: 0.03 }, { yaw: wide ? 0.66 : 0.5, pitch: 0.11, duration: 2.8, ease: 'io' }, 0.55)
@@ -190,7 +190,7 @@ function Hero({ onSignIn }) {
   }, { scope: box, dependencies: [live] })
 
   return (
-    <section className="hero" id="top" ref={box}>
+    <section className="sitehero" id="top" ref={box}>
       <figure className="stage">
         {flat ? <PoseStill /> : (
           <canvas ref={canvas} role="img"
@@ -300,15 +300,15 @@ function Sources() {
           .fromTo(pulses[i], { '--d': 0, opacity: 1 }, { '--d': 1, duration: 0.55 }, at + 0.35)
           .to(pulses[i], { opacity: 0, duration: 0.05 }, at + 0.9)
       })
-      tl.fromTo('.verdict', { '--on': 0 }, { '--on': 1, duration: 0.5 }, 3.2)
+      tl.fromTo('.vcard', { '--on': 0 }, { '--on': 1, duration: 0.5 }, 3.2)
         .from('.v-pos', { scrambleText: { text: '······', chars: 'ABCDEFGHIKLMNOPRSTW', speed: 0.5 }, duration: 0.6 }, 3.2)
         .from('.v-fit b', { textContent: 0, snap: { textContent: 1 }, duration: 0.7 }, 3.25)
         .from('.v-agree, .v-rest li', { opacity: 0, x: -12, stagger: 0.08, duration: 0.3 }, 3.85)
         .to({}, { duration: 0.5 })
     })
     // anywhere else each part simply arrives as it is reached
-    mm.add(`${MOTION} and (max-width: 1080px), ${MOTION} and (max-height: 739px)`, () => {
-      gsap.from('.src, .verdict', {
+    mm.add(COMPACT.split(', ').map(q => `${MOTION} and ${q}`).join(', '), () => {
+      gsap.from('.src, .vcard', {
         opacity: 0, y: 26, duration: 0.7, stagger: 0.1,
         scrollTrigger: { trigger: '.how', start: 'top 82%', once: true },
       })
@@ -341,7 +341,7 @@ function Sources() {
             {WIRES.map(d => <i key={`p${d}`} className="pulse" style={{ offsetPath: `path('${d}')` }} />)}
           </div>
 
-          <div className="verdict">
+          <div className="vcard">
             <div className="v-head"><span className="k">Sample player</span><span className="k">Football, men&apos;s</span></div>
             <p className="v-name">Karthik Selvaraj</p>
             <div className="v-main">
@@ -418,7 +418,7 @@ function Levels() {
       tl.from('.board-foot b', { opacity: 0.15, duration: 0.4, stagger: 0.15 }, 3.0)
         .to({}, { duration: 0.4 })
     })
-    mm.add(`${MOTION} and (max-width: 1080px), ${MOTION} and (max-height: 739px)`, () => {
+    mm.add(COMPACT.split(', ').map(q => `${MOTION} and ${q}`).join(', '), () => {
       gsap.fromTo('.lane', { '--p': 0, '--lit': 0 }, {
         '--p': 1, '--lit': 1, duration: 1.1, stagger: 0.12, ease: 'power2.out',
         scrollTrigger: { trigger: '.board', start: 'top 75%', once: true },
@@ -700,7 +700,7 @@ function Basis() {
     <section className="sec" id="data">
       <div className="wrap">
         <h2 className="d h2 rise">Every number says where it came from.</h2>
-        <div className="basis">
+        <div className="origins">
           <div className="brow"><b className="d">Standard</b><p>An official threshold from a governing body, such as <strong>BCCI&apos;s Yo-Yo level 17.1</strong> for cricket.</p></div>
           <div className="brow"><b className="d">Published</b><p>Widely reported norms for the level, such as <strong>NBA Draft Combine</strong> lane-agility times for basketball.</p></div>
           <div className="brow"><b className="d">Estimated</b><p>A sensible starting range. The test is the real protocol, and you retune the range for your own squad.</p></div>
