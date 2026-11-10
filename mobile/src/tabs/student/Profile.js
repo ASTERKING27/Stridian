@@ -5,10 +5,11 @@ import { api, authedSource, initials } from '../../lib/api'
 import { useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
 import { Btn, Eyebrow, I, Icon, Logo, Mono, Rec, Screen, T, Tile, TileImage, Wordmark } from '../../ui'
-import { levelWord } from '../../ui/DetailsForm'
+import { LEVELS, levelWord } from '../../ui/DetailsForm'
 
 export const fmtDate = iso => new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 export const masked = a => (a ? `XXXX XXXX ${a.slice(-4)}` : '')
+const rank = key => LEVELS.findIndex(([k]) => k === key)
 
 // What the sports directorate still needs from them (the website's checklist).
 export function todos(s, achievements = []) {
@@ -21,7 +22,9 @@ export function todos(s, achievements = []) {
     ['Pick your team — men’s or women’s', !!s.category],
     ['Add your height and weight', !!(s.height_cm && s.weight_kg)],
     ...(s.highest_level ? [[`Send proof of your ${levelWord(s.highest_level).toLowerCase()}-level result`,
-      achievements.some(a => a.status !== 'draft'), 'ach']] : []),
+      // pending or verified, at the claimed level or above (as backend main.profile_done)
+      achievements.some(a => (a.status === 'pending' || a.status === 'verified') && rank(a.level) >= rank(s.highest_level)),
+      'ach']] : []),
   ]
 }
 

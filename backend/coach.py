@@ -18,7 +18,7 @@ from datetime import date, datetime, timedelta
 
 from levels import LEVEL_WORDS
 from scoring import normalize_ladder
-from sports_config import TRAINING_TIPS
+from sports_config import TRAINING_TIPS, UNTRAINABLE
 
 TARGET_SESSIONS = 3            # sessions a week that complete the weekly focus
 CARDS_MAX = 5                  # things the dashboard says at once; the tabs have the rest
@@ -64,10 +64,19 @@ def amount(row, delta):
     return f"{_num(delta)} {unit}".strip()
 
 
+def _shuttles(value):
+    """Yo-Yo IR1 shuttles run to reach `value`: 16.8 is level 16, shuttle 8. Levels 5, 9, 11,
+    12 and 13 have 1, 1, 2, 3 and 4 shuttles, every level from 14 up has 8 (16.3 = 30 x 40 m)."""
+    level, shuttle = divmod(round(value * 10), 10)
+    short = {5: 1, 9: 1, 11: 2, 12: 3, 13: 4}
+    return sum(8 if lv >= 14 else short.get(lv, 0) for lv in range(level)) + shuttle
+
+
 def gap_words(row, target):
     """How far a value is from a target, said the natural way round."""
-    if row.get("unit") == "level":                    # Yo-Yo levels don't subtract
-        return f"level {target}"
+    if row.get("unit") == "level":                    # Yo-Yo levels don't subtract: 16.8 → 17.1 is 1 shuttle
+        n = max(1, abs(_shuttles(target) - _shuttles(row["value"])))
+        return f"{n} shuttle{'s' if n > 1 else ''}"
     return amount(row, target - row["value"])
 
 
@@ -107,6 +116,7 @@ def changes(history, rows_by_key):
             if int(new // 20) > int(old // 20) and new >= 20:
                 crossed = min(4, int(new // 20) - 1)
         out.append({"row": row, "delta": abs(now["value"] - before["value"]), "since": before["recorded_at"],
+                    "words": gap_words({**row, "value": before["value"]}, now["value"]),
                     "at": now["recorded_at"], "better": better, "crossed": crossed})
     out.sort(key=lambda c: c["at"], reverse=True)
     return out
@@ -122,14 +132,14 @@ def _date_words(when):
 def focus_metric(report):
     """What to work on this week: the weakest measure that matters most for their
     position (the training plan's first item), else the lowest-level one with a next step.
-    Height can't be trained, so it is never the focus."""
+    A fixed trait (height, reach, wingspan) can't be trained, so it is never the focus."""
     rows = {r["key"]: r for r in (report.get("levels") or {}).get("rows", [])}
     for item in report.get("developmentPlan") or []:
         row = rows.get(item["key"])
-        if row and row.get("next") and row["source"] != "profile":
+        if row and row.get("next") and row["key"] not in UNTRAINABLE:
             return item["key"]
     candidates = [r for r in rows.values()
-                  if r.get("next") and r["level"] is not None and r["source"] != "profile"]
+                  if r.get("next") and r["level"] is not None and r["key"] not in UNTRAINABLE]
     candidates.sort(key=lambda r: (r["level"], r["source"] != "test"))
     return candidates[0]["key"] if candidates else None
 
@@ -209,8 +219,8 @@ BADGES = [
 
 def earned_badges(student, report, history, achievements, weeks, today, profile_done):
     rows = (report.get("levels") or {}).get("rows", []) if report else []
-    # height isn't an achievement: the level badges count what they did
-    best = max((r["level"] for r in rows if r["level"] is not None and r["source"] != "profile"), default=-1)
+    # a fixed trait (height, reach, wingspan) isn't an achievement: the level badges count what they did
+    best = max((r["level"] for r in rows if r["level"] is not None and r["key"] not in UNTRAINABLE), default=-1)
     ups = sum(1 for c in changes(history, {r["key"]: r for r in rows}) if c["better"])
     best_streak = longest_streak(weeks)
     matches = ((report or {}).get("matchCards") or {}).get("context") or {}
@@ -339,7 +349,7 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
         # 1. anything that just happened — a level crossed, a jump, a dip
         recent = changes(history, rows_by_key)
         for c in recent[:3]:
-            row, d, since = c["row"], amount(c["row"], c["delta"]), _date_words(c["since"])
+            row, d, since = c["row"], c["words"], _date_words(c["since"])
             if c["crossed"] is not None:
                 t, b = say(LEVEL_WIN, f"lw{row['key']}")
                 cards.append(_card("levelup", t.format(label=row["label"], N=LEVEL_WORDS[c["crossed"]]),
@@ -353,8 +363,9 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
                 cards.append(_card("drop", t.format(label=row["label"], d=d), b.format(d=d, since=since),
                                    "My report", row["key"]))
 
-        # 2. the closest level-up
-        rings = sorted((ring(r) for r in rows if r.get("next")), key=lambda x: -x["progress"])
+        # 2. the closest level-up (one they can train for)
+        rings = sorted((ring(r) for r in rows if r.get("next") and r["key"] not in UNTRAINABLE),
+                       key=lambda x: -x["progress"])
         for x in rings[:1]:
             if x["progress"] >= 0.4:
                 t, b = say(NEAR, f"n{x['key']}")
@@ -374,9 +385,9 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
                                "My report", focus_key))
 
         # 4. their best weapon
-        # (height isn't a weapon they built; and a measure already talked about comes last)
+        # (a fixed trait isn't a weapon they built; and a measure already talked about comes last)
         taken = {c["key"] for c in cards}
-        best = max((r for r in rows if r["source"] != "profile"),
+        best = max((r for r in rows if r["key"] not in UNTRAINABLE),
                    key=lambda r: (r["level"], r["key"] not in taken), default=None)
         if best and best["level"] >= 2:
             t, b = say(STRONG, "strong")
@@ -480,7 +491,7 @@ def coach_feed(players, pending_certs, today):
     near = []
     for p in players:
         for r in p["rows"]:
-            if r["level"] is None or not r.get("next") or not r.get("ladder") or r["source"] == "profile":
+            if r["level"] is None or not r.get("next") or not r.get("ladder") or r["key"] in UNTRAINABLE:
                 continue
             x = ring(r)
             if x["progress"] >= 0.6:
@@ -507,7 +518,7 @@ def coach_feed(players, pending_certs, today):
                 continue
             said.add(c["better"])
             line = {"id": p["id"], "name": p["name"],
-                    "text": f"{c['row']['label']} {'up' if c['better'] else 'down'} {amount(c['row'], c['delta'])} "
+                    "text": f"{c['row']['label']} {'up' if c['better'] else 'down'} {c['words']} "
                             f"since {_date_words(c['since'])}"}
             (movers if c["better"] else drops).append(line)
     if movers:
@@ -567,10 +578,37 @@ if __name__ == "__main__":
            "next": {"level": 3, "target": 4.22, "gap": -0.08}}
     x = ring(row)
     assert x["gap"] == "0.08 sec" and x["next"] == "National" and 0 < x["progress"] < 1, x
+    yoyo = {"unit": "level", "value": 16.8}
+    assert gap_words(yoyo, 17.1) == "1 shuttle" and gap_words({**yoyo, "value": 16.4}, 17.2) == "6 shuttles"
+    assert gap_words({**yoyo, "value": 13.4}, 15.1) == "9 shuttles" and _shuttles(18.5) * 40 == 1920
+    # a fixed trait is never the weekly focus, nor a level-up to chase
+    from levels import read_out
+    lv = read_out("Basketball", {"standingReach": 228, "wingspan": 178, "standingVertical": 48, "heightCm": 190}, "M")
+    plan = [{"key": "standingReach"}, {"key": "standingVertical"}]
+    assert focus_metric({"levels": lv, "developmentPlan": plan}) == "standingVertical"
+    assert focus_metric({"levels": lv, "developmentPlan": plan[:1]}) not in UNTRAINABLE
+    me = {"id": 1, "status": "verified", "category": "M", "photo_version": 1, "height_cm": 190, "weight_kg": 85}
+    cards = student_coach(me, {"levels": lv, "developmentPlan": plan}, [], [], [], None, d, True)["cards"]
+    assert not [c for c in cards if c["kind"] in ("focus", "step", "near") and c["key"] in UNTRAINABLE], cards
+    feed = coach_feed([{"id": 1, "name": "A", "status": "verified", "category": "M", "has_results": True,
+                        "last_test": d, "rows": lv["rows"], "history": [], "streak": 0}], 0, d)
+    assert [p["text"] for f in feed if f["kind"] == "near" for p in f["people"]] == [
+        "2 cm off State in Standing Vertical Leap"], feed
     hist = [{"metric_key": "sprint30m", "value": 4.45, "recorded_at": datetime(2026, 8, 1)},
             {"metric_key": "sprint30m", "value": 4.30, "recorded_at": datetime(2026, 9, 20)}]
     c = changes(hist, {"sprint30m": row})[0]
-    assert c["better"] and c["crossed"] == 2 and amount(row, c["delta"]) == "0.15 sec", c
+    assert c["better"] and c["crossed"] == 2 and c["words"] == "0.15 sec", c
+    yo = {"key": "yoyoLevel", "unit": "level", "better": "higher"}
+    hist = [{"metric_key": "yoyoLevel", "value": 16.4, "recorded_at": datetime(2026, 8, 1)},
+            {"metric_key": "yoyoLevel", "value": 17.2, "recorded_at": datetime(2026, 9, 20)}]
+    assert changes(hist, {"yoyoLevel": yo})[0]["words"] == "6 shuttles"          # up 0.8 is 6 shuttles
+    assert changes(hist[::-1], {"yoyoLevel": yo})[0]["words"] == "6 shuttles"    # and so is the drop
+    # a long reach and wingspan earn no level badge and are nobody's superpower
+    lv = read_out("Basketball", {"standingReach": 257, "wingspan": 203, "standingVertical": 30, "heightCm": 190}, "M")
+    cards = student_coach(me, {"levels": lv, "developmentPlan": []}, [], [], [], None, d, True)["cards"]
+    assert not [c for c in cards if c["kind"] == "strength" and c["key"] in UNTRAINABLE], cards
+    assert not [b for b in earned_badges(me, {"levels": lv}, [], [], [], d, True)
+                if b["id"] in ("state", "national", "international") and b["earned"]]
     hist = week_history([{"week": "2026-W39", "sessions": ["a", "b", "c"]}], d, n=3)
     assert hist == [{"week": "2026-W38", "sessions": 0}, {"week": "2026-W39", "sessions": 3},
                     {"week": "2026-W40", "sessions": 0}], hist

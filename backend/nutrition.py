@@ -10,6 +10,8 @@ This produces general sports-nutrition guidance for a coach to work from. It is 
 medical or individualised dietetic advice, and the API says so in every response.
 """
 
+from itertools import zip_longest
+
 from sports_config import NUTRITION, get_sport
 
 DISCLAIMER = (
@@ -71,9 +73,9 @@ FOODS = [
     ("post", "2 boiled eggs with fruit", 2, {"egg"}, "recovery"),
 
     # ------------------------------------------------------------------- dinner
-    ("dinner", "Khichdi with vegetables and curd", 0, set(), "balanced"),
+    ("dinner", "Khichdi with vegetables and curd", 1, {"milk"}, "balanced"),
     ("dinner", "Dal, 2 rotis and a vegetable", 0, {"gluten"}, "balanced"),
-    ("dinner", "Vegetable pulao with raita", 0, set(), "balanced"),
+    ("dinner", "Vegetable pulao with raita", 1, {"milk"}, "balanced"),
     ("dinner", "Tofu stir-fry with rice", 0, {"soy"}, "protein-led"),
     ("dinner", "Paneer bhurji with 2 rotis", 1, {"milk", "gluten"}, "protein-led"),
     ("dinner", "Egg curry with rice", 2, {"egg"}, "protein-led"),
@@ -132,6 +134,9 @@ def plan(student, sport_name, recommended_position=None):
     meals = []
     for slot, label, share in MEAL_SPLIT:
         options = [f for f in FOODS if f[0] == slot and _allowed(f, level, allergies)]
+        # FOODS lists the vegan dishes first, so take one from each diet level in turn, theirs first
+        tiers = [[f for f in options if f[2] == t] for t in sorted({f[2] for f in options}, reverse=True)]
+        options = [f for row in zip_longest(*tiers) for f in row if f]
         meals.append({
             "slot": slot,
             "label": label,
@@ -153,8 +158,9 @@ def plan(student, sport_name, recommended_position=None):
         "recovers better than either alone.",
     ]
     if recommended_position:
+        position = recommended_position.lower()
         notes.append(
-            f"Targets here assume the workload of a {recommended_position.lower()}. "
+            f"Targets here assume the workload of {'an' if position[0] in 'aeiou' else 'a'} {position}. "
             "Adjust with the coach if the actual training load is much higher or lower."
         )
     if allergies:
@@ -189,3 +195,26 @@ def plan(student, sport_name, recommended_position=None):
 def sport_positions_note(sport_name):
     sport = get_sport(sport_name)
     return sport["note"] if sport else ""
+
+
+if __name__ == "__main__":
+    meat = {"Grilled fish, rice and vegetables", "Chicken curry with rice and salad",
+            "Grilled chicken with vegetables and rice"}
+
+    def names(p):
+        return [o["name"] for m in p["meals"] for o in m["options"]]
+
+    p = plan({"weight_kg": 64, "diet_preference": "nonveg"}, "Volleyball", "Outside Hitter")
+    assert meat & set(names(p)) and any("egg" in n.lower() for n in names(p)), names(p)
+    assert "an outside hitter" in p["notes"][-1], p["notes"][-1]
+    p = plan({"weight_kg": 64, "diet_preference": "egg"}, "Football", "Winger")
+    assert any("egg" in n.lower() for n in names(p)) and not meat & set(names(p)), names(p)
+    assert "a winger" in p["notes"][-1], p["notes"][-1]
+    p = plan({"weight_kg": 64, "diet_preference": "vegan"}, "Football")
+    level = {f[1]: f[2] for f in FOODS}
+    assert all(level[n] == 0 for n in names(p)), names(p)
+    p = plan({"weight_kg": 64, "diet_preference": "nonveg", "allergies": "egg, fish"}, "Football")
+    assert not {"egg", "fish"} & set().union(*(f[3] for f in FOODS if f[1] in names(p))), names(p)
+    p = plan({"weight_kg": 64, "diet_preference": "veg", "allergies": "milk"}, "Football")
+    assert not any(w in n.lower() for n in names(p) for w in ("curd", "raita", "paneer")), names(p)
+    print("nutrition: ok")

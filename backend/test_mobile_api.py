@@ -10,6 +10,7 @@ import sys
 import tempfile
 from datetime import timedelta
 from pathlib import Path
+from types import SimpleNamespace as NS
 
 TMP = Path(tempfile.mkdtemp())
 os.environ["DATABASE_URL"] = f"sqlite:///{TMP / 'test.db'}"
@@ -127,6 +128,14 @@ def main_test():
         ok(c.get("/api/auth/me", headers=CH), 401)
         with main.SessionLocal() as db:
             assert not db.scalars(main.select(main.PushToken)).all()
+
+    # "All set": the level a student claims needs a certificate sent at that level or above
+    me = dict(photo_key="k", ra_number="RA1", dob="2005-03-14", phone="9", father_phone="9", mother_phone=None,
+              aadhaar="1", blood_group="B+", category="M", height_cm=172, weight_kg=66, highest_level="national")
+    done = lambda *certs: main.profile_done(NS(**me, achievements=[NS(status=s, level=lv) for s, lv in certs]))  # noqa: E731
+    assert done(("pending", "national")) and done(("verified", "international"), ("draft", "state"))
+    assert not any([done(("pending", "state")), done(("rejected", "national")), done(("draft", "national")),
+                    done(("verified", None))])
     print("mobile api: ok")
 
 

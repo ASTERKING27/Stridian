@@ -191,7 +191,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
                           role={data.levels?.position ?? recommended?.position} hasVideo={(videos ?? []).length > 0} />
               )}
 
-              {t === 'Diet' && <Diet diet={diet} name={student.name} />}
+              {t === 'Diet' && <Diet diet={diet} name={student.name} readOnly={readOnly} />}
 
               {t === 'Video' && (
                 <div className="card">

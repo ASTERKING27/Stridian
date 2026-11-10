@@ -23,7 +23,7 @@ from pathlib import Path
 
 import match_cards
 import sports_config as sc
-from sports_config import TRAINING_TIPS
+from sports_config import TRAINING_TIPS, UNTRAINABLE
 from models import LEVELS
 
 DEFAULTS = json.loads((Path(__file__).parent / "levels.json").read_text(encoding="utf-8"))
@@ -167,7 +167,7 @@ def read_out(sport, values, category, card_category=None, card_format=None, weig
         entry = DEFAULTS[sport][key]
         rows.append({"key": key, **meta, "value": value, "ladder": steps, "level": level, "next": nxt,
                      "custom": key in (overrides or {}), "basis": entry["basis"],
-                     "tip": TRAINING_TIPS.get(key)})
+                     "tip": TRAINING_TIPS.get(key), "trainable": key not in UNTRAINABLE})
 
     groups = {g: _summary([r for r in rows if group_of(r["source"]) == g], weights)
               for g in ("test", "card", "match")}
@@ -231,6 +231,7 @@ if __name__ == "__main__":
     demo = read_out("Football", {"sprint30m": 4.30, "cmj": 38, "yoyoLevel": 17.4, "heightCm": 174},
                     "M")
     assert demo["overall"]["level"] is not None and demo["groups"]["test"]["measures"] == 4, demo
+    assert [r["key"] for r in demo["rows"] if not r["trainable"]] == ["heightCm"], demo["rows"]
     for bad in ([4.1, 4.2, 4.3, 4.4, 4.5], [10 ** 400] * 5, [float("nan")] * 5, [True] * 5):
         try:
             check("Football", "sprint30m", {"M": bad, "W": None})

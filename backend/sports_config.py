@@ -349,6 +349,9 @@ TRAINING_TIPS = {
     "weightKg": "Adjust through structured strength training and nutrition with qualified guidance.",
 }
 
+# Measured traits no training changes (their tips say so): never a weekly focus or a level-up to chase.
+UNTRAINABLE = {"heightCm", "standingReach", "wingspan"}
+
 
 # Energy and macro targets per sport, in grams (or kcal) per kg of bodyweight per day.
 # Ranges follow general sports-nutrition guidance for athletes in regular training:

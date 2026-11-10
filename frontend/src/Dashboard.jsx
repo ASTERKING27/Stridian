@@ -115,7 +115,7 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach, 
         <div className="tile">
           <div className="k">Pending</div>
           <div className="v">{stats.pending}</div>
-          <div className="s">awaiting your verification</div>
+          <div className="s">position not confirmed yet</div>
         </div>
       </div>
 

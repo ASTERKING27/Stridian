@@ -1,6 +1,6 @@
 import { MacroBar } from './charts'
 
-export default function Diet({ diet, name }) {
+export default function Diet({ diet, name, readOnly }) {
   if (!diet) return null
 
   if (!diet.available) {
@@ -64,7 +64,7 @@ export default function Diet({ diet, name }) {
           <div>
             <h2>A day of eating</h2>
             <p className="muted">
-              Options already filtered for {name}&apos;s preferences. Pick one per slot.
+              Options already filtered for {readOnly ? 'your' : `${name}'s`} preferences. Pick one per slot.
             </p>
           </div>
         </div>

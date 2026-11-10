@@ -47,8 +47,8 @@ export default function OfficialReport({ data, onBack }) {
   const byLevel = judged.map((r, i) => ({ ...r, i }))
   const best = [...byLevel].sort((a, b) => b.level - a.level || a.i - b.i)
     .filter(r => r.level >= 0 && (overall == null || r.level >= overall)).slice(0, MAX.strengths)
-  const behind = [...byLevel].sort((a, b) => a.level - b.level || a.i - b.i)   // height can't be trained
-    .filter(r => r.next && r.source !== 'profile' && (overall == null || r.level < overall)).slice(0, MAX.plan)
+  const behind = [...byLevel].sort((a, b) => a.level - b.level || a.i - b.i)   // fixed traits can't be trained
+    .filter(r => r.next && r.trainable && (overall == null || r.level < overall)).slice(0, MAX.plan)
 
   return (
     <>

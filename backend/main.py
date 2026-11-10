@@ -1048,11 +1048,15 @@ def weekly_nudge(authorization: str | None = Header(default=None), db: Session =
 # it once their coach has verified them; before that, only their to-dos and badges.
 
 def profile_done(student: Student) -> bool:
-    """Everything the student dashboard's checklist asks for is filled in."""
+    """Everything the student dashboard's checklist asks for is filled in. The level they
+    claim needs a certificate sent to the coach (pending or verified) at that level or above."""
+    rank = lambda lv: LEVELS.index(lv) if lv in LEVELS else -1   # noqa: E731
     return all([student.photo_key, student.ra_number, student.dob, student.phone,
                 student.father_phone or student.mother_phone, student.aadhaar, student.blood_group,
                 student.category, student.height_cm, student.weight_kg,
-                not student.highest_level or any(a.status != "draft" for a in student.achievements)])
+                not student.highest_level or any(a.status in ("pending", "verified")
+                                                 and rank(a.level) >= rank(student.highest_level)
+                                                 for a in student.achievements)])
 
 
 def focus_weeks(db: Session, student: Student, report: dict | None, today) -> list:

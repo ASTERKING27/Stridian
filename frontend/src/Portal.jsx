@@ -5,13 +5,14 @@ import Icon from './Icon'
 import Report from './Report'
 import StudentForm from './StudentForm'
 import {
-  Achievement, CertificateUpload, DetailsForm, DetailsView, levelWord, Photo, PhotoButton,
+  Achievement, CertificateUpload, DetailsForm, DetailsView, LEVELS, levelWord, Photo, PhotoButton,
 } from './people'
 
 const TABS = ['Dashboard', 'My report', 'Achievements', 'Profile']
 const PHOTO_URL = '/api/student/photo'
 const certUrl = id => `/api/student/achievements/${id}/certificate`
 const SHORT = ['Uni', 'Zonal', 'State', 'Nat’l', 'Int’l']
+const rank = key => LEVELS.findIndex(([k]) => k === key)
 
 const greeting = () => {
   const h = new Date().getHours()
@@ -144,7 +145,9 @@ function Home({ me, achievements, onGo, onRefresh }) {
     ['Your height and weight', !!(s.height_cm && s.weight_kg), 'Profile'],
     ...(s.highest_level
       ? [[`Proof of your ${levelWord(s.highest_level).toLowerCase()}-level achievement`,
-          list.some(a => a.status !== 'draft'), 'Achievements']]
+          // pending or verified, at the claimed level or above (as backend main.profile_done)
+          list.some(a => (a.status === 'pending' || a.status === 'verified') && rank(a.level) >= rank(s.highest_level)),
+          'Achievements']]
       : []),
   ]
   const done = todo.filter(t => t[1]).length
