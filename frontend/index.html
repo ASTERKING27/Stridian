@@ -1,16 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="floodlit">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- inline so the browser never fires a /favicon.ico request the API would 404 -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='system-ui,sans-serif' font-size='20' font-weight='700' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
-    <title>Stridian — Sports talent intelligence</title>
-    <meta name="theme-color" content="#070b1a" />
-    <!-- the chosen look (Theme.jsx), set before the first paint so the page never flashes another one -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230B0C0D'/%3E%3Cpath transform='translate(12 12) scale(.76)' fill='%23ECEBE6' d='M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z'/%3E%3C/svg%3E" />
+    <title>Stridian: sports talent intelligence</title>
+    <meta name="description" content="Stridian scores every student athlete against every position in their sport, then shows the level each result reaches." />
+    <meta name="theme-color" content="#0B0C0D" />
+    <!-- the chosen look and accent (Theme.jsx), set before the first paint so the page never flashes another one -->
     <script>
-      try { var look = localStorage.getItem('stridian.look') || 'neon' } catch (e) { look = 'neon' }
-      if (look !== 'system') document.documentElement.setAttribute('data-theme', look)
+      (function () {
+        var look = null, accent = null
+        try { look = localStorage.getItem('stridian.look'); accent = localStorage.getItem('stridian.accent') } catch (e) {}
+        var light = look === 'daylight' || look === 'light' ||
+          (look === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)
+        var root = document.documentElement
+        root.setAttribute('data-theme', light ? 'daylight' : 'floodlit')
+        if (accent === 'blaze' || accent === 'sky') root.setAttribute('data-accent', accent)
+      })()
     </script>
   </head>
   <body>

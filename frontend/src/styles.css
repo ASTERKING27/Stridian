@@ -1,104 +1,99 @@
 /* ===========================================================================
-   Stridian — design system
-   Colour roles are defined once here and referenced by name everywhere else,
-   so light and dark are two value sets rather than two stylesheets.
-   Dark is declared twice on purpose: the media query follows the OS, the
-   [data-theme] scope follows the in-app toggle, and the toggle wins both ways.
+   Stridian: design system
+   Graphite and volt. Colour roles are defined once here and referenced by name
+   everywhere else, so Floodlit (dark) and Daylight (light) are two value sets
+   rather than two stylesheets. index.html and Theme.jsx set data-theme and
+   data-accent on <html>; system.css gives every component its look.
    =========================================================================== */
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  --plane: #f9f9f7;
-  --surface: #fcfcfb;
-  --surface-2: #f1f1ee;
-  --surface-3: #e9e8e3;
+  /* the accent: --volt fills things that carry dark text; lines, dots and accent
+     text use --acc-line / --acc-text, which darken in Daylight to keep contrast */
+  --volt: #CDF24A;
+  --volt-deep: #56661F;
+  --on-acc: #0B0C0D;
+  --acc-text: var(--volt);
+  --acc-line: var(--volt);
 
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --ink-3: #898781;
+  --plane: #0B0C0D;
+  --surface: #111315;
+  --surface-2: #171A1D;
+  --surface-3: #23272B;
 
-  --line: #e1e0d9;
-  --line-2: #c3c2b7;
+  --ink: #ECEBE6;
+  --ink-2: #A9ABA6;
+  --ink-3: #82857F;
 
-  --accent: #2a78d6;
-  --accent-hover: #256abf;
-  --accent-ink: #ffffff;
-  --accent-wash: rgba(42, 120, 214, 0.1);
+  --line: #23272B;
+  --line-2: #33383D;
 
-  --s1: #2a78d6;
-  --s2: #eb6834;
-  --s3: #1baf7a;
+  --accent: var(--acc-text);
+  --accent-hover: var(--ink);
+  --accent-ink: var(--on-acc);
+  --accent-wash: color-mix(in oklab, var(--volt) 13%, transparent);
 
-  --good: #0ca30c;
-  --warning: #fab219;
-  --serious: #ec835a;
-  --critical: #d03b3b;
+  /* chart series: one accent, then ink, then grey. Never a rainbow. */
+  --s1: var(--acc-line);
+  --s2: var(--ink);
+  --s3: var(--ink-3);
 
-  --shadow-1: 0 1px 2px rgba(11, 11, 11, 0.05);
-  --shadow-2: 0 1px 2px rgba(11, 11, 11, 0.05), 0 10px 28px -14px rgba(11, 11, 11, 0.28);
+  --good: var(--acc-text);
+  --warning: #E9B44C;
+  --serious: #FF8A4C;
+  --critical: #FF5F57;
 
-  --r-sm: 8px;
-  --r: 14px;
-  --r-lg: 20px;
+  --shadow-1: none;
+  --shadow-2: 0 28px 70px -30px rgba(0, 0, 0, 0.85);
 
-  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --r-sm: 0px;
+  --r: 0px;
+  --r-lg: 0px;
+
+  --sans: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
   --display: var(--sans);
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
 
-  /* a look can give these their own values; the classic looks keep them plain */
-  --glass: var(--surface);          /* cards and panels */
-  --grad-a: var(--accent);          /* rings, markers, bars: one end … */
-  --grad-b: var(--accent);          /* … and the other */
+  --glass: var(--surface);
+  --grad-a: var(--acc-line);
+  --grad-b: var(--acc-line);
+
+  /* sport art is drawn only from these, so it looks the same in every theme and accent */
+  --court: color-mix(in oklab, var(--ink) 20%, transparent);
+  --court-strong: color-mix(in oklab, var(--ink) 38%, transparent);
+  --court-fill: color-mix(in oklab, var(--ink) 4%, transparent);
+  --court-key: var(--acc-line);
 
   --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-io: cubic-bezier(.65, 0, .15, 1);
   --fast: .15s;
+  --cut: 13px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme='light'])) {
-    color-scheme: dark;
-    --plane: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-2: #232321;
-    --surface-3: #2c2c2a;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --ink-3: #898781;
-    --line: #2c2c2a;
-    --line-2: #383835;
-    --accent: #3987e5;
-    --accent-hover: #5598e7;
-    --accent-ink: #0d0d0d;
-    --accent-wash: rgba(57, 135, 229, 0.16);
-    --s1: #3987e5;
-    --s2: #d95926;
-    --s3: #199e70;
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 28px -14px rgba(0, 0, 0, 0.8);
-  }
+:root[data-theme='daylight'] {
+  color-scheme: light;
+  --acc-text: var(--volt-deep);
+  --acc-line: var(--volt-deep);
+  --plane: #EEEEEA;
+  --surface: #F7F7F4;
+  --surface-2: #E4E4DF;
+  --surface-3: #D6D6D0;
+  --ink: #0E0F10;
+  --ink-2: #46494B;
+  --ink-3: #606366;
+  --line: #D6D6D0;
+  --line-2: #BDBDB6;
+  --on-acc: #0E0F10;
+  --accent-wash: color-mix(in oklab, var(--volt-deep) 14%, transparent);
+  --warning: #8A6100;
+  --serious: #B5460F;
+  --critical: #C2302A;
+  --shadow-2: 0 28px 70px -34px rgba(14, 15, 16, 0.4);
 }
 
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --plane: #0d0d0d;
-  --surface: #1a1a19;
-  --surface-2: #232321;
-  --surface-3: #2c2c2a;
-  --ink: #ffffff;
-  --ink-2: #c3c2b7;
-  --ink-3: #898781;
-  --line: #2c2c2a;
-  --line-2: #383835;
-  --accent: #3987e5;
-  --accent-hover: #5598e7;
-  --accent-ink: #0d0d0d;
-  --accent-wash: rgba(57, 135, 229, 0.16);
-  --s1: #3987e5;
-  --s2: #d95926;
-  --s3: #199e70;
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 28px -14px rgba(0, 0, 0, 0.8);
-}
+:root[data-accent='blaze'] { --volt: #FF6A2B; --volt-deep: #6B2D12; }
+:root[data-accent='sky'] { --volt: #7FD3FF; --volt-deep: #35596B; }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -689,9 +684,9 @@ tr.total td { font-weight: 700; }
     color-scheme: light;
     --plane: #fff; --surface: #fff; --surface-2: #f3f3f3; --surface-3: #e6e6e6; --glass: #fff;
     --ink: #000; --ink-2: #333; --ink-3: #666; --line: #d6d6d6; --line-2: #bbb;
-    --accent: #2a78d6; --accent-wash: rgba(42, 120, 214, 0.1); --grad-a: #2a78d6; --grad-b: #2a78d6;
-    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
-    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --acc-text: #3d4a12; --acc-line: #3d4a12; --accent: #3d4a12; --accent-wash: rgba(0, 0, 0, 0.06); --grad-a: #3d4a12; --grad-b: #3d4a12;
+    --s1: #3d4a12; --s2: #000; --s3: #777;
+    --good: #2f6b12; --warning: #8a6100; --serious: #b5460f; --critical: #c2302a;
     --shadow-1: none; --shadow-2: none;
   }
   body::before { display: none !important; }
@@ -781,84 +776,6 @@ table.levels td.ladcell small.ok { color: var(--good); }
 .or-standing td { text-align: center; font-size: 8.5pt; }
 .or-standing td.here { background: #e6e6e6; font-weight: 700; }
 .or-standing small { font-size: 7.5pt; }
-
-/* ============================== Neon look ============================== */
-/* Deep navy with a cyan-to-violet accent. The glow sits still behind the page; the
-   gradient is kept for things that measure progress (rings, bars, markers) and the main
-   button — never on text. */
-
-:root[data-theme='neon'] {
-  color-scheme: dark;
-  --plane: #070b1a;
-  --surface: #0e1430;
-  --surface-2: #151d3d;
-  --surface-3: #1f2a52;
-  --glass: rgba(17, 25, 54, 0.74);
-  --ink: #eef2ff;
-  --ink-2: #b4bdd8;
-  --ink-3: #8a94b8;
-  --line: rgba(148, 163, 255, 0.13);
-  --line-2: rgba(148, 163, 255, 0.24);
-  --accent: #22d3ee;
-  --accent-hover: #67e8f9;
-  --accent-ink: #04121c;
-  --accent-wash: rgba(34, 211, 238, 0.12);
-  --grad-a: #22d3ee;
-  --grad-b: #a78bfa;
-  --s1: #22d3ee;
-  --s2: #f472b6;
-  --s3: #a78bfa;
-  --good: #34d399;
-  --warning: #fbbf24;
-  --serious: #fb923c;
-  --critical: #fb7185;
-  --shadow-1: 0 10px 30px -20px rgba(0, 0, 0, 0.9);
-  --shadow-2: 0 0 0 1px rgba(148, 163, 255, 0.12), 0 24px 60px -24px rgba(0, 0, 0, 0.95);
-  --r-sm: 10px;
-  --r: 16px;
-  --r-lg: 22px;
-  --sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --display: 'Space Grotesk Variable', 'Inter Variable', system-ui, sans-serif;
-}
-
-:root[data-theme='neon'] body::before {
-  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(60vmax 45vmax at 10% -10%, rgba(34, 211, 238, 0.10), transparent 70%),
-    radial-gradient(55vmax 45vmax at 105% 0%, rgba(167, 139, 250, 0.12), transparent 70%),
-    radial-gradient(50vmax 40vmax at 60% 115%, rgba(244, 114, 182, 0.05), transparent 70%);
-}
-
-:root[data-theme='neon'] :is(h1, h2, .headline, .brand b, .tile .v, .hero .big, .hero .score, .verdict .v) {
-  font-family: var(--display);
-}
-:root[data-theme='neon'] :is(.card, .tile, .rail, .say) { background: var(--glass); }
-:root[data-theme='neon'] .card { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), var(--shadow-1); }
-/* a bar that floats over the page needs a solid back, or the page shows through it */
-:root[data-theme='neon'] .card.savebar { background: var(--surface); }
-:root[data-theme='neon'] :is(.brand .mark, .avatar) {
-  background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color: var(--accent-ink);
-}
-:root[data-theme='neon'] .btn:not(.sec) {
-  background: linear-gradient(115deg, var(--grad-a), var(--grad-b)); color: var(--accent-ink);
-  box-shadow: 0 6px 20px -10px rgba(34, 211, 238, 0.7);
-}
-:root[data-theme='neon'] .btn:not(.sec):hover:not(:disabled) {
-  filter: brightness(1.08); box-shadow: 0 8px 26px -8px rgba(167, 139, 250, 0.7);
-}
-:root[data-theme='neon'] .btn.sec { background: rgba(148, 163, 255, 0.06); }
-:root[data-theme='neon'] .btn.sec:hover:not(:disabled) { background: rgba(148, 163, 255, 0.12); border-color: rgba(34, 211, 238, 0.45); }
-:root[data-theme='neon'] :is(input, select, textarea):focus {
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16), 0 0 16px -4px rgba(34, 211, 238, 0.45);
-}
-:root[data-theme='neon'] :is(.track > i:not(.good, .warn, .bad), .progress span, .hbar .track span) {
-  background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
-}
-:root[data-theme='neon'] .seg:not(.tabs, .slide) button[aria-pressed='true'] { background: var(--surface-3); }
-:root[data-theme='neon'] .seg-pill { background: var(--surface-3); }
-:root[data-theme='neon'] .rowitem:hover { background: rgba(148, 163, 255, 0.06); }
-:root[data-theme='neon'] .banner { background: rgba(148, 163, 255, 0.06); }
-:root[data-theme='neon'] .ring-fill { filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.35)); }
 
 /* ============================== motion ============================== */
 

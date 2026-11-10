@@ -1,10 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Analytics } from '@vercel/analytics/react'
-import '@fontsource-variable/inter'
-import '@fontsource-variable/space-grotesk'
+import '@fontsource-variable/archivo/wdth.css'
+import '@fontsource/ibm-plex-mono/latin-400.css'
+import '@fontsource/ibm-plex-mono/latin-500.css'
 import App from './App.jsx'
 import './styles.css'
+import './system.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
