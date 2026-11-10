@@ -4,6 +4,11 @@
   "installCommand": "cd frontend && npm ci",
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
+  "git": {
+    "deploymentEnabled": {
+      "aster2/youthful-euler-8tdu94": false
+    }
+  },
   "regions": [
     "sin1"
   ],
