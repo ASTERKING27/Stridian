@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { api, token } from './api'
 import { Seg } from './fx'
-import { LookPicker } from './Theme'
+import Icon from './Icon'
 
 /* Each step is its own <form>, with the autocomplete words password managers look for:
    "username" + "current-password" is a sign-in, "username" + "new-password" is a new
    account or a reset. One form flipping between them made browsers offer a new password
    on sign-in. */
-export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
+export default function Login({ sports, onAuthed }) {
   const [mode, setMode] = useState('login')   // login | signup | forgot | reset
   const [form, setForm] = useState({
     name: '', email: '', password: '', sport: sports[0].name, signup_code: '',
@@ -64,7 +64,7 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
       setForm(f => ({ ...f, email: res.email, email_code: '' }))
       setMode('reset')
       setCodeSent(`If a coach account uses ${res.email}, a 6-digit code is on its way to it. ` +
-                  'It can take a minute — check spam too.')
+                  'It can take a minute, so check spam too.')
     })
   }
 
@@ -84,24 +84,10 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
   )
   const errorNote = error && <div className="note err">{error}</div>
 
+  const title = { login: 'Welcome back.', signup: 'Set up your squad.', forgot: 'Reset your password.', reset: 'Check your inbox.' }[mode]
   return (
-    <div className="authpage">
-      <div className="authcard">
-        <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 6 }}>
-          <LookPicker look={look} onLook={onLook} />
-        </div>
-
-        <div className="authhero">
-          <span className="eyebrow">Stridian for coaches</span>
-          <h1>Your squad, read for you.</h1>
-          <p>Who is close to a level-up, who needs a check-in, and what needs you today.</p>
-        </div>
-
-        <div className="card">
-          <div className="brand">
-            <span className="mark" aria-hidden="true">S</span>
-            <b>Stridian<span>Coach access</span></b>
-          </div>
+        <>
+          <h1 className="auth-h" key={mode}>{title}</h1>
 
           {(mode === 'login' || mode === 'signup') && (
             <Seg options={[['login', 'Sign in'], ['signup', 'Create account']]} value={mode} onChange={go}
@@ -116,9 +102,9 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
                 <input id="cpass" name="password" type="password" required value={form.password}
                        onChange={e => set('password', e.target.value)} autoComplete="current-password" />
               </div>
-              <button className="btn wide" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+              <button className="btn wide" disabled={busy}>{busy ? 'Signing in' : 'Sign in'}<Icon name="next" size={18} /></button>
               {errorNote}
-              <p style={{ textAlign: 'center', marginTop: 12 }}>
+              <p className="auth-alt">
                 <button type="button" className="linkbtn" onClick={() => go('forgot')}>
                   Forgot your password?
                 </button>
@@ -164,7 +150,7 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
                 <input id="ccode" value={form.signup_code} autoComplete="off"
                        onChange={e => set('signup_code', e.target.value)} />
                 <p className="muted" style={{ marginTop: 6 }}>
-                  Ask whoever runs this site — it keeps student details to real coaches.
+                  Ask whoever runs this site. It keeps student details to real coaches.
                 </p>
               </div>
               {emailField}
@@ -183,24 +169,23 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
                          onChange={e => set('email_code', e.target.value.replace(/\D/g, '').slice(0, 6))} />
                 </div>
               )}
-              <button className="btn wide" disabled={busy}>{busy ? 'Working…' : 'Create account'}</button>
+              <button className="btn wide" disabled={busy}>{busy ? 'Working' : 'Create account'}<Icon name="next" size={18} /></button>
               {errorNote}
             </form>
           )}
 
           {mode === 'forgot' && (
             <form id="forgot" name="forgot" onSubmit={sendReset}>
-              <h2 style={{ marginTop: 0 }}>Reset your password</h2>
               <p className="muted" style={{ marginTop: 0 }}>
                 Type your account&apos;s email. We&apos;ll send a 6-digit code to it, then you
                 choose a new password.
               </p>
               {emailField}
-              <button className="btn wide" disabled={busy}>{busy ? 'Sending…' : 'Email me a code'}</button>
+              <button className="btn wide" disabled={busy}>{busy ? 'Sending' : 'Email me a code'}<Icon name="next" size={18} /></button>
               {errorNote}
-              <p style={{ textAlign: 'center', marginTop: 12 }}>
+              <p className="auth-alt">
                 <button type="button" className="linkbtn" onClick={() => go('login')}>
-                  ← Back to sign in
+                  Back to sign in
                 </button>
               </p>
             </form>
@@ -208,7 +193,6 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
 
           {mode === 'reset' && (
             <form id="reset" name="reset" onSubmit={finishReset}>
-              <h2 style={{ marginTop: 0 }}>Reset your password</h2>
               {codeSent && <p className="muted" style={{ marginTop: 0 }}>{codeSent}</p>}
               {/* not shown: tells the password manager which account the new password is for */}
               <input type="text" name="email" autoComplete="username" defaultValue={form.email} hidden />
@@ -229,7 +213,7 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
                 </p>
               </div>
               <button className="btn wide" disabled={busy || form.email_code.length !== 6}>
-                {busy ? 'Checking…' : 'Set password and sign in'}
+                {busy ? 'Checking' : 'Set password and sign in'}<Icon name="next" size={18} />
               </button>
               {errorNote}
               <p className="row" style={{ justifyContent: 'space-between', marginTop: 12 }}>
@@ -242,12 +226,6 @@ export default function Login({ sports, onAuthed, onCancel, look, onLook }) {
               </p>
             </form>
           )}
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          <button className="linkbtn" onClick={onCancel}>← I'm a student, take me back</button>
-        </div>
-      </div>
-    </div>
+        </>
   )
 }

@@ -14,6 +14,8 @@ gsap.registerPlugin(useGSAP, CustomEase, DrawSVGPlugin, ScrambleTextPlugin, Scro
 CustomEase.create('out', '.2,.8,.2,1')
 CustomEase.create('io', '.65,0,.15,1')
 gsap.defaults({ ease: 'out', duration: 0.8 })
+// a section that isn't on this page (a court with no spots, say) is not a mistake
+gsap.config({ nullTargetWarn: false })
 
 export const calm = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 export const MOTION = '(prefers-reduced-motion: no-preference)'

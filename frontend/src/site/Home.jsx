@@ -6,7 +6,6 @@ import Court from './Court'
 import { SPORTKIT } from './sportkit'
 import { BONES, JOINTS, pose } from './stride'
 import { COMPACT, DESKTOP, MOTION, SCRAMBLE, ScrollTrigger, SplitText, calm, gsap, useGSAP } from './motion'
-import './home.css'
 
 const SPORTS = Object.keys(SPORTKIT)
 

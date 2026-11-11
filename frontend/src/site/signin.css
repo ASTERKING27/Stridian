@@ -1,0 +1,53 @@
+/* The sign-in page: the pitch on the left, the form on the right. */
+.signin { display: grid; grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); min-height: 100vh; min-height: 100svh; font-size: 16px; }
+
+.si-side { position: relative; display: flex; flex-direction: column; padding: 26px clamp(24px, 4vw, 56px) 40px; background: var(--surface); border-right: 1px solid var(--line); overflow: hidden; }
+.si-top { display: flex; align-items: center; justify-content: space-between; }
+.si-copy { margin-top: auto; padding-top: 56px; }
+.signin .si-title { margin: 22px 0 0; font-size: clamp(40px, 6.2vw, 96px); letter-spacing: -.03em; line-height: .94; text-wrap: balance; }
+.signin .si-copy .lede { max-width: 44ch; }
+
+/* the five levels, the first reached and the second under way */
+.si-ladder { list-style: none; margin: clamp(32px, 6vh, 72px) 0 0; padding: 0; border-top: 1px solid var(--line); }
+.si-ladder li { display: grid; grid-template-columns: 56px 132px minmax(0, 1fr); align-items: center; min-height: clamp(40px, 5.6vh, 52px); border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 15px; }
+.si-ladder b { font-size: 24px; color: var(--ink-3); }
+.si-ladder .bar { position: relative; height: 4px; }
+.si-ladder .bar i { position: absolute; inset: 0; background: var(--acc-line); transform-origin: left center; display: none; }
+.si-ladder li.full .bar i { display: block; }
+.si-ladder li.here .bar i { display: block; right: 22%; }
+.si-ladder li.here .bar::after { content: ''; position: absolute; right: 22%; top: 50%; width: 14px; height: 14px; margin: -7px -7px 0 0; border-radius: 50%; background: var(--acc-line); box-shadow: 0 0 0 4px var(--surface); }
+.si-ladder li.full, .si-ladder li.here { color: var(--ink); }
+
+.si-court { margin-top: clamp(24px, 4vh, 48px); max-width: min(620px, 60vh); }
+.si-court .court { opacity: .9; }
+
+.si-main { display: flex; flex-direction: column; padding: 26px clamp(20px, 5vw, 72px) 28px; background: var(--plane); min-width: 0; }
+.si-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 440px; margin: 0 auto; }
+.si-role { flex: 1; grid-auto-columns: 1fr; margin: 0; }
+.si-role button { min-height: 44px; }
+.si-form { width: 100%; max-width: 440px; margin: auto; padding-block: 40px; animation: lift .5s var(--ease) backwards; }
+.signin .auth-h { margin: 0 0 26px; font-size: clamp(32px, 3.4vw, 46px); letter-spacing: -.025em; line-height: 1; animation: lift .45s var(--ease) backwards; }
+
+/* sign in or new here: words on a hairline, the accent line under the chosen one */
+.si-form .seg { display: flex; gap: 24px; padding: 0; margin-bottom: 26px; background: none; border-bottom: 1px solid var(--line); }
+.si-form .seg button { min-height: 44px; padding: 0 0 2px; font-size: 15px; color: var(--ink-3); }
+.si-form .seg button[aria-pressed='true'] { color: var(--ink); }
+.si-form .seg-pill { top: auto !important; bottom: -1px; height: 2px !important; background: var(--acc-line); }
+.si-form input, .si-form select { min-height: 52px; }
+.si-form form { animation: lift .35s var(--ease) backwards; }
+.si-form .btn.wide { margin-top: 6px; min-height: 56px; justify-content: center; }
+.si-form .muted { font-size: 14px; line-height: 1.5; }
+.auth-alt { margin: 18px 0 0; }
+.si-foot { display: flex; gap: 24px; width: 100%; max-width: 440px; margin: 0 auto; }
+.si-foot a { font-size: 13px; color: var(--ink-3); text-decoration: none; transition: color .2s; }
+.si-foot a:hover { color: var(--ink); }
+
+@media (max-width: 900px) {
+  .signin { grid-template-columns: minmax(0, 1fr); }
+  .si-side { padding-bottom: 28px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .si-copy { padding-top: 36px; }
+  .si-ladder, .si-court { display: none; }
+  .si-form { padding-block: 32px; margin: 0 auto; }
+  .si-foot { padding-top: 24px; }
+  .si-foot a { display: inline-flex; align-items: center; min-height: 44px; }
+}

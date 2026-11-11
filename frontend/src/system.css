@@ -344,3 +344,39 @@ dialog.record::backdrop { background: color-mix(in oklab, var(--plane) 82%, tran
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after { animation: none; }
 }
+
+/* ============================== a change of scene ============================== */
+/* Between the home page, sign in and the app: a sheet of accent leads, the page colour
+   follows and covers the window, the scene changes under it (App.jsx), and both leave. */
+.wipe { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; }
+.wipe i { position: absolute; inset: 0 -22vw; transform: translateX(-112%) skewX(-14deg); will-change: transform; }
+.wipe i:first-child { background: var(--volt); animation: wipe-lead 1s var(--ease-io) forwards; }
+.wipe i:last-child { background: var(--plane); animation: wipe-cover 1s var(--ease-io) forwards; }
+@keyframes wipe-lead { 0% { transform: translateX(-112%) skewX(-14deg); } 34%, 60% { transform: translateX(0) skewX(-14deg); } 100% { transform: translateX(112%) skewX(-14deg); } }
+@keyframes wipe-cover { 0% { transform: translateX(-112%) skewX(-14deg); } 40%, 54% { transform: translateX(0) skewX(-14deg); } 96%, 100% { transform: translateX(112%) skewX(-14deg); } }
+
+/* ============================== the band across a signed-in page ============================== */
+.band {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, min(46%, 560px)); gap: clamp(20px, 4vw, 56px); align-items: center;
+  margin: 0 calc(-1 * clamp(20px, 3.2vw, 44px)) 0; padding: clamp(28px, 4vw, 52px) clamp(20px, 3.2vw, 44px);
+  border-bottom: 1px solid var(--line); overflow: hidden;
+  background: repeating-linear-gradient(90deg, transparent 0 72px, color-mix(in oklab, var(--ink) 2.2%, transparent) 72px 144px);
+}
+.band h1 { font-size: clamp(2.2rem, 5.4vw, 4.6rem); line-height: .96; letter-spacing: -.03em; margin: 0; }
+.band-title { display: flex; align-items: center; gap: 20px; }
+.band-meta { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 22px 0 22px; color: var(--ink-2); font-size: .98rem; }
+.band-meta span + span { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--line-2); }
+.band-meta .mono { font-size: .86rem; align-self: center; }
+.band .lede { margin: 16px 0 22px; }
+.band-art { min-width: 0; }
+.tagline {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; background: var(--ink); color: var(--plane);
+  font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+}
+.tagline.wait { background: transparent; color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+.ashell .band { margin-inline: calc(-1 * clamp(20px, 3.2vw, 44px)); }
+@media (max-width: 900px) {
+  .band { grid-template-columns: minmax(0, 1fr); margin-inline: -16px; padding: 26px 16px 24px; }
+  .band-art { order: 2; max-width: 520px; }
+  .ashell .band { margin-inline: -16px; }
+}

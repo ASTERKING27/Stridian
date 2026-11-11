@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { api, token } from './api'
 import { Seg } from './fx'
-import { LookPicker } from './Theme'
+import Icon from './Icon'
 
 /* Students sign in with their university email and a password they choose for
    Stridian. Creating an account and resetting a forgotten password are the same two
    steps: get a code by email, then type it with the password you want. */
-export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
+export default function StudentAuth({ onAuthed }) {
   const [mode, setMode] = useState('login')   // login | email | code
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -56,7 +56,7 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
       setEmail(res.email)
       setCode('')
       setMode('code')
-      setInfo(`We've emailed a 6-digit code to ${res.email}. It can take a minute — check spam too.`)
+      setInfo(`We've emailed a 6-digit code to ${res.email}. It can take a minute, so check spam too.`)
     })
   }
 
@@ -74,24 +74,10 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
     </div>
   )
 
+  const title = { login: 'Welcome back.', email: 'Join your squad.', code: 'Check your inbox.' }[mode]
   return (
-    <div className="authpage">
-      <div className="authcard">
-        <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 6 }}>
-          <LookPicker look={look} onLook={onLook} />
-        </div>
-
-        <div className="authhero">
-          <span className="eyebrow">Stridian for athletes</span>
-          <h1>Your second coach.</h1>
-          <p>Where you stand at every level, what to work on this week, and how close the next level is.</p>
-        </div>
-
-        <div className="card">
-          <div className="brand">
-            <span className="mark" aria-hidden="true">S</span>
-            <b>Stridian<span>Student access</span></b>
-          </div>
+        <>
+          <h1 className="auth-h" key={mode}>{title}</h1>
 
           {mode !== 'code' && (
             <Seg options={[['login', 'Sign in'], ['email', 'New here']]} value={mode} onChange={go}
@@ -106,9 +92,9 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
                 <input id="spass" name="password" type="password" required value={password}
                        autoComplete="current-password" onChange={e => setPassword(e.target.value)} />
               </div>
-              <button className="btn wide" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+              <button className="btn wide" disabled={busy}>{busy ? 'Signing in' : 'Sign in'}<Icon name="next" size={18} /></button>
               {error && <div className="note err">{error}</div>}
-              <p style={{ textAlign: 'center', marginTop: 12 }}>
+              <p className="auth-alt">
                 <button type="button" className="linkbtn" onClick={() => go('email')}>
                   Forgot your password?
                 </button>
@@ -124,7 +110,7 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
                 password.
               </p>
               {emailField}
-              <button className="btn wide" disabled={busy}>{busy ? 'Sending…' : 'Email me a code'}</button>
+              <button className="btn wide" disabled={busy}>{busy ? 'Sending' : 'Email me a code'}<Icon name="next" size={18} /></button>
               {error && <div className="note err">{error}</div>}
             </form>
           )}
@@ -150,7 +136,7 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
                 </p>
               </div>
               <button className="btn wide" disabled={busy || code.length !== 6}>
-                {busy ? 'Checking…' : 'Continue'}
+                {busy ? 'Checking' : 'Continue'}<Icon name="next" size={18} />
               </button>
               {error && <div className="note err">{error}</div>}
               <p className="row" style={{ justifyContent: 'space-between', marginTop: 12 }}>
@@ -163,15 +149,6 @@ export default function StudentAuth({ onAuthed, onCoach, look, onLook }) {
               </p>
             </form>
           )}
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          <button className="linkbtn" onClick={onCoach}>I&apos;m a coach →</button>
-        </div>
-        <footer className="sitefoot" style={{ textAlign: 'center' }}>
-          <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of use</a>
-        </footer>
-      </div>
-    </div>
+        </>
   )
 }

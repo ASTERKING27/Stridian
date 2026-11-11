@@ -1,7 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { SPORTKIT, kitLayers } from './sportkit'
 import { calm, gsap, useGSAP } from './motion'
-import './court.css'
 
 /* A sport's court, drawn to scale from the sport kit, the lines chalked in whenever the
    sport changes. `spots` marks where each position plays; `players` (one per kit spot,

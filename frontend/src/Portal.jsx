@@ -1,9 +1,11 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, formatValue, utc } from './api'
-import { CountUp, Ring, Switcher, Tabs, toast } from './fx'
+import { CountUp, Ring, Switcher, toast } from './fx'
 import Icon from './Icon'
 import Report from './Report'
 import StudentForm from './StudentForm'
+import Court from './site/Court'
+import { SPORTKIT } from './site/sportkit'
 import {
   Achievement, CertificateUpload, DetailsForm, DetailsView, LEVELS, levelWord, Photo, PhotoButton,
 } from './people'
@@ -22,12 +24,10 @@ const greeting = () => {
 /* A signed-in student's own space: enrol first, then a dashboard that talks to them (the
    second coach), their report once the coach has verified them, their achievements, and
    their details. */
-export default function Portal({ me, sports, onChange }) {
-  const [tab, setTab] = useState('Dashboard')
+export default function Portal({ me, sports, onChange, tab, onTab }) {
   const [reportTab, setReportTab] = useState('Overview')   // where a "See it" link lands in the report
   const [achievements, setAchievements] = useState(null)
   const [aiOn, setAiOn] = useState(false)
-  const tabsId = useId()
   const s = me.student
 
   const loadAchievements = () => api.myAchievements().then(setAchievements).catch(() => setAchievements(a => a ?? []))
@@ -37,28 +37,18 @@ export default function Portal({ me, sports, onChange }) {
     api.health().then(h => setAiOn(!!h.documentAI)).catch(() => {})
   }, [s?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!s) return <StudentForm sports={sports} onSaved={m => { onChange(m); setTab('Dashboard') }} />
+  if (!s) return <StudentForm sports={sports} onSaved={m => { onChange(m); onTab('Dashboard') }} />
 
-  const go = (next, sub = 'Overview') => { setReportTab(sub); setTab(next) }
+  const go = (next, sub = 'Overview') => { setReportTab(sub); onTab(next) }
   const replace = item => setAchievements(list => list.map(a => (a.id === item.id ? item : a)))
   const remove = id => setAchievements(list => list.filter(a => a.id !== id))
   const setStudent = student => onChange({ ...me, student })
 
   return (
     <>
-      <div className="pagehead row noprint" style={{ gap: 16, flexWrap: 'nowrap' }}>
-        <Photo url={PHOTO_URL} version={s.photo_version} name={s.name} size={64} />
-        <div style={{ minWidth: 0 }}>
-          <h1>{greeting()}, {s.name.split(' ')[0]}</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            {s.sport}{s.ra_number ? ` · ${s.ra_number}` : ''} · {me.email}
-          </p>
-        </div>
-      </div>
+      <AthleteHead me={me} tab={tab} onGo={go} />
 
-      <Tabs id={tabsId} tabs={TABS} value={tab} onChange={t => go(t)} label="Your space" className="noprint" />
-
-      <Switcher id={tabsId} value={tab} order={TABS}>
+      <Switcher value={tab} order={TABS}>
         {t => (
           <>
             {t === 'Dashboard' && (
@@ -85,6 +75,35 @@ export default function Portal({ me, sports, onChange }) {
         )}
       </Switcher>
     </>
+  )
+}
+
+/* The band across the top of an athlete's space: the greeting, who they are, and their
+   sport's court drawn behind. */
+function AthleteHead({ me, tab, onGo }) {
+  const s = me.student
+  const first = s.name.split(' ')[0]
+  return (
+    <header className="band noprint">
+      <div className="band-copy">
+        <div className="band-title">
+          <Photo url={PHOTO_URL} version={s.photo_version} name={s.name} size={64} />
+          <h1>{tab === 'Dashboard' ? <>{greeting()},<br />{first}</> : tab}</h1>
+        </div>
+        <p className="band-meta">
+          <span>{s.sport}</span>{s.ra_number && <span className="mono">{s.ra_number}</span>}<span className="mono">{me.email}</span>
+        </p>
+        <div className="row">
+          {s.status === 'verified'
+            ? <span className="tagline"><Icon name="verified" size={16} />Verified · {s.verified_position}</span>
+            : <span className="tagline wait"><Icon name="shield" size={16} />Waiting for your coach</span>}
+          {s.status === 'verified' && tab !== 'My report' && (
+            <button className="btn sec" onClick={() => onGo('My report')}>Open my report</button>
+          )}
+        </div>
+      </div>
+      {SPORTKIT[s.sport] && <div className="band-art" aria-hidden="true"><Court sport={s.sport} /></div>}
+    </header>
   )
 }
 
