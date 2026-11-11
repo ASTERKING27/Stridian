@@ -892,11 +892,14 @@ Six coach screens (seven for an admin) behind a rail on desktop and a bottom tab
 phones. Moving between pages and tabs is a short slide — the new page comes in from the
 side of the tab you chose while the old one fades away, and the marker under the menu
 and the tabs slides with it; anyone whose device asks for reduced motion gets instant
-changes instead. A **look** picker (the palette button) switches between whole designs:
-**Neon** (the default — deep navy with a cyan-to-violet accent) and the classic light,
-dark and follow-your-device looks; the choice is remembered in the browser. Signed out, the
-site opens on the student sign-in, with a link across to the coach one. A student gets
-the enrolment form, then their own space (Dashboard, My report, Achievements, Profile).
+changes instead. A **look** picker (the half-shaded circle) switches between **Floodlit**
+(graphite, the default), **Daylight** (chalk) and follow-your-device, and between three
+accents (volt, blaze, sky); the choice is remembered in the browser. Signed out, the site
+opens on the home page: a 3D sprinter as the pose model sees one, two scenes that hold
+still while they play (three sources into one verdict, the five levels) and a court for
+each sport. Athlete and coach sign-in share one page behind it, and a sheet sweeps across
+the window between the home page, sign in and the app. A student gets the enrolment form,
+then their own space (Dashboard, My report, Achievements, Profile) along a top bar.
 
 The report itself is tabbed: **Overview** (best-fit position, the reasoning, the radar,
 standouts and weak links, and the two-source panel with its reconciliation),
@@ -927,9 +930,8 @@ name. Identified boxes turn green and carry the student's name.
 
 Charts are inline SVG written by hand — a radar for the athlete profile, sparklines for
 progress, a stacked bar for the macro split. Colours come from CSS custom properties, so
-light and dark are two value sets rather than two stylesheets, and the palette was run
-through a colour-vision-deficiency check rather than eyeballed. Every chart value is
-also readable as text, so nothing depends on colour alone.
+the Floodlit and Daylight looks are two value sets rather than two stylesheets. Every
+chart value is also readable as text, so nothing depends on colour alone.
 
 ---
 
@@ -985,8 +987,13 @@ mobile/             the Android / iPhone app (Expo)
   src/lib/          API client, session, theme, haptics, uploads, pose maths, push
 
 frontend/src/
-  App.jsx           app shell, nav, auth state
-  Theme.jsx         the looks and the look picker
+  App.jsx           app shell, nav, auth state, the sheet between scenes
+  Theme.jsx         the looks (Floodlit, Daylight), the accents and their picker
+  Logo.jsx          the mark and the wordmark
+  site/             the public pages and what they share with the app:
+                    Home.jsx, SignIn.jsx and their styles; Sprinter.js and stride.js
+                    (the hero's 3D sprinter and its stride model, three.js);
+                    Court.jsx and sportkit.js (every sport's court); motion.js (GSAP)
   fx.jsx            motion: page/tab slides, sliding markers, rings, toasts
   Login.jsx         coach sign in / create account / forgot password
   OfficialReport.jsx  the one-page report for the Directorate of Sports
@@ -1006,7 +1013,8 @@ frontend/src/
   Training.jsx      the AI Training page
   charts.jsx        radar, sparkline, macro bar — all inline SVG
   api.js            fetch wrapper, token handling, shared formatting
-  styles.css        the whole design system
+  styles.css        colour tokens and layout
+  system.css        the look of every component
 ```
 
 `scoring.py` takes weights as an argument and never touches the database, so the
