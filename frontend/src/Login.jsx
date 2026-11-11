@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api, token } from './api'
 import { Seg } from './fx'
 import Icon from './Icon'
@@ -10,7 +10,7 @@ import Icon from './Icon'
 export default function Login({ sports, onAuthed }) {
   const [mode, setMode] = useState('login')   // login | signup | forgot | reset
   const [form, setForm] = useState({
-    name: '', email: '', password: '', sport: sports[0].name, signup_code: '',
+    name: '', email: '', password: '', sport: sports[0]?.name ?? '', signup_code: '',
     employee_id: '', phone: '', designation: '', email_code: '',
   })
   const [error, setError] = useState('')
@@ -18,6 +18,8 @@ export default function Login({ sports, onAuthed }) {
   const [busy, setBusy] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  // the sport list can arrive after the form is on screen
+  useEffect(() => { if (sports[0]) setForm(f => (f.sport ? f : { ...f, sport: sports[0].name })) }, [sports])
 
   function go(next) {
     setMode(next)

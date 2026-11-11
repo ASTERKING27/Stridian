@@ -1,20 +1,25 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { api, initials, setUnauthorizedHandler, token } from './api'
 import Icon from './Icon'
 import Logo, { Mark } from './Logo'
-import StudentForm from './StudentForm'
-import CoachEntry from './CoachEntry'
-import Matches from './Matches'
-import MatchCards from './MatchCards'
-import Dashboard, { MyDetails } from './Dashboard'
-import Portal from './Portal'
-import Weights from './Weights'
-import Training from './Training'
 import Home from './site/Home'
 import SignIn from './site/SignIn'
 import { SPORTKIT } from './site/sportkit'
 import { Switcher, Toaster, calm, useIndicator } from './fx'
 import { LookPicker, useLook } from './Theme'
+
+// A visitor to the home page downloads the home page; each page of the app itself arrives
+// when someone signed in first opens it.
+const StudentForm = lazy(() => import('./StudentForm'))
+const CoachEntry = lazy(() => import('./CoachEntry'))
+const Matches = lazy(() => import('./Matches'))
+const MatchCards = lazy(() => import('./MatchCards'))
+const Dashboard = lazy(() => import('./Dashboard'))
+const MyDetails = lazy(() => import('./Dashboard').then(m => ({ default: m.MyDetails })))
+const Portal = lazy(() => import('./Portal'))
+const Weights = lazy(() => import('./Weights'))
+const Training = lazy(() => import('./Training'))
+const waiting = <div className="skeleton" style={{ textAlign: 'center' }}>Loading</div>
 
 // the public pages keep their place in the address bar, so Back works between them
 const HASH = { signin: '#signin', login: '#coach' }
@@ -104,14 +109,11 @@ export default function App() {
   if (signedOut && !token.get() && view === 'home') {
     return <>{sheet}<Home onSignIn={who => visit(who === 'coach' ? 'login' : 'signin')} look={look} onLook={setLook} /></>
   }
-  if (error) return <main><div className="banner bad" style={{ marginTop: 24 }}>{error}</div></main>
-  if (!sports || !booted) return <>{sheet}<div className="skeleton" style={{ textAlign: 'center' }}>Loading</div></>
-
-  if (signedOut) {
+  if (signedOut && !token.get()) {
     return (
       <>
         {sheet}
-        <SignIn role={view === 'login' ? 'coach' : 'athlete'} sports={sports} look={look} onLook={setLook}
+        <SignIn role={view === 'login' ? 'coach' : 'athlete'} sports={sports ?? []} look={look} onLook={setLook}
                 onHome={() => visit('home')}
                 onRole={r => { const v = r === 'coach' ? 'login' : 'signin'; setView(v); window.history.replaceState(null, '', HASH[v]) }}
                 onAthlete={m => scene(() => { setMe(m); setView('Dashboard'); settle() })}
@@ -119,6 +121,9 @@ export default function App() {
       </>
     )
   }
+
+  if (error) return <main><div className="banner bad" style={{ marginTop: 24 }}>{error}</div></main>
+  if (!sports || !booted || signedOut) return <>{sheet}<div className="skeleton" style={{ textAlign: 'center' }}>Loading</div></>
 
   const nav = coach ? [
     // adding students by hand is for admins; everyone else enrols themselves
@@ -171,7 +176,9 @@ export default function App() {
           {signOutButton}
         </header>
         <main>
-          <Portal me={me} sports={sports} onChange={setMe} tab={nav.length ? view : 'Dashboard'} onTab={go} />
+          <Suspense fallback={waiting}>
+            <Portal me={me} sports={sports} onChange={setMe} tab={nav.length ? view : 'Dashboard'} onTab={go} />
+          </Suspense>
           <footer className="sitefoot"><a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of use</a></footer>
         </main>
         {nav.length > 1 && <TabBar items={nav} view={view} onGo={go} />}
@@ -253,7 +260,7 @@ export default function App() {
         </header>
 
         <main>
-          {body}
+          <Suspense fallback={waiting}>{body}</Suspense>
           <footer className="sitefoot"><a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of use</a></footer>
         </main>
 
