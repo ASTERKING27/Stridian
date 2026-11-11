@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Seg } from '../fx'
 import Login from '../Login'
 import Logo from '../Logo'
@@ -24,6 +24,9 @@ const SIDE = {
 export default function SignIn({ role, sports, onRole, onHome, onAthlete, onCoach, look, onLook }) {
   const page = useRef(null)
   const side = SIDE[role]
+  // true only while the page is first arriving; switching between athlete and coach is not that
+  const arriving = useRef(true)
+  useEffect(() => { arriving.current = false }, [])
 
   useGSAP(() => {
     const mm = gsap.matchMedia()
@@ -55,7 +58,9 @@ export default function SignIn({ role, sports, onRole, onHome, onAthlete, onCoac
             ))}
           </ol>
         ) : (
-          <div className="si-court" aria-hidden="true"><Court sport="Football" /></div>
+          <div className="si-court" aria-hidden="true">
+            <Court sport="Football" pace={arriving.current ? 1.2 : 1} delay={arriving.current ? 0.35 : 0} />
+          </div>
         )}
       </aside>
 

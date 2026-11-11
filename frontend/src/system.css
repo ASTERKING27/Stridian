@@ -351,8 +351,8 @@ dialog.record::backdrop { background: color-mix(in oklab, var(--plane) 82%, tran
    follows and covers the window, the scene changes under it (App.jsx), and both leave. */
 .wipe { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; }
 .wipe i { position: absolute; inset: 0 -22vw; transform: translateX(-112%) skewX(-14deg); will-change: transform; }
-.wipe i:first-child { background: var(--volt); animation: wipe-lead 1s var(--ease-io) forwards; }
-.wipe i:last-child { background: var(--plane); animation: wipe-cover 1s var(--ease-io) forwards; }
+.wipe i:first-child { background: var(--volt); animation: wipe-lead 1.35s var(--ease-io) forwards; }
+.wipe i:last-child { background: var(--plane); animation: wipe-cover 1.35s var(--ease-io) forwards; }
 @keyframes wipe-lead { 0% { transform: translateX(-112%) skewX(-14deg); } 34%, 60% { transform: translateX(0) skewX(-14deg); } 100% { transform: translateX(112%) skewX(-14deg); } }
 @keyframes wipe-cover { 0% { transform: translateX(-112%) skewX(-14deg); } 40%, 54% { transform: translateX(0) skewX(-14deg); } 96%, 100% { transform: translateX(112%) skewX(-14deg); } }
 

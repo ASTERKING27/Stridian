@@ -30,7 +30,7 @@ const STUDENT_NAV = [
   { key: 'Achievements', label: 'Achievements', short: 'Awards', icon: 'medal' },
   { key: 'Profile', label: 'Profile', short: 'Profile', icon: 'student' },
 ]
-const WIPE_MS = 460   // when the sheet covers the whole window (system.css .wipe)
+const WIPE_MS = 620   // when the sheet covers the whole window (system.css .wipe)
 
 export default function App() {
   const [coach, setCoach] = useState(null)

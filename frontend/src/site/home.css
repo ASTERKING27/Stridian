@@ -233,7 +233,8 @@
 .site .sportlist button[aria-pressed='true'] { color: var(--ink); font-weight: 600; padding-left: 20px; }
 .site .sportlist button[aria-pressed='true']::after { transform: scale(1); }
 .site .court-stage { min-width: 0; }
-.site .court-stage .court { max-height: 520px; margin-inline: auto; }
+/* capped by height, through its width, so the marks stay on the drawing whatever its shape */
+.site .court-stage .court { max-width: calc(500px * var(--aspect)); margin-inline: auto; }
 .site .court-stage .spot b, .site .court-stage .spot small { background: var(--surface); }
 .site .court-pos { margin: 22px 0 0 !important; font-size: 12px !important; letter-spacing: .04em; color: var(--ink-3) !important; text-wrap: balance; animation: lift .5s var(--ease) backwards; }
 
@@ -358,5 +359,11 @@
   .site .v-main { flex-direction: column; align-items: flex-start; }
   .site .v-fit { text-align: left; }
   .site .cell, .site .panel, .site .vcard { padding: 22px; }
-  .site .court-stage .spot small { font-size: 8px; letter-spacing: .04em; }
+  /* too small for names on the drawing: each mark carries its position's number, and the line below is the key */
+  .site .court-stage .spot > span { display: none; }
+  .site .court-stage .spot > i { left: -8px; top: -8px; width: 16px; height: 16px; }
+  .site .court-stage .spot::after { content: attr(data-n); position: absolute; left: -8px; top: -8px; width: 16px; height: 16px; display: grid; place-items: center; font: 600 9px/1 var(--mono); color: var(--plane); }
+  .site .court-pos { counter-reset: pos; line-height: 1.9; }
+  .site .court-pos span { counter-increment: pos; white-space: nowrap; }
+  .site .court-pos span::before { content: counter(pos) ' '; color: var(--ink); font-weight: 600; }
 }

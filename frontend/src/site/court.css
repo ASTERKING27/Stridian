@@ -1,7 +1,7 @@
 /* Sport art. Built only from the --court tokens, so every sport looks the same in every
    look and accent. One signature element per court carries the accent. */
 .court { position: relative; width: 100%; }
-.court svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.court svg { display: block; width: 100%; height: 100%; overflow: hidden; }
 .kt, .kf { fill: var(--court-fill); }
 .ktl { stroke: var(--court-fill); stroke-width: 1; }
 .kl { stroke: var(--court); stroke-width: 1; }

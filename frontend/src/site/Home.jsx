@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import Icon from '../Icon'
 import Logo from '../Logo'
 import { LookPicker } from '../Theme'
@@ -572,8 +572,10 @@ function Coaches() {
               </div>
             </div>
             <div className="court-stage">
-              <Court sport={sport} spots />
-              <p className="court-pos mono" key={sport}>{positions.length} positions: {positions.join(', ')}</p>
+              <Court sport={sport} spots view="full" />
+              <p className="court-pos mono" key={sport}>
+                {positions.length} positions: {positions.map((p, i) => <Fragment key={p}><span>{p}</span>{i < positions.length - 1 ? ', ' : ''}</Fragment>)}
+              </p>
             </div>
           </article>
 
