@@ -164,8 +164,15 @@ function Hero({ onSignIn }) {
   // the scene arrives: flat and side-on like the video, then the camera turns and the depth opens
   useGSAP(() => {
     const s = scene.current
-    if (!live || !s || s.still) return undefined
+    if (!live || !s) return undefined
     const v = s.view
+    if (s.still) {
+      // for anyone who asked for less motion: one frame, already turned to show its depth
+      const wide = window.matchMedia('(min-width: 1081px)').matches
+      Object.assign(v, { shift: wide ? 0.17 : 0, dist: wide ? 5.9 : 6.6, aim: wide ? 0.8 : 0.94, yaw: wide ? 0.66 : 0.5, pitch: 0.11, reveal: 1 })
+      s.draw()
+      return undefined
+    }
     const mm = gsap.matchMedia()
     mm.add({ wide: '(min-width: 1081px)', narrow: '(max-width: 1080px)' }, ctx => {
       const wide = ctx.conditions.wide
@@ -386,7 +393,8 @@ function Levels() {
     if (ok) best = i
     const tx = x(t)
     return {
-      name: LEVELS[i], ok, tx, target: fmt(t), lo: tx < 34,
+      // the target's label sits left of its line, unless that would land on the result's dot
+      name: LEVELS[i], ok, tx, target: fmt(t), lo: tx < 34 || (tx > ax && tx - ax < 14),
       gap: ok ? 'Reached' : m.unit === 'level' ? 'Not yet' : `${Math.abs(t - m.v).toFixed(m.dp)} ${m.unit} to go`,
     }
   })
