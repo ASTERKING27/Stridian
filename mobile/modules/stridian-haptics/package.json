@@ -1,0 +1,6 @@
+{
+  "name": "stridian-haptics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The design's rich haptic patterns on Android (VibrationEffect compositions)"
+}

@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "Stridian",
+    "slug": "stridian",
+    "scheme": "stridian",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F3F2EE",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.arthabiswas.stridian"
+    },
+    "android": {
+      "package": "com.arthabiswas.stridian",
+      "adaptiveIcon": {
+        "backgroundColor": "#F3F2EE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F3F2EE",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "dark": {
+            "backgroundColor": "#0F0F0E",
+            "image": "./assets/splash-icon-dark.png"
+          }
+        }
+      ],
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#121211"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Stridian uses your photos to add a profile picture, a certificate, a match card or a drill clip.",
+          "cameraPermission": "Stridian uses the camera to film drills and photograph certificates and match cards.",
+          "microphonePermission": "Stridian records sound with the drill and match videos you film."
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "https://stridian.vercel.app"
+    }
+  }
+}

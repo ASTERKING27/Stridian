@@ -1,0 +1,1040 @@
+# Stridian
+
+*Sports talent intelligence.*
+
+Sport-specific talent profiling for students. A student signs in with their university
+email and enrols with their coach's code, the coach records test results, and the app scores them against every position in that
+sport, ranks them, and explains *why* — then adds pose-based video analysis, a
+training plan and a diet plan on top.
+
+- **Backend:** FastAPI + SQLAlchemy — Postgres (Neon) online, SQLite on one computer
+- **Drill video:** MediaPipe Pose + OpenCV — one athlete, technique
+- **Match video:** YOLO11n + ByteTrack — every player, what they did in the game
+- **Frontend:** React + Vite — no UI kit, no chart library, no router
+- **Auth:** coach and student accounts, PBKDF2 passwords, bearer-token sessions, email
+  codes over Gmail SMTP (stdlib only)
+- **Online:** website on Vercel, videos in Google Drive, heavy lifting on a worker
+  computer (the laptop now, the lab iMac later), live Google Sheets for the admins,
+  Excel downloads for coaches
+- **Documents:** certificates and photos of match cards read by Google's Gemini API
+  (free tier, swappable)
+
+Sports covered: Football, Basketball, Volleyball, Cricket, Badminton, Tennis, Kho-Kho.
+(Badminton and Tennis were one sport until they got cards of their own; a database from
+before is moved across by itself — everyone lands in Badminton, and an admin moves any
+tennis players with **Edit details**.)
+
+---
+
+## Who sees what
+
+| | Who | Scope |
+|---|---|---|
+| Enrol, then My space (dashboard, report, achievements, profile) | a student, signed in with their university email | **only their own record**; the report is read-only and appears once a coach has verified them |
+| Coach Entry, Match Footage, Match Cards, Dashboard, Weights, AI Training | a coach | **only the coach's own sport**, every student's full record included; Excel downloads, no Google Sheets |
+| all of the above, plus Add Student, editing anyone's details, every coach, the Google Sheets | an admin (`ADMIN_EMAILS`) | **every sport**, one at a time, switched from the menu |
+
+A coach signs up once and picks their sport. From then on every list, report, video
+and weight they can reach belongs to that sport — a football coach asking for a
+basketball student gets a 404, and asking for basketball weights gets a 403.
+
+A coach (or admin) who forgets their password uses **Forgot your password?** on the
+sign-in page: Stridian emails a 6-digit code to the account's address, and the code plus
+a new password signs them in and signs every other device out. The page says the same
+thing whether or not an account uses that email; codes follow the students' rules below.
+
+### Admins
+
+An admin is a coach account whose email is listed in `ADMIN_EMAILS` on the server
+(comma-separated). There is no admin sign-up and no way to become one from the website:
+add the email in Vercel and redeploy. An admin picks which sport they are looking at
+from a menu under their name (every page then shows that sport), and is the only one
+who can:
+
+- add a student by hand (**Add Student**) — someone without a login;
+- change a student's university record — RA number, date of birth, family, Aadhaar,
+  passport, identification mark, level — and move them to another sport (which sends
+  them back to Pending, since positions differ between sports);
+- change a student's photo, and add certificates for students who have no portal;
+- see every coach with their employee ID and mobile (click your name in the menu);
+- open the Google Sheets and download every sport as one Excel file.
+
+Coaches keep everything else they had: recording results, notes and measurements,
+videos, verifying students and their achievements, and downloading their own squad as
+Excel. Anything in the university record is corrected by the student (their own) or
+by an admin.
+
+### Student accounts
+
+A student signs in with their **university email** (`@srmist.edu.in`, set by
+`STUDENT_EMAIL_DOMAIN`) and a password they choose **for Stridian** — never their
+university email password, which Stridian never sees. To prove the address is theirs,
+Stridian emails a 6-digit code to it; the password is only ever set together with
+that code. So signing up and "forgot password" are the same two steps, and someone who
+types a classmate's email first gains nothing — they never see the code. Codes last 15
+minutes, die after 5 wrong guesses, and a new one can be sent once a minute.
+
+Being a university student is not enough to join a squad: enrolling needs that sport's
+**enrolment code**, shown to its coaches on the Dashboard (six characters, no 0/O or
+1/I to misread). "Make a new code" retires the old one; students already enrolled are
+unaffected. An admin can still add someone by hand from **Add Student** — that student
+has no login.
+
+Enrolling is the student's record with the sports directorate, so it asks for what the
+match-card forms need: name, RA number (`RA` + 13 digits, one student per number), date
+of birth (age is worked out from it), their team (men's or women's — which level targets
+apply), mobile, personal email, blood group,
+identification mark, both parents' names and at least one parent's mobile, Aadhaar
+(checked with its built-in Verhoeff check digit, so one mistyped digit is caught),
+passport if any, the highest level they have played at (University → Zonal → State →
+National → International) with details, and a photo, which the browser shrinks before
+it goes up. Indian mobile numbers are accepted in any common form (`+91 98765-43210`,
+`098765 43210`) and stored as ten digits.
+
+A student's space then has four tabs:
+
+- **Dashboard** — the *second coach* (below): what their numbers say today, this week's
+  focus, how close each result is to its next level, milestones — then how complete
+  their profile is (with links to what's missing) and recent updates (verified, an
+  achievement verified or sent back with the reason).
+- **My report** — once a coach verifies them: best position and why, measurements,
+  positions, match, training and diet, with nothing they can change. The coach's
+  private notes are never sent to them. Un-verifying hides it again.
+- **Achievements** — upload a certificate (photo or PDF). If `GEMINI_API_KEY` is set,
+  its event, level, year and result are read off it; the student checks them and sends
+  it. A coach (or admin) opens the certificate and verifies it, or rejects it with a
+  reason the student sees and can fix. Verified ones can't be edited or deleted by the
+  student.
+- **Profile** — everything above, editable, plus **Print / save as PDF** (a clean
+  one-page profile with photo). RA number and date of birth can be filled in once by a
+  student who enrolled before they were asked for, and after that only an admin
+  changes them; sport is admin-only.
+
+Deleting a student leaves the login in place so they can enrol again.
+
+### The second coach
+
+The dashboards talk, without AI and without costing anything: `backend/coach.py` turns
+the numbers Stridian already has into a few sentences, from templates. Which wording is
+used is picked from the student and the day, so a message reads the same all day and
+changes tomorrow. Students hear it the way a teammate would say it; coaches get it short
+and practical.
+
+- **The brief** — the level they play at as a ring (how far they are towards the next
+  one), the ladder under it (how many of their measures reach each level), and a
+  headline.
+- **What the coach says** — at most five cards: a level crossed, a result that improved
+  or dipped since the test before, the result closest to its next level, the weak spot
+  that matters most for their position (with the drill for it) — or, with nothing weak,
+  their lowest level as the next project — their best weapon, a
+  test not done yet, and anything they still have to do themselves. Each links to the
+  right tab of the report.
+- **This week's focus** — one measure a week (the training plan's first item), picked on
+  their first visit of the week so it stays put. They tick each day they trained it;
+  three sessions complete the week, and completed weeks in a row are their streak.
+- **Next-level rings** — every measure with a ladder: how far through its level it is,
+  and how much is still needed for the next one.
+- **Milestones** — thirteen, from the first test result to an eight-week streak.
+- **Level reached** — the first time their level is known, and every time it goes up,
+  it is put on record: a card with the level, what it rests on, the date and the next
+  target. New milestones get a quiet note in the corner. Each is shown once
+  (`Student.coach_seen` remembers what has been shown); a level going down is never
+  announced.
+
+Coaches get **Today's brief** on top of their Dashboard: players waiting to be verified,
+certificates to check, players without a team, who is close to a level-up, who improved,
+whose results dipped (worth a check-in), who has never been tested or not in 30 days,
+and who is on a focus streak. Each name opens that player's report.
+
+The codes are sent through a Gmail account over SMTP with an **app password**: turn on
+2-Step Verification for that Google account, create an app password at
+<https://myaccount.google.com/apppasswords>, and set `SMTP_USER` (the Gmail address)
+and `SMTP_PASSWORD` (the 16-letter app password). On a laptop without them the code is
+printed in the server's terminal instead; on Vercel sign-up says email isn't set up.
+
+Passwords are PBKDF2-SHA256 with a per-user salt at 240k iterations. Session tokens
+are 256-bit random strings and only their SHA-256 is stored, so a database dump does
+not hand anyone a live session. Coach and student sessions live in separate tables, so
+a student's token opens no coach endpoint.
+
+---
+
+## How the pieces fit
+
+```
+  students & coaches                       Google (one login, drive.file scope)
+        │ browser                           ┌──────────────────────────────┐
+        ▼                                   │ Drive: "Stridian videos"     │
+  ┌───────────────────┐   4 MB chunks ────► │   (kept 30 days)             │
+  │ Vercel            │                     │ Sheet: Pending | Verified    │
+  │  React site (CDN) │   row push   ─────► └──────────────▲───────────────┘
+  │  FastAPI /api/*   │                                    │ download / thumbnails
+  └────────┬──────────┘                                    │
+           │ DATABASE_URL           ┌──────────────────────┴───────┐
+           ▼                        │ worker.py — laptop / iMac    │
+  ┌───────────────────┐  queue &    │  MediaPipe + YOLO analysis   │
+  │ Neon Postgres     │◄──results── │  training, 30-day clean-up,  │
+  │ (Singapore)       │             │  sheet repair                │
+  └───────────────────┘             └──────────────────────────────┘
+```
+
+The website never runs a vision model — that is what lets it live on a free
+serverless host. An upload goes to Drive and becomes a **queued** job in the database.
+The worker, whenever it is switched on, claims queued jobs, analyses them, writes the
+results back, then retrains the model and tidies up. Switch it off mid-job and the job
+is handed back automatically after 30 minutes; nothing is lost, and the next session
+carries on with yesterday's data plus whatever arrived since.
+
+---
+
+## Requirements
+
+- **Python 3.11 or 3.12** — MediaPipe 0.10.14 has no wheels for 3.13+. Check with `python --version`.
+- **Node 20+** for the frontend.
+
+## Running it
+
+**Terminal 1 — backend** (from `backend`):
+
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+On WSL2/Linux: `python3.12 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --reload`
+
+**Match analysis is an optional extra**, because it pulls in PyTorch (a few hundred MB).
+Everything else works without it; match clips simply wait in the queue until a worker
+with it installed comes along.
+
+```powershell
+# CPU-only torch first, otherwise pip fetches the much larger CUDA build
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements-match.txt
+```
+
+The YOLO weights (~6 MB) download themselves on first use and are cached in
+`backend/models/`. The worker says at startup which lanes it can run, and only picks
+up jobs it can finish — the rest wait for a computer that can.
+
+**Terminal 2 — the worker** (from `backend`, same virtual environment):
+
+```powershell
+python worker.py            # runs until Ctrl+C; add --once for a single pass
+```
+
+Uploads wait in the queue until this runs. Settings (database, Google) come from a
+`.env` file in the project folder — copy `.env.example`. With no `.env` at all, both
+processes use a local SQLite file and the `backend/uploads` folder, which is all you
+need to try things on one computer.
+
+**Terminal 3 — frontend** (from `frontend`):
+
+```bash
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173**. Vite proxies `/api` to port 8000, so the browser only
+ever sees one origin and CORS never comes into it.
+
+Interactive API docs: **http://127.0.0.1:8000/docs**
+
+### You never need to delete the database
+
+`create_all` only creates tables that are missing entirely — it will not touch one that
+already exists. So an older `ppanalyzer.db` used to keep working right up until something
+wrote a newly added field, then fail with a 500 on a form submit, which is a miserable
+way to find out. `migrate.py` now runs on every startup: it compares the models against
+what is actually on disk and adds whatever columns are missing. It only ever *adds* —
+nothing is dropped, renamed or retyped, existing rows are untouched, and against an
+up-to-date database it does nothing at all. Anything it cannot add in place is named in
+the server log rather than swallowed.
+
+The same repair runs against Postgres, so the hosted database picks up new columns the
+first time a new version of the site starts.
+
+### Single-port deployment
+
+`npm run build` writes `frontend/dist`, and the backend serves that folder at `/`
+automatically when it exists. Build once, then run only uvicorn and open
+http://127.0.0.1:8000.
+
+---
+
+## Going online
+
+Everything below is free for a university squad. Order matters: the database first,
+then Google, then Vercel, because each step produces a value the next one needs.
+
+1. **Code on GitHub.** Push this folder to a repository of your own. `.gitignore`
+   already keeps out `.env`, the database, uploads and model weights — check that
+   `.env` is not listed by `git status` before your first push.
+2. **Database — Neon.** Create a project in the **AWS Asia Pacific (Singapore)**
+   region, copy the connection string, and put it in `.env` as `DATABASE_URL=`.
+   (Neon's free tier suspends when idle and wakes in about a second; data is kept.)
+3. **Google.** In Google Cloud: create a project, enable the **Google Drive API** and
+   **Google Sheets API**, set up the OAuth consent screen (External), add the
+   `.../auth/drive.file` scope, then **publish the app** — in "Testing" mode Google
+   expires the login after 7 days. Create an OAuth client of type **Desktop app** and
+   put its ID and secret in `.env`. Then run `python backend/setup_google.py`: it opens
+   a browser, you sign in with the account whose Drive should hold the videos, and it
+   creates the video folder and writes the rest of `.env` itself. (The spreadsheets are
+   made by the app later, in the same Drive.)
+4. **Vercel.** Import the GitHub repository. `vercel.json` already sets the build, the
+   Python function and the Singapore region. Under Settings → Environment Variables add
+   `DATABASE_URL`, `COACH_SIGNUP_CODE`, `STORAGE=drive`, the four `GOOGLE_*` values
+   from your `.env`, `SMTP_USER` / `SMTP_PASSWORD` for the students' email codes,
+   `ADMIN_EMAILS` for whoever runs the site, and `GEMINI_API_KEY` (optional) to read
+   certificates. Deploy.
+5. **Worker.** On the laptop (later the iMac): same `.env`, `pip install -r
+   backend/requirements.txt` (plus the YOLO extras), then `python backend/worker.py`.
+
+**Visitor statistics** use Vercel Web Analytics: turn it on under the project's
+**Analytics** tab, and the next deployment starts counting page views (anonymous, no
+cookies). The site only includes the analytics script in builds Vercel makes, so a copy
+built on a laptop never asks for it.
+
+`COACH_SIGNUP_CODE` matters once the site is public: without it anyone could create a
+coach account and read a squad's details, including allergies and blood groups — so on
+Vercel, sign-up stays closed until it is set. Share the code only with your coaches.
+The Google Sheets cover **every** sport, so only admins see their links; coaches
+download their own squad as Excel instead.
+
+---
+
+## How the AI learns from the coaches
+
+The position engine below starts from expert weights. Every time a coach **verifies**
+a student — confirms the position they actually play, from the card at the top of the
+report — that becomes a labelled example. The worker then asks, for each position:
+*which measurements set the players a coach put here apart from the rest of the
+squad?* and moves that position's weights towards them.
+
+- **It stays explainable.** Only the weights change; every report can still say
+  exactly which results drove a recommendation.
+- **Small squads can't wreck it.** The starting weights count as 8 verified students,
+  so a position with two labels barely moves and one with forty is mostly learned.
+  Tests-vs-footage balance per position is preserved.
+- **It must prove itself.** Each candidate is scored leave-one-out — every student
+  predicted by a model that never saw them — and goes live only if it beats the
+  current model on the same students. Otherwise it is recorded and kept out.
+- **Nothing is rewritten.** Every model, every coach's weight edit and every reset is
+  a version in the history, and any of them can be put back live from the **AI
+  Training** page, which also shows what the model has learned in plain words, how
+  often it agrees with the coaches, whether the worker is on, the queue, and the sheets.
+
+Training starts once a sport has 6 verified students across at least two positions,
+and only reruns when the verified data has actually changed.
+
+The video models themselves (MediaPipe, YOLO) are not retrained — they already find
+bodies well. What is learned is what those measurements *mean* for positions in your
+university's squads, which is the part no pretrained model knows.
+
+---
+
+## The Google Sheets and Excel downloads
+
+Spreadsheets in the admin's Google Drive, kept apart by sport and by kind of
+information, each rewritten whenever what it holds changes:
+
+| Spreadsheet | Holds |
+|---|---|
+| **Football squad**, **Basketball squad**, … (one file per sport) | each student's analysis, Pending and Verified tabs — below |
+| **Student profiles** (a tab per sport) | the university record: RA number, DOB, age, contacts, family, Aadhaar, passport, level, verified achievements |
+| **Achievements** (a tab per sport) | every achievement sent in, its status, who checked it and when, and the name the AI read off the certificate |
+| **Coaches** | name, email, employee ID, mobile, designation, sport, admin or not |
+| **Football match cards**, … (one file per sport) | **Matches** — a row per player per finished card (Part C); **Tournaments** — each player's Part D, a total row per tournament |
+
+The app makes each one the first time there is something to put in it (a sport's squad
+file when its first student enrols) — the Drive login's `drive.file` scope allows that —
+and lists them all, with links and when each last synced, on the admin's **AI Training**
+page. Since each sport has its own file, an admin can share one sport's file (view only)
+with its coach without showing any other sport. Only admins see the links. Everything is written as
+plain text, so the sheets can't be broken by what people type, and the worker repushes
+all of them on every pass, repairing any push that failed.
+
+Coaches, instead of the sheets, get **Download Excel** — on the Dashboard for the whole
+squad (Profiles, Analysis, Achievements and Test results tabs, plus Match cards and
+Tournaments once there are finished cards) and on each student for just them (with their
+Part D). An admin also gets **All sports (Excel)**, with a Coaches tab. The downloads
+are built from the same rows as the sheets. Aadhaar and phone numbers stay text (no
+`4.6E+11`), and anything that looks like a formula is written as text.
+
+### The squad files
+
+One Google Sheet per sport with two tabs, **Pending** and **Verified**, rewritten whenever anything
+changes — a student enrols, a coach records results, verifies someone, identifies them
+in match footage, or edits weights. Each row carries the student's details, status,
+who verified them and when, the verified and recommended positions and whether they
+agree, strengths, weak links, the diet targets, allergies and notes, and the
+student's university email when they enrolled themselves.
+
+Each student's row is computed when their data changes and cached, so a push is two
+API calls however big the squad gets. Every push rewrites both tabs completely, so a
+push that fails (Google briefly down) is simply repaired by the next one; the worker
+also pushes on every pass. Values are written as plain text, so a formula typed into a
+form stays text.
+
+---
+
+## Match cards
+
+The paper sheet a scorer fills in during a match, for all seven sports, defined in
+`backend/match_cards.py`. Volleyball copies the Directorate of Sports' hardcopy word for
+word; the others follow its five parts at the same depth, with their own skills:
+
+| Part | What it is |
+|---|---|
+| **A** — live match sheet | the header (tournament, round, level, date, venue, opponent, result, score, recorded by, coach, match no., men / women) and a row per player: a + / 0 / − tally for every skill |
+| **B** — scoring key | what counts as + / 0 / −, the formulas with worked examples and University / Elite targets, the 1–5 rating scale, elite add-ons |
+| **C** — post-match review | per player: the sport's key numbers, coordination and overall (1–5), key strength, area to improve; and a team summary |
+| **D** — progress tracker | one player across a tournament, a trend arrow per match (overall rating vs the match before), and an average / total row |
+| Player card | attempts, successes and errors by zone — on paper each cell lists jersey numbers |
+
+**Print blank card** prints them on A4 landscape with the ticked players' names and jersey
+numbers already written in (a racket card prints one player per page; Part D prints one
+page per player). Jersey numbers are set by the coach on a student's **Profile** tab.
+
+After the match the coach either **types the card in** (the grid mirrors Part A) or **adds
+a photo** and has the AI read the header and every row. A jersey number that only one squad
+member wears is matched to them; anything unclear becomes a highlighted row that asks
+which student it was. The coach checks the numbers, adds the ratings and comments, and
+**finishes** the card. Only finished cards count: Part C is worked out on the spot, Part D
+builds up across a tournament, each player's report gets a **Match cards** tab, and the
+card numbers become the third source for the position suggestion.
+
+Cricket (T20 / 50-over) and kho-kho (mat / traditional) pick their format per card;
+cricket's targets follow it, kho-kho's points per out and turn length do. A player's card
+metrics only pool cards of the same category and format as their latest one.
+
+**Targets.** Elite values come from published competition statistics (FIVB / VNL, Premier
+League, NBA, IPL, BWF, Grand Slams, Ultimate Kho Kho); University values sit a step below.
+Meeting the University target scores 60 on the 0–100 scale and the Elite target 100.
+Rates only count towards the report once there are enough attempts behind them (for
+example 20 attacks, 10 field-goal attempts, 100 balls faced).
+
+**Position weights.** The measures B2 lists say how *well* a player did; the engine also
+uses Stridian's own **share of actions** — how much of what a player does is setting,
+receiving, blocking — because that is what tells a setter from a libero or a keeper from a
+striker. Those role metrics are never called a strength or a weakness, and the trainer
+treats cards as their own pool of weight, like the tests and the footage.
+
+---
+
+## How the prediction works
+
+Everything rests on one idea, so the output is always explainable.
+
+1. **Normalise.** Each measurement is scored 0–100 on the **level ladder** for the
+   player's team (see *Levels* below): University 20, Zonal 40, State 60, National 80,
+   International 100, a straight line between two targets, and 0 one average step short
+   of University. So a score says the level at a glance — 64 is just past State — and it
+   never disagrees with the Levels tab (a score is capped just short of a target it
+   hasn't reached). A measure with no ladder for them (no team set, a stat that isn't
+   compared across levels, uncalibrated footage) is scored against the `poor → elite`
+   range in `sports_config.py` instead: a 30 m sprint of 5.20 s scores 0, 3.90 s scores
+   100. Timed tests need no special case in either — the arithmetic runs both directions.
+   A strength is 60 or more (State level), a weak link under 40 (short of Zonal).
+2. **Weight.** Each position is a weight profile over those metrics. A football winger
+   is `sprint30m 0.40, agilityTtest 0.30, yoyoLevel 0.15, cmj 0.10, heightCm 0.05`.
+3. **Rank.** Position fit = weighted average of the scores that have values.
+4. **Explain.** The engine tracks `weight × (score − 50)` per metric — how far each one
+   pulled the fit away from average. Biggest positives become *drivers*, biggest
+   negatives *drags*, and those become the "why" sentence.
+
+`coverage` reports how much of a position's weight was actually backed by data, and
+`confidence` turns that into high / medium / low. One test filled in still produces a
+ranking, clearly marked low-confidence.
+
+### Four passes, not one
+
+Every metric carries a `source`: `test` (the battery), `profile` (height and weight),
+`match` (derived from footage) or `card` (worked out from match cards). The engine takes a
+`sources` filter, so the same code runs four times per report:
+
+| Pass | Sources | Answers |
+|---|---|---|
+| Tests | `test` + `profile` | what their body and their testing say |
+| Footage | `match` only | how they moved in a game |
+| Cards | `card` only | what they did with the ball, skill by skill |
+| Combined | everything | the headline verdict |
+
+Weights are normalised so each source carries the same total weight — neither drowns the
+other in the combined pass — and a filtered pass only counts the weights it could
+possibly satisfy, so a tests-only verdict isn't reported as half-covered just because the
+position also has match weights.
+
+`reconciliation` then says plainly whether the sources agree, nearly agree (each ranks the
+others' picks in its own top three), or disagree — and what a disagreement usually means.
+
+### Editing the weights
+
+Defaults live in `sports_config.py`, but they are **seeded into the database on first
+run and read from there afterwards** — so changing them is a normal app action on the
+Weights tab, not a code edit. A coach only ever edits their own sport.
+
+| Method | Endpoint |
+|---|---|
+| `GET` | `/api/sports/{sport}/weights` — current weights plus the built-in defaults |
+| `PUT` | `/api/sports/{sport}/weights` — set weights for one or more positions |
+| `POST` | `/api/sports/{sport}/weights/reset` — back to defaults |
+
+`{sport}` accepts the full name or a slug (`football`, `kho-kho`). Weights do
+not have to sum to 1 — the engine divides by the total it actually used.
+
+### Levels: University to International
+
+Every report has a **Levels** tab: each number against what players typically post at
+**University, Zonal (AIU zone), State, National and International** level, for the men's
+or the women's team, with a ✓ at every level it meets and how far off it is at every level
+it doesn't. **Where they stand at every level** shows, for each level, how much of what
+matters for their position already meets it (each measure counted by its weight for the
+position — their verified one, else the suggested one — with the tests and the match
+cards leading and footage counting half). They *play at* the highest level more than half
+of it meets; at least three comparable measures are needed before it names one. The
+0–100 scores are read off the same ladders (above), so the two never disagree.
+
+* **Which team.** Students pick Men's or Women's team when they enrol (once — their coach
+  can change it; the Profile tab has it next to the jersey number). Tests and footage
+  are read against that team's targets; match-card measures use the team and format
+  (T20 / 50-over) of the cards they played. A student with no team set borrows it from
+  their latest match card, and otherwise the tab asks for it.
+* **Where the numbers come from.** `backend/levels.json` holds every ladder with its
+  `basis` (`published`, `mixed` or `estimated`), its sources and a note on how the levels
+  were mapped. Published norms were used where they exist (Indian studies first, then
+  federation and international data); the levels between were interpolated and the rest
+  estimated. Match-card ladders start at the directorate's University target. A measure
+  that gets *worse* at higher levels because the opposition does (T20 economy, smash
+  winners in badminton) has no ladder at all rather than a misleading one.
+* **Retuning.** Weights → **Level targets** lists every ladder, men's and women's, with
+  where it came from. A coach edits one measure at a time for their own sport; a ladder
+  must never get worse going up, and clearing all five stops comparing that measure.
+  Edits are stored in `AppState["levels:<sport>"]`; Reset goes back to the built-in
+  numbers.
+
+| Method | Endpoint |
+|---|---|
+| `GET` | `/api/sports/{sport}/levels` — every ladder, its defaults, basis and sources |
+| `PUT` | `/api/sports/{sport}/levels/{metric}` — `{"targets": {"M": [5 numbers], "W": [...]}}` (inside `{format: ...}` for cricket's card measures) |
+| `DELETE` | `/api/sports/{sport}/levels/{metric}` — back to the built-in ladder |
+
+---
+
+## Are these international standards?
+
+Partly, and the app says which is which rather than leaving you to guess. Every metric
+carries a `basis`, shown as a badge next to it:
+
+| Badge | Means | Examples |
+|---|---|---|
+| **standard** | The number itself is an official threshold from a governing body | BCCI's Yo-Yo 17.1 bar and 2 km trial targets; the ICC's 15° elbow limit; the 19.8 / 25.2 km/h high-speed-running and sprint thresholds |
+| **published** | Drawn from widely reported norms for the level concerned — good enough to judge against, not an official pass mark | Yo-Yo IR1 level 20–21 for professional outfield players; NBA Combine anthropometrics and agility; FIVB-aligned touch heights; elite match distance around 105–120 m/min and top speeds of 33–36 km/h |
+| **estimated** | A sensible starting point set for this app | Most agility-test ranges, and every scale-free match metric |
+
+The **protocols** are the real ones everywhere — Yo-Yo IR1, CMJ, the T-test, the NBA
+Combine's lane agility and ¾-court sprint, FIVB block and spike touch, the BCCI 2 km
+trial. What varies is how confident the poor → elite *range* is, and that is exactly
+what the badge tells you.
+
+Two things worth being blunt about:
+
+* **Anything marked `estimated` should be retuned from the Weights tab** once you have
+  results from your own squad and your own timing gates. Shipping a number is not the
+  same as validating it.
+* **Uncalibrated match metrics are not comparable to anything outside the clip.** They
+  are in body-heights because pixels have no scale. Calibrate the pitch and they become
+  metres and km/h, which is when they start meaning what a scout means by them.
+
+---
+
+## Two video lanes
+
+They answer different questions and neither replaces the other.
+
+| | Drill lane | Match lane |
+|---|---|---|
+| Model | MediaPipe Pose | YOLO11n + ByteTrack |
+| Input | one athlete, one movement | full match or snippet, everyone visible |
+| Belongs to | a student | the squad, until a coach identifies players |
+| Measures | technique — joint angles, symmetry, trunk stability | output — distance, speed, sprints, positioning |
+| Feeds | corrective drills | the match-source position verdict |
+
+### Drill lane (MediaPipe)
+
+A drill clip (mp4, mov, avi, mkv, webm or m4v, up to 200 MB) is uploaded in 4 MB
+pieces and queued. The worker samples up to 300 frames, runs MediaPipe Pose over them,
+and derives:
+
+| Metric | Meaning |
+|---|---|
+| `jumpHeightCm` | peak rise of the hips above their grounded position |
+| `airtimeSec` | time spent near the top of the jump |
+| `kneeFlexionMinDeg` / `kneeExtensionMaxDeg` | loading depth and take-off extension |
+| `elbowFlexionMinDeg` / `elbowExtensionMaxDeg` | throwing / spiking / bowling arm action |
+| `kneeSymmetryPct`, `armSymmetryPct` | left vs right working evenly |
+| `trunkLeanAvgDeg`, `trunkStabilityPct` | torso posture and steadiness |
+| `movementSpeedMps`, `movementBodySpansPerSec` | horizontal travel rate |
+| `strideCadencePerSec` | steps per second |
+
+Real-world units need the student's height on file; the `body-spans` versions work
+without it. A skeleton-overlay thumbnail of the peak frame is saved and served from
+`/api/videos/{id}/thumbnail`.
+
+**Those numbers then become drills.** `video.py` holds a rule table — low leg symmetry
+→ single-leg work; unstable trunk → anti-rotation core; shallow knee bend → tempo
+squats and ankle mobility; low cadence → metronome runs — and each firing rule produces
+a finding, why it matters, and what to do about it. They appear on the report's
+Training tab beside the test-based plan. If detection was too poor to trust, the only
+advice returned is how to re-film.
+
+**Filming:** side-on, whole body in frame, steady camera, decent light, one person
+visible. The app reports a `detectionRate` and warns when it is low.
+
+#### Sport-specific technique
+
+On top of the general movement measures, `pose_sports.py` finds the moment that matters
+— the frame where the ankle is fastest, or the wrist is highest — and measures the
+things only that sport cares about.
+
+| Sport | Measured at the key frame |
+|---|---|
+| **Football** | striking foot, plant-foot distance, knee angle at contact, trunk lean at contact and while running |
+| **Volleyball** | contact height above the head, elbow extension and shoulder angle at contact, how much of the reach came from the approach jump |
+| **Basketball** | release elbow angle, release height, knee bend in the set, whether the follow-through holds |
+| **Cricket** | bowling arm, elbow angle when the arm reaches horizontal and again at release, the extension between them, front-knee angle, trunk lean |
+
+Each fires its own drills — a narrow plant foot, an arm that isn't extended at contact, a
+collapsing follow-through, a front leg giving way at release.
+
+**On the ICC 15° rule.** The cricket analyser measures elbow extension through the
+delivery swing and compares it to the ICC's 15-degree limit. Read that number as a
+*prompt to arrange a proper test*, never as a verdict: official adjudication uses 3D
+motion capture in an accredited lab, and this is a single-camera 2D estimate. In testing
+it reads low rather than high — a designed 28° action measured 20° — which is the safe
+direction for a flag of this kind, but it means a marginal action can slip past. The app
+states all of this next to the result.
+
+**All these angles are 2D.** They are only accurate when the movement happens roughly
+side-on to the lens; rotate the athlete 45 degrees and the same angle reads several
+degrees off. Film square to the action.
+
+The pinned MediaPipe version ships the pose model inside the wheel, so nothing is
+downloaded at runtime. A worker without MediaPipe installed leaves drill clips queued
+rather than failing them — the rest of the app keeps working.
+
+### Match lane (YOLO)
+
+A match clip (up to 600 MB) is uploaded the same way, with a label and which way the
+team attacks, and queued for the worker. YOLO
+detects every person, ByteTrack follows them at 5 fps over the first three minutes, and
+each track that survives (seen for 2+ seconds in 6%+ of frames) becomes a candidate
+player.
+
+It uses YOLO's plain person detector at 1280 pixels, not the pose model at 640: only the
+boxes are needed, and in wide broadcast frames the pose model found none of the ~20
+players (60–130 pixels tall) that the detector found. The larger size costs about three
+times the time per frame, which a background worker can afford. The app then serves a keyframe — the moment with the most players visible — and
+the coach clicks their student once. That track's numbers attach to that student, and
+several students can be identified in the same clip.
+
+**Units are body-heights, not metres.** Pixels mean nothing across zooms and angles, so
+every distance is divided by that player's own bounding-box height. A zoomed-in clip and
+a wide shot then produce comparable numbers with no calibration. Metres are also shown,
+converted using the student's real height, and labelled approximate everywhere.
+
+| Metric | Meaning |
+|---|---|
+| `matchDistance` | ground covered, body-heights per minute |
+| `matchTopSpeed` | 95th-percentile speed, body-heights per second |
+| `matchSprints` | high-intensity bursts per minute |
+| `matchWorkRate` / `matchStationary` | share of time moving / held in position |
+| `matchWidth` | how much of the frame's width they used |
+| `matchAdvanced` / `matchDeepness` | how far forward they sat **relative to the other players on screen** |
+
+That last pair is why the coach only has to name the attacking direction: positioning is
+measured against where everyone else is, not against a pitch the app can't see. It is
+carried only for Football and Kho-Kho, where play genuinely runs along one axis in normal
+footage; for court sports that swap ends every few seconds it would be noise with a
+number attached, so it is left out.
+
+The `matchStationary` mirror exists for one reason: being deep *and* still is what
+separates a goalkeeper from a centre-back, who is deep and covers ground.
+
+**Per-minute rates need at least 45 seconds of tracking.** A ten-second highlight of
+somebody sprinting extrapolates to several hundred metres per minute and would score a
+perfect 100 against an elite benchmark. Below the threshold those metrics are simply not
+reported — the engine treats them as unmeasured and lowers confidence, which is the
+correct answer rather than a flattering one. Peak speed is exempt: a peak is a peak
+however short the clip.
+
+**A caveat worth repeating to whoever uses this:** ByteTrack will occasionally swap two
+players who cross closely, and the reference ranges in `sports_config.py` were set for
+typical wide footage. Retune them from the Weights tab once you have clips from your own
+camera — framing shifts these numbers more than the players do.
+
+### Pitch calibration — getting real metres
+
+Click one marking you know the size of and everything becomes real. Pick a preset
+(penalty area, six-yard box, full pitch, FIBA court, volleyball court, cricket pitch,
+badminton or tennis court, Kho-Kho field), move the frame slider to a moment where all
+four of its corners are in view, click them in the order the app lists them, and a
+homography maps every tracked position onto the ground plane in metres.
+
+The slider steps through 16 stills the worker saves from across the analysed part of the
+clip, starting on the identification keyframe. They are kept after the video itself is
+deleted, like the keyframe. Calibration is worked out for the camera position in the
+chosen still, so it is only right for footage from a camera that stays put — a tripod
+at the side of the pitch, not a broadcast camera that pans with the ball.
+
+What that unlocks:
+
+| Metric | |
+|---|---|
+| `matchMetresPerMin` | distance covered, directly comparable to a GPS report |
+| `matchTopSpeedKmh` | peak speed, 95th percentile rather than a single jittery frame |
+| `matchHsrPerMin` | metres above the high-speed threshold — **19.8 km/h** for football |
+| `matchSprintMetresPerMin` | metres above the sprint threshold — **25.2 km/h** for football |
+| `matchAccelPerMin` | efforts above 3 m/s² |
+
+Court sports use lower thresholds (14.4 / 18.0 km/h) because the distances and speeds
+are smaller; those are widely used rather than officially fixed, and the app labels them
+accordingly.
+
+Calibration is applied *after* tracking. The per-frame samples are kept on the clip
+precisely so marking out the pitch re-derives every metric instantly — no second upload,
+no model re-run — and any identifications already made pick up the new units. It can be
+removed again if the four points were clicked badly.
+
+### Why there is no ball tracking
+
+An earlier version ran a second detector for the ball. It is gone: the coach clicking
+the player they care about is more reliable than a general-purpose detector guessing
+at a small, fast, often-hidden object, and it halves the work per frame. Old databases
+keep their ball-metric weights on disk; they are simply ignored.
+
+### Video retention
+
+Video files are deleted 30 days after upload (`VIDEO_RETENTION_DAYS` changes it). The
+measurements, tracks, keyframes and thumbnails are kept, so identifying players and
+calibrating the pitch still work on an old clip.
+
+---
+
+## Diet plans
+
+Energy is derived per kilogram of bodyweight from the sport's demand profile (endurance
+sports carry more carbohydrate, power sports more protein), adjusted for training hours
+and for athletes still growing. Fat is held inside 22–30% of energy and carbohydrate
+absorbs the difference, so the three macros always add back up to the calorie target.
+
+Meals are drawn from a food table tagged by diet level (vegan ⊂ vegetarian ⊂
+eggetarian ⊂ non-veg) and by allergen, then filtered against what the student declared
+on their form. Anything they marked — milk, egg, peanut, tree nuts, gluten, soy, fish,
+shellfish — disappears from every suggestion.
+
+The plan also gives a hydration target, protein distribution across the day, and
+recovery timing. `GET /api/students/{id}/diet`, or the Diet tab on the report.
+
+> This is general sports-nutrition guidance for training support, not medical or
+> individual dietetic advice — the API returns that disclaimer with every plan and the
+> UI shows it. A qualified sports dietitian should sign off on anything significant.
+
+---
+
+## The phone app
+
+`mobile/` is the Android and iPhone app — React Native with Expo (SDK 57), Expo Router
+for the screens. It talks to the same hosted API as the website (`extra.apiUrl` in
+`mobile/app.json`) and covers all three kinds of account:
+
+- **Students** — the second coach's dashboard, the report (with the full *why* behind
+  every fit), achievements and the focus streak, their profile and settings, and drill
+  clips filmed on the phone: uploaded in pieces, then played back as a pose overlay
+  once the analysis computer has measured them.
+- **Coaches** — the squad with Today's brief, a student's page (verify, team and shirt
+  number, a missed focus session logged late, certificates to check, Excel), Coach Entry
+  with checks on every number, the weights, match footage (upload, then tap who's who on
+  the frame), match cards (print one blank, then upload a photo of it filled in — the AI
+  reads it into the card and the phone shows what went in) and AI training.
+- **Admins** — everything a coach has, plus Add Student and switching sport.
+
+The motion is the design's: the launch (sparks, then the S-shaped window opening onto
+the app), the diagonal ink-line sweep between tabs, the level-reached card, badges earned
+and the streak's count rolling — and with Settings → Motion → Reduced, or the phone's own
+reduce-motion setting, each becomes a short fade. Loading blocks shimmer; a server that
+isn't answering gets its own screen that keeps trying by itself.
+
+Pitch calibration and editing a match card's grid stay on the website: both need a big
+screen. Accounts can be deleted from the app (Settings → Delete account, password asked
+again), as the stores require.
+
+**Running it on a phone.** `cd mobile`, `npm install`, then `npx expo start` and open it
+in Expo Go. Everything runs there except notifications and the rich haptics.
+
+**The installable app (APK).** Once: `npx eas-cli@latest login`, then
+`npx eas-cli@latest init`. Then `npx eas-cli@latest build --profile preview --platform android`
+builds it in Expo's cloud and gives a link to install it from (`eas.json` has the
+profiles; `production` makes the Play Store bundle). The installed app also carries
+`mobile/modules/stridian-haptics`, the app's own Android module that plays the design's
+haptic patterns (launch, the tab sweep): a vibration Composition where the phone's motor
+has the primitives, the simpler waveform where it doesn't. Expo Go and iPhone fall back to
+the system haptics.
+
+`npm run check` tests the app's pure logic (pose read-out, result checks, weights,
+match-card reading, the blank card, haptic patterns) with Node 22 or newer.
+
+### Phone notifications
+
+The server sends through Expo's push service (`backend/push.py`): a clip analysed,
+verified or a position changed, a certificate checked, a new enrolment or a certificate
+waiting for the coach, a streak restored, and a Saturday nudge when the week's focus
+isn't done. Each phone keeps its own on/off switches in Settings. Once, for Android:
+
+1. In `mobile/`: `npx eas-cli@latest login`, then `npx eas-cli@latest init` — it writes
+   the project ID into `app.json`, which the app needs for its push token.
+2. Firebase console → new project → add an Android app with the package
+   `com.arthabiswas.stridian` → download `google-services.json` into `mobile/` and add
+   `"googleServicesFile": "./google-services.json"` under `android` in `app.json`.
+3. Firebase → Project settings → Service accounts → **Generate new private key** (keep
+   that file out of git). Then `npx eas-cli@latest credentials` → Android → production →
+   Google Service Account → *Manage your Google Service Account Key for Push
+   Notifications (FCM V1)* → upload it.
+4. In Vercel, add `CRON_SECRET` (any long random string) for the weekly nudge.
+
+iPhone needs an Apple Developer account; `eas credentials` sets up its push key.
+
+### What the server added for the app
+
+Drill clips a student uploads themselves, the pose track behind the overlay, the full
+contribution of every measure to every fit (`contributions` on each ranked position),
+the streak's last eight weeks and who restored a week, push tokens, account deletion
+and the weekly cron. `backend/test_mobile_api.py` runs all of it against a throwaway
+database: `python backend/test_mobile_api.py`.
+
+---
+
+## API reference
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| `GET` | `/api/health` | — | status, storage, whether the worker is online |
+| `POST` | `/api/auth/signup` `/login` | — | create a coach account (needs the sign-up code) / sign in |
+| `POST` | `/api/auth/reset-code` `/reset` | — | forgot password: email a 6-digit code / code + new password → signed in |
+| `GET` `PATCH` `POST` | `/api/auth/me` `/logout` | coach | current account, edit own details, revoke this token |
+| `PATCH` | `/api/auth/sport` | admin | switch the sport being viewed |
+| `GET` | `/api/coaches` | admin | every coach |
+| `GET` | `/api/sports`, `/api/sports/{sport}` | — | metric batteries and positions |
+| `GET` `PUT` `POST` | `/api/sports/{sport}/weights[/reset]` | own sport | read / edit / reset weights |
+| `GET` `PUT` `DELETE` | `/api/sports/{sport}/levels[/{metric}]` | own sport | level targets: read / retune one measure / reset it |
+| `POST` | `/api/student/code` | — | email a 6-digit code (new account or forgotten password) |
+| `POST` | `/api/student/verify` | — | code + chosen password → signed in |
+| `POST` | `/api/student/login` | — | student sign-in |
+| `GET` `POST` | `/api/student/me` `/logout` | student | own account and enrolment, revoke this token |
+| `POST` | `/api/student/enrol` | student | join a sport with its enrolment code |
+| `GET` | `/api/student/report` | student | own report, read-only, once verified |
+| `GET` | `/api/student/coach` | student | the dashboard's second coach: headline, messages, rings, milestones, this week's focus |
+| `POST` | `/api/student/coach/seen` | student | the level reached and new milestones have been shown |
+| `POST` | `/api/student/focus/tick` | student | today's session of this week's focus is done (once a day) |
+| `GET` | `/api/coach/feed` | coach | Today's brief for the coach's sport |
+| `POST` | `/api/students/{id}/focus/log` | own sport | a focus session the student forgot to tick (`day`, this week or last) |
+| `GET` `POST` | `/api/student/videos` | student | own drill clips / announce one filmed on the phone (`label`: the drill) |
+| `PUT` | `/api/student/videos/{id}/upload` | student | one piece, with `X-Chunk-Range` |
+| `GET` | `/api/student/videos/{id}/thumbnail` `/pose` | student | the skeleton keyframe / the pose track for the overlay |
+| `DELETE` | `/api/student/videos/{id}` | student | remove a clip they uploaded, before it is analysed |
+| `DELETE` | `/api/student/me`, `/api/auth/me` | student / coach | delete the account (`password` again) |
+| `POST` `DELETE` | `/api/push/token` | student / coach | this phone's Expo push token and its on/off switches / forget it |
+| `GET` | `/api/cron/weekly-nudge` | `CRON_SECRET` | Vercel's Saturday cron: remind students whose focus week isn't done |
+| `PATCH` | `/api/student/profile` | student | edit own details (not sport; RA number, DOB and team only if empty) |
+| `PUT` `GET` | `/api/student/photo` | student | set / fetch own photo (JPEG body) |
+| `GET` `POST` | `/api/student/achievements` | student | list / upload a certificate (raw body, `X-Filename`) — comes back as a draft, AI-filled |
+| `PATCH` `DELETE` | `/api/student/achievements/{id}` | student | edit, send (`submit: true`) / delete — until verified |
+| `GET` | `/api/student/achievements/{id}/certificate` | student | the uploaded file |
+| `GET` `POST` | `/api/enrol-code[/rotate]` | coach | the sport's enrolment code / make a new one |
+| `POST` | `/api/students` | admin | add a student by hand |
+| `GET` | `/api/students` | coach | roster, already scoped to their sport |
+| `GET` `PATCH` `DELETE` | `/api/students/{id}` | own sport | one student (personal details and sport: admin only) |
+| `GET` `PUT` | `/api/students/{id}/photo` | own sport / admin | a student's photo / replace it |
+| `GET` `POST` | `/api/students/{id}/achievements` | own sport / admin | their achievements / add one for them |
+| `GET` | `/api/achievements?status=pending` | coach | the sport's achievements, e.g. those waiting to be checked |
+| `PATCH` | `/api/achievements/{id}` | admin | edit an achievement's details |
+| `POST` | `/api/achievements/{id}/review` | own sport | verify, or reject with a reason |
+| `GET` | `/api/achievements/{id}/certificate` | own sport | the uploaded file |
+| `GET` | `/api/export/squad[?scope=all]` | coach / admin | the squad (or every sport) as Excel |
+| `GET` | `/api/students/{id}/export` | own sport | one student as Excel |
+| `GET` `PUT` | `/api/students/{id}/results` | own sport | read / record test results |
+| `GET` | `/api/students/{id}/history` | own sport | every measurement ever recorded |
+| `GET` | `/api/students/{id}/analysis` | own sport | **the report** — ranking, why, plan, diet |
+| `GET` | `/api/students/{id}/diet` | own sport | the diet plan on its own |
+| `POST` `DELETE` | `/api/students/{id}/verify` | own sport | confirm the position they play / undo |
+| `GET` | `/api/nutrition/options` | — | allergen and diet-preference lists |
+| `POST` `GET` | `/api/students/{id}/videos` | own sport | announce an upload (name, size) / list drill clips |
+| `PUT` | `/api/videos/{id}/upload` | own sport | one piece, with `X-Chunk-Range: bytes a-b/total` |
+| `GET` | `/api/videos/{id}/thumbnail` | own sport | skeleton keyframe |
+| `GET` | `/api/videos/{id}/pose` | own sport | the pose track behind the phone's overlay |
+| `GET` | `/api/videos` | coach | every drill clip in the sport, newest first, with whose it is (the app's Footage › Drill) |
+| `DELETE` | `/api/videos/{id}` | own sport | remove a drill clip |
+| `POST` `GET` | `/api/matches` | own sport | announce a match upload / list clips |
+| `PUT` | `/api/matches/{id}/upload` | own sport | one piece of the match video |
+| `GET` | `/api/matches/{id}` | own sport | tracks, metrics and clickable keyframe boxes |
+| `GET` | `/api/matches/{id}/keyframe` | own sport | the frame the coach identifies players on |
+| `GET` | `/api/matches/{id}/frames/{n}` | own sport | one of the stills to calibrate on |
+| `POST` | `/api/matches/{id}/assign` | own sport | "track 7 is this student" |
+| `DELETE` | `/api/matches/{id}/assign/{track}` | own sport | undo an identification |
+| `POST` `DELETE` | `/api/matches/{id}/calibrate` | own sport | mark out the pitch / remove it |
+| `DELETE` | `/api/matches/{id}` | own sport | remove a match clip |
+| `GET` | `/api/cards/config?category=W&format=` | coach | the sport's card (skills, formulas, targets, Part C/D columns, zones) and squad |
+| `GET` `POST` | `/api/cards` | coach | the sport's match cards / start one |
+| `GET` `PUT` `DELETE` | `/api/cards/{id}` | own sport | one card with its Part C / save it (`final: true` makes it count) / delete it |
+| `POST` | `/api/cards/{id}/photos` | own sport | add a photo or PDF of the paper card (raw body, 4 MB, up to 4) |
+| `GET` `DELETE` | `/api/cards/{id}/photos/{n}` | own sport | a photo / remove it |
+| `POST` | `/api/cards/{id}/photos/{n}/read` | own sport | the AI's reading of Part A, matched to the squad — nothing saved |
+| `GET` | `/api/training` | coach | the AI Training page: labels, versions, worker, queue, sheets (links for admins) |
+| `POST` | `/api/training/versions/{id}/rollback` | own sport | put an older model back live |
+
+Every piece of an upload is answered with how many bytes are really stored, and the
+browser carries on from there — so a dropped connection costs one piece, and a piece
+sent twice is recognised rather than stored twice.
+
+Test results are **appended, never overwritten** — `/history` returns the full series
+for the progress sparklines, while the analysis always uses the newest value per metric.
+
+---
+
+## The interface
+
+Six coach screens (seven for an admin) behind a rail on desktop and a bottom tab bar on
+phones. Moving between pages and tabs is a short slide — the new page comes in from the
+side of the tab you chose while the old one fades away, and the marker under the menu
+and the tabs slides with it; anyone whose device asks for reduced motion gets instant
+changes instead. A **look** picker (the half-shaded circle) switches between **Floodlit**
+(graphite, the default), **Daylight** (chalk) and follow-your-device, and between three
+accents (volt, blaze, sky); the choice is remembered in the browser. Signed out, the site
+opens on the home page: a 3D sprinter as the pose model sees one, two scenes that hold
+still while they play (three sources into one verdict, the five levels) and a court for
+each sport. Athlete and coach sign-in share one page behind it, and a sheet sweeps across
+the window between the home page, sign in and the app. A student gets the enrolment form,
+then their own space (Dashboard, My report, Achievements, Profile) along a top bar.
+
+The report itself is tabbed: **Overview** (best-fit position, the reasoning, the radar,
+standouts and weak links, and the two-source panel with its reconciliation),
+**Levels** (each number against the University → International ladder, and the level
+they play at), **Profile** (photo, team and jersey number, the university record,
+achievements to verify or reject, print),
+**Measurements** (every test metric with its reference range and a progress sparkline once
+there are two readings), **Positions** (all of them ranked, each expanding to the weight
+table behind its score), **Footage** (the footage-only verdict, match metrics with their own
+radar, and every clip the student appears in), **Match cards** (the card-only verdict, Part D
+per tournament with trend arrows and University / Elite targets, and the player card summed
+over matches), **Training**, **Diet**, **Video**.
+
+**Official report** (a button beside Download Excel) is the one page for the Directorate
+of Sports: the player's details and photo, the level they play at, the best-fit (or
+confirmed) position, their test and match-card results with the level each reaches,
+strengths and what to work on — both read by level, so they agree with the headline —
+verified achievements, lines for the coach's remarks, and signature lines for the coach
+and the Director of Sports. It prints (or saves as PDF) on one A4 portrait page.
+
+Uploads show a progress bar, then the clip waits as **waiting → analysing → done**; the
+page refreshes itself while anything is in the queue, and says plainly when the
+analysis computer is off. The Dashboard filters Pending / Verified, and the report
+opens with the verification card.
+
+Identifying players is a frame with the detected boxes laid over it — click a box, pick a
+name. Identified boxes turn green and carry the student's name.
+
+Charts are inline SVG written by hand — a radar for the athlete profile, sparklines for
+progress, a stacked bar for the macro split. Colours come from CSS custom properties, so
+the Floodlit and Daylight looks are two value sets rather than two stylesheets. Every
+chart value is also readable as text, so nothing depends on colour alone.
+
+---
+
+## Project layout
+
+```
+api/index.py        Vercel's entry point — imports backend/main.py
+vercel.json         build, Python function, Singapore region, /api rewrite
+requirements.txt    the website's (light) Python packages — what Vercel installs
+.env.example        every setting, documented
+
+backend/
+  main.py           FastAPI app — all routes, uploads, verification, sheet sync
+  docreader.py      reads certificates and match cards with Gemini (the one file to change to swap AI)
+  match_cards.py    every sport's match card: skills, formulas, targets, Parts C/D, zones
+  export.py         the Excel downloads
+  worker.py         the worker: queue, analysis, training, retention, sheet repair
+  trainer.py        learns position weights from verified students (pure logic)
+  storage.py        videos in Google Drive or a local folder, chunked uploads
+  sheets.py         the Google Sheets: squad and match-card files per sport, profiles,
+                    achievements, coaches
+  gapi.py           the one Google login both of those use
+  setup_google.py   one-time: Google sign-in, creates the video folder
+  auth.py           password hashing, bearer-token sessions, email codes
+  mailer.py         sends students their codes through Gmail SMTP
+  db.py             Postgres (DATABASE_URL) or SQLite engine + session
+  migrate.py        adds missing columns on startup
+  models.py         coaches, students, student logins, achievements, test results,
+                    weights, videos, match clips, match cards, model versions, app state
+  schemas.py        request/response validation
+  sports_config.py  sports, metrics, reference ranges, default weights, match
+                    archetypes, nutrition profiles
+  scoring.py        the prediction engine (no DB access — pure logic)
+  levels.py         the University → International read-out (pure logic)
+  coach.py          the second coach: the dashboards' words, rings, milestones, weekly focus
+  levels.json       every sport's level ladders, men's and women's, with sources
+  nutrition.py      diet engine + food table
+  video.py          MediaPipe drill pipeline, metric maths, drill rules
+  pose_sports.py    sport-specific technique: strike, spike, shot, bowling action
+  match_video.py    YOLO + ByteTrack match pipeline (worker only)
+  match_metrics.py  track metrics + homography, numpy only (website and worker)
+  requirements.txt  everything for the laptop / iMac
+  requirements-match.txt   optional — the YOLO lane
+  models/           YOLO weights, downloaded on first use
+
+mobile/             the Android / iPhone app (Expo)
+  app.json          name, icons, splash, package id, plugins, the API's address
+  eas.json          the cloud builds: preview (an APK to install), production
+  modules/stridian-haptics/  the app's own Android module: the design's haptic patterns
+  scripts/check.mjs the app's pure logic, checked with Node
+  src/app/          every screen (Expo Router): sign-in, the tabs, pages pushed over them
+  src/tabs/         the tab screens — student/, coach/, admin/
+  src/report/       the report's front page, pitch drawings, the pages behind it
+  src/ui/           the design system: type, buttons, fields, tab bar, toasts, badges
+  src/lib/          API client, session, theme, haptics, uploads, pose maths, push
+
+frontend/src/
+  App.jsx           app shell, nav, auth state, the sheet between scenes
+  Theme.jsx         the looks (Floodlit, Daylight), the accents and their picker
+  Logo.jsx          the mark and the wordmark
+  site/             the public pages and what they share with the app:
+                    Home.jsx, SignIn.jsx and their styles; Sprinter.js and stride.js
+                    (the hero's 3D sprinter and its stride model, three.js);
+                    Court.jsx and sportkit.js (every sport's court); motion.js (GSAP)
+  fx.jsx            motion: page/tab slides, sliding markers, rings, toasts
+  Login.jsx         coach sign in / create account / forgot password
+  OfficialReport.jsx  the one-page report for the Directorate of Sports
+  StudentAuth.jsx   student sign in, email code, new password
+  StudentForm.jsx   student enrolment (and an admin's Add Student)
+  Portal.jsx        a student's space: the second coach's dashboard, report, achievements, profile
+  people.jsx        shared: details form and view, photos, achievements
+  CoachEntry.jsx    roster, test results, drill-video upload
+  Matches.jsx       match clips, the click-to-identify frame, per-player table
+  MatchCards.jsx    match cards: list, editor, photos and the AI read, print setup
+  BlankCard.jsx     the printable blank card, Parts A–D and the player card
+  Dashboard.jsx     Today's brief, squad overview, roster, achievements to check, Excel, your details
+  Report.jsx        the tabbed report, the three source verdicts, reconciliation, Part D
+  Diet.jsx          fuelling targets and the day's menu
+  VideoCard.jsx     clip metrics, drills, skeleton thumbnail
+  Weights.jsx       weight editor
+  Training.jsx      the AI Training page
+  charts.jsx        radar, sparkline, macro bar — all inline SVG
+  api.js            fetch wrapper, token handling, shared formatting
+  styles.css        colour tokens and layout
+  system.css        the look of every component
+```
+
+`scoring.py` takes weights as an argument and never touches the database, so the
+built-in defaults and a coach's edited weights run through identical code.

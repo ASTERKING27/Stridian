@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stridian launch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#55544F}a:hover{color:#121211}
+.t-white{--bg:#F3F2EE;--ink:#121211;--ink2:#55544F;--line:rgba(18,18,17,.14);--glass:rgba(246,245,241,.56);--glassEdge:rgba(18,18,17,.10);--hi:rgba(255,255,255,.8);--shadow:0 14px 34px rgba(18,18,17,.16);--wall:#CFCEC8;--walltext:#121211}
+.t-dark{--bg:#0F0F0E;--ink:#EEEDE8;--ink2:#9D9C96;--line:rgba(238,237,232,.16);--glass:rgba(34,34,32,.5);--glassEdge:rgba(238,237,232,.12);--hi:rgba(255,255,255,.09);--shadow:0 14px 34px rgba(0,0,0,.55);--wall:#2B2B29;--walltext:#EEEDE8}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.wm{font-family:Archivo,'Helvetica Neue',sans-serif;font-stretch:125%;font-weight:620;letter-spacing:.2em}
+.eyebrow{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;color:var(--ink2)}
+.spk{position:absolute;left:0;top:0;background:currentColor;clip-path:polygon(0 50%,70% 0,100% 50%,70% 100%)}
+.spk.dot{clip-path:none}
+.appicon{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px}
+.appicon:focus-visible .tile{outline:2px solid var(--walltext);outline-offset:3px}
+.ctl{font:500 12px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.08em;height:44px;padding:0 18px;border:1px solid #121211;background:transparent;color:#121211;border-radius:22px;cursor:pointer}
+.ctl:hover{background:rgba(18,18,17,.06)}
+.ctl.on{background:#121211;color:#F3F2EE}
+</style>
+</helmet>
+<div style="width: 980px; height: 1070px; box-sizing: border-box; padding: 40px; background: #E6E5E0; font-family: Archivo, 'Helvetica Neue', sans-serif; color: #121211; display: flex; flex-direction: column; gap: 30px">
+  <div style="display: flex; gap: 80px">
+    <sc-for list="{{phones}}" as="p" hint-placeholder-count="2">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <span class="mono" style="font-size: 11px; letter-spacing: .14em; color: #55544F">{{p.label}}</span>
+        <div class="t-{{p.theme}}" style="width: 410px; height: 864px; box-sizing: border-box; padding: 10px; border-radius: 58px; background: #0A0A09; box-shadow: 0 30px 60px rgba(18,18,17,.18)">
+          <div style="position: relative; width: 390px; height: 844px; border-radius: 48px; overflow: hidden; background: var(--wall); isolation: isolate">
+
+            <div style="position: absolute; inset: 0; transform-origin: 50% 46%; transform: scale({{p.appS}}); visibility: {{p.appVis}}">
+              <div style="position: absolute; inset: 0; background: var(--bg); color: var(--ink); box-sizing: border-box; padding: 60px 22px 0; display: flex; flex-direction: column; gap: 22px">
+                <div style="display: flex; align-items: center; justify-content: space-between">
+                  <div style="display: flex; align-items: center; gap: 9px">
+                    <svg viewBox="0 0 100 100" width="22" height="22" aria-hidden="true"><path d="{{logoD}}" style="fill: var(--ink)"></path></svg>
+                    <span class="wm" style="font-size: 12px">STRIDIAN</span>
+                  </div>
+                  <span class="mono" style="font-size: 10.5px; letter-spacing: .1em; color: var(--ink2)">FOOTBALL · MEN</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <span class="eyebrow">YOUR SECOND COACH</span>
+                  <h1 style="margin: 0; font-size: 27px; line-height: 1.16; font-weight: 500; letter-spacing: -.012em; text-wrap: balance">Zonal level, locked in. 3/5 of what matters is already at State.</h1>
+                </div>
+                <div style="display: flex; align-items: center; gap: 24px; padding-top: 18px; border-top: 1px solid var(--line)">
+                  <div style="position: relative; width: 112px; height: 112px; flex-shrink: 0">
+                    <svg viewBox="0 0 112 112" width="112" height="112" aria-hidden="true">
+                      <circle cx="56" cy="56" r="50" fill="none" stroke-width="5" style="stroke: var(--line)"></circle>
+                      <circle cx="56" cy="56" r="50" fill="none" stroke-width="5" stroke-dasharray="188.5 314.2" transform="rotate(-90 56 56)" style="stroke: var(--ink)"></circle>
+                    </svg>
+                    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+                      <span class="wm" style="font-size: 13px; letter-spacing: .12em; padding-left: .12em">ZONAL</span>
+                      <span class="mono" style="font-size: 10px; color: var(--ink2)">60% → STATE</span>
+                    </div>
+                  </div>
+                  <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+                    <div style="display: flex; justify-content: space-between; color: var(--ink2)"><span>International</span><span class="mono">0/5</span></div>
+                    <div style="display: flex; justify-content: space-between; color: var(--ink2)"><span>National</span><span class="mono">1/5</span></div>
+                    <div style="display: flex; justify-content: space-between; color: var(--ink2)"><span>State</span><span class="mono">3/5</span></div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 650"><span>Zonal</span><span class="mono">5/5</span></div>
+                    <div style="display: flex; justify-content: space-between"><span>University</span><span class="mono">5/5</span></div>
+                  </div>
+                </div>
+                <div style="border: 1px solid var(--ink); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+                  <div style="display: flex; flex-direction: column; gap: 5px">
+                    <span class="eyebrow">THIS WEEK'S FOCUS</span>
+                    <span style="font-size: 18px; font-weight: 600">30m Sprint</span>
+                    <span style="font-size: 12px; color: var(--ink2)">2 of 3 sessions · 4-week streak</span>
+                  </div>
+                  <div style="display: flex; gap: 6px">
+                    <span style="width: 16px; height: 16px; background: var(--ink)"></span>
+                    <span style="width: 16px; height: 16px; background: var(--ink)"></span>
+                    <span style="width: 14px; height: 14px; border: 1px solid var(--ink)"></span>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column">
+                  <span class="eyebrow" style="padding-bottom: 8px">NEXT LEVEL</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--line)">
+                    <div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">30m Sprint</span><span class="mono" style="font-size: 11px; color: var(--ink2)">0.05 s to State</span></div>
+                    <span class="mono" style="font-size: 15px">4.38 s</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--line)">
+                    <div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Countermovement jump</span><span class="mono" style="font-size: 11px; color: var(--ink2)">1 cm to State</span></div>
+                    <span class="mono" style="font-size: 15px">36 cm</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--line)">
+                    <div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Agility T-test</span><span class="mono" style="font-size: 11px; color: var(--ink2)">0.15 s to National</span></div>
+                    <span class="mono" style="font-size: 15px">9.95 s</span>
+                  </div>
+                </div>
+              </div>
+
+              <nav aria-label="Sections" style="position: absolute; left: 10px; right: 10px; bottom: 18px; height: 60px; border-radius: 30px; background: var(--glass); backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3); border: 1px solid var(--glassEdge); box-shadow: var(--shadow), inset 0 1px 0 var(--hi); box-sizing: border-box; transform: translateY({{p.barY}}px)">
+                <span style="position: absolute; top: 3px; height: 52px; border-radius: 26px; background: var(--ink); left: {{ind.l}}px; width: {{ind.w}}px"></span>
+                <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+                  <button aria-label="{{t.label}}" aria-current="{{t.current}}" style="all: unset; position: absolute; top: 3px; height: 52px; left: {{t.l}}px; width: {{t.w}}px; display: flex; align-items: center; justify-content: center; gap: {{t.gap}}px; color: {{t.color}}; font: 600 12.5px/1 Archivo, sans-serif; cursor: pointer">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="{{t.icon}}"></path></svg>
+                    <span style="overflow: hidden; white-space: nowrap; max-width: {{t.lw}}px">{{t.short}}</span>
+                  </button>
+                </sc-for>
+              </nav>
+            </div>
+
+            <sc-if value="{{p.wall}}" hint-placeholder-val="{{true}}">
+              <div style="position: absolute; inset: 0; background: var(--wall); display: flex; align-items: center; justify-content: center">
+                <sc-if value="{{p.icon}}" hint-placeholder-val="{{true}}">
+                  <button class="appicon" onClick="{{p.tap}}" aria-label="Open Stridian" style="margin-top: 20px">
+                    <span class="tile" style="width: 76px; height: 76px; border-radius: 17px; background: var(--bg); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.18)">
+                      <svg viewBox="0 0 100 100" width="46" height="46" aria-hidden="true"><path d="{{logoD}}" style="fill: var(--ink)"></path></svg>
+                    </span>
+                    <span style="font-size: 12px; font-weight: 500; color: var(--walltext)">Stridian</span>
+                  </button>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{p.splash}}" hint-placeholder-val="{{false}}">
+              <svg viewBox="0 0 390 844" width="390" height="844" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+                <defs>
+                  <mask id="{{p.maskId}}" maskUnits="userSpaceOnUse" x="0" y="0" width="390" height="844">
+                    <rect x="0" y="0" width="390" height="844" fill="#ffffff"></rect>
+                    <path d="{{logoD}}" transform="{{p.holeT}}" fill="#000000"></path>
+                  </mask>
+                </defs>
+                <rect x="{{p.gx}}" y="{{p.gy}}" width="{{p.gw}}" height="{{p.gh}}" rx="{{p.grx}}" mask="url(#{{p.maskId}})" style="fill: var(--bg)"></rect>
+                <path d="{{logoD}}" transform="{{p.echo2T}}" fill="none" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linejoin="miter" stroke-miterlimit="12" style="stroke: var(--ink); opacity: {{p.echo2Op}}"></path>
+                <path d="{{logoD}}" transform="{{p.echo1T}}" fill="none" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="miter" stroke-miterlimit="12" style="stroke: var(--ink); opacity: {{p.echo1Op}}"></path>
+                <path d="{{logoD}}" transform="{{p.holeT}}" fill="none" stroke-width="{{p.ringW}}" vector-effect="non-scaling-stroke" stroke-linejoin="miter" stroke-miterlimit="12" style="stroke: var(--ink); opacity: {{p.ringOp}}"></path>
+                <path d="{{logoD}}" transform="{{p.logoT}}" style="fill: var(--ink); opacity: {{p.logoOp}}"></path>
+              </svg>
+            </sc-if>
+
+            <div style="position: absolute; inset: 0; pointer-events: none; color: var(--ink)">
+              <sc-for list="{{p.sparks}}" as="s" hint-placeholder-count="0">
+                <span class="spk {{s.cls}}" style="width: {{s.w}}px; height: {{s.h}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span>
+              </sc-for>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display: flex; justify-content: center; align-items: center; gap: 10px">
+    <button class="ctl" onClick="{{replay}}">Replay</button>
+    <button class="ctl {{loopCls}}" onClick="{{toggleLoop}}" aria-pressed="{{loopOn}}">Loop</button>
+    <span style="width: 1px; height: 24px; background: rgba(18,18,17,.2)"></span>
+    <sc-for list="{{speeds}}" as="sp" hint-placeholder-count="3">
+      <button class="ctl {{sp.cls}}" onClick="{{sp.pick}}" aria-pressed="{{sp.on}}">{{sp.label}}</button>
+    </sc-for>
+    <span class="mono" style="font-size: 11px; letter-spacing: .08em; color: #55544F; padding-left: 8px">Tap an icon to open</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":980,"height":1070}}'>
+const LOGO_D = 'M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z';
+const SKEL = [[88.8,26.4],[83.9,10.7],[27.1,18.6],[18.3,46.0],[77.0,52.8],[28.5,88.7],[3.0,78.5]];
+const AX = 47.6, AY = 49.4;
+const CX = 195, CY = 422;
+const T_EXP = 360, T_CHG = 820, T_SQ = 1380, T_IG = 1520, T_ZEND = 2420, T_END = 2800, HOLD = 2200, HOME = 900;
+const K0 = 1.2 * 0.9, K1 = 120;
+
+const cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const eIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eOut = t => 1 - Math.pow(1 - t, 3);
+const r2 = v => Math.round(v * 100) / 100;
+
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function makeSparks() {
+  const R = rng(11);
+  const segs = [];
+  let total = 0;
+  for (let i = 0; i < SKEL.length - 1; i++) {
+    const [x1, y1] = SKEL[i], [x2, y2] = SKEL[i + 1];
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    segs.push({ x1, y1, x2, y2, len, at: total });
+    total += len;
+  }
+  const out = [];
+  const N = 46;
+  for (let i = 0; i < N; i++) {
+    const d = R() * total;
+    const s = segs.find(g => d >= g.at && d <= g.at + g.len) || segs[segs.length - 1];
+    const f = (d - s.at) / s.len;
+    const px = lerp(s.x1, s.x2, f), py = lerp(s.y1, s.y2, f);
+    const a = Math.atan2(py - 50, px - 50) + (R() - .5) * 1.0;
+    const dot = R() < .22;
+    out.push({
+      ox: CX + (px - 50) * 1.2, oy: CY + (py - 50) * 1.2, a,
+      dist: 44 + R() * 120, birth: 400 + (i / N) * 900 + R() * 60, life: 440 + R() * 340,
+      len: dot ? 3 : 7 + R() * 11, h: dot ? 3 : (R() < .3 ? 3 : 2), dot
+    });
+  }
+  for (let i = 0; i < 24; i++) {
+    const a = R() * Math.PI * 2;
+    out.push({
+      ox: CX + (R() - .5) * 30, oy: CY + (R() - .5) * 30, a,
+      dist: 170 + R() * 230, birth: T_IG + R() * 60, life: 480 + R() * 280,
+      len: 16 + R() * 18, h: 2.5, dot: false
+    });
+  }
+  return out;
+}
+
+function frame(t) {
+  const f = { home: true, wall: true, icon: true, splash: false, appVis: 'hidden', appS: 1.14, barY: 100, sparks: [],
+    holeT: 'scale(0)', echo1T: 'scale(0)', echo2T: 'scale(0)', logoT: 'scale(0)', logoOp: 0, ringOp: 0, ringW: 3, echo1Op: 0, echo2Op: 0,
+    gx: 157, gy: 374, gw: 76, gh: 76, grx: 17 };
+  if (t == null || t < 0) return f;
+  f.home = false;
+  f.icon = false;
+  f.wall = t < T_EXP;
+  f.splash = t < T_ZEND;
+
+  // the icon tile grows into the splash screen
+  const ex = eIO(cl(t / T_EXP));
+  f.gx = r2(lerp(157, 0, ex)); f.gy = r2(lerp(374, 0, ex));
+  f.gw = r2(lerp(76, 390, ex)); f.gh = r2(lerp(76, 844, ex));
+  f.grx = r2(lerp(17, 48, ex));
+
+  // logo: settle, charge, squash
+  let m = 1, jx = 0, jy = 0;
+  if (t >= T_CHG && t < T_SQ) m = 1 + .06 * eOut((t - T_CHG) / (T_SQ - T_CHG));
+  if (t >= T_SQ) m = lerp(1.06, .9, eIO(cl((t - T_SQ) / (T_IG - T_SQ))));
+  if (t >= T_CHG && t < T_IG) {
+    const a = .9 * cl((t - T_CHG) / (T_SQ - T_CHG));
+    jx = a * Math.sin(t * .09); jy = a * Math.cos(t * .117);
+  }
+  const s = lerp(.46, 1.2, ex) * m;
+  const cy = lerp(412, CY, ex);
+  f.logoT = 'translate(' + r2(CX - 50 * s + jx) + ' ' + r2(cy - 50 * s + jy) + ') scale(' + Math.round(s * 1000) / 1000 + ')';
+  f.logoOp = t < T_IG ? 1 : 0;
+
+  // the huge spark: a runner-shaped window that opens onto the app
+  if (t >= T_IG) {
+    const z = cl((t - T_IG) / (T_ZEND - T_IG));
+    const k = K0 * Math.pow(K1 / K0, z * z);
+    const e = eOut(z);
+    const px = lerp(CX + (AX - 50) * K0, CX, e), py = lerp(CY + (AY - 50) * K0, CY, e);
+    const T = kk => 'translate(' + r2(px) + ' ' + r2(py) + ') scale(' + Math.round(kk * 1000) / 1000 + ') translate(' + (-AX) + ' ' + (-AY) + ')';
+    f.holeT = T(k); f.echo1T = T(k * 1.12); f.echo2T = T(k * 1.28);
+    f.ringOp = 1; f.ringW = r2(lerp(2.5, 7, z));
+    f.echo1Op = r2(.55 * (1 - z * .4)); f.echo2Op = r2(.28 * (1 - z * .4));
+    f.appVis = 'visible';
+    f.appS = Math.round(lerp(1.14, 1, eOut(cl((t - T_IG) / (2650 - T_IG)))) * 1000) / 1000;
+  }
+  f.barY = t < 2200 ? 100 : r2(lerp(100, 0, eOut(cl((t - 2200) / 520))));
+  return f;
+}
+
+function sparksAt(list, t) {
+  const out = [];
+  if (t == null || t < 0 || t > T_END) return out;
+  for (const s of list) {
+    const u = (t - s.birth) / s.life;
+    if (u < 0 || u > 1) continue;
+    const d = s.dist * eOut(u);
+    const x = s.ox + Math.cos(s.a) * d, y = s.oy + Math.sin(s.a) * d;
+    const w = s.dot ? s.len : s.len * (1 - .55 * u);
+    out.push({
+      cls: s.dot ? 'dot' : '', w: r2(w), h: s.h,
+      x: r2(x - w / 2), y: r2(y - s.h / 2), r: r2(s.a * 180 / Math.PI),
+      o: r2(u < .6 ? 1 : 1 - (u - .6) / .4)
+    });
+  }
+  return out;
+}
+
+const TABS = [
+  { label: 'Dashboard', short: 'Dashboard', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-4a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0-4a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z' },
+  { label: 'My report', short: 'Report', icon: 'M5 3h10l4 4v14H5V3ZM15 3v4h4M8 11h8M8 15h8M8 19h5' },
+  { label: 'Achievements', short: 'Achievements', icon: 'M8 3h8l-2 6h-4L8 3Zm4 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z' },
+  { label: 'Profile', short: 'Profile', icon: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20.5c.8-3.6 3.8-6 7.5-6s6.7 2.4 7.5 6' }
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tick: 0, loop: true, speed: 1 };
+    this.vt = 0;
+    this.last = null;
+    this.starts = { white: HOME - 200, dark: HOME - 200 };
+    this.sparkList = makeSparks();
+    this.raf = null;
+  }
+  componentDidMount() { this.run(); }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); this.raf = null; }
+  run() {
+    if (this.raf) return;
+    this.last = null;
+    const step = ts => {
+      const dt = this.last == null ? 16 : Math.min(64, ts - this.last);
+      this.last = ts;
+      this.vt += dt * this.state.speed;
+      const keys = ['white', 'dark'];
+      const done = keys.every(k => this.starts[k] != null && this.vt - this.starts[k] > T_END + HOLD);
+      if (done && this.state.loop) keys.forEach(k => { this.starts[k] = this.vt + HOME; });
+      const idle = !this.state.loop && keys.every(k => this.starts[k] != null && this.vt - this.starts[k] > T_END);
+      this.setState({ tick: this.state.tick + 1 });
+      if (idle) { this.raf = null; return; }
+      this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  }
+  renderVals() {
+    const inner = 360, n = TABS.length, active = 0;
+    const aw = Math.round(TABS[active].short.length * 7 + 46);
+    const iw = (inner - aw) / (n - 1);
+    let x = 4;
+    const tabs = TABS.map((tb, i) => {
+      const w = i === active ? aw : iw;
+      const o = { ...tb, l: r2(x), w: r2(w), gap: i === active ? 7 : 0, lw: i === active ? 110 : 0,
+        color: i === active ? 'var(--bg)' : 'var(--ink)', current: i === active ? 'page' : undefined };
+      x += w;
+      return o;
+    });
+    const ind = { l: tabs[active].l, w: tabs[active].w };
+    const phones = ['white', 'dark'].map(theme => {
+      const st = this.starts[theme];
+      const t = st == null ? null : this.vt - st;
+      const f = frame(t);
+      return { theme, label: theme === 'white' ? 'WHITE' : 'DARK', maskId: 'hole-' + theme,
+        ...f, sparks: sparksAt(this.sparkList, t),
+        tap: () => { this.starts[theme] = this.vt; this.run(); } };
+    });
+    const speeds = [1, .5, .25].map(v => ({
+      label: v === 1 ? '1×' : v === .5 ? '½×' : '¼×', on: this.state.speed === v, cls: this.state.speed === v ? 'on' : '',
+      pick: () => this.setState({ speed: v })
+    }));
+    return {
+      logoD: LOGO_D, phones, tabs, ind, speeds,
+      loopOn: this.state.loop, loopCls: this.state.loop ? 'on' : '',
+      toggleLoop: () => { this.setState({ loop: !this.state.loop }, () => this.run()); },
+      replay: () => { this.starts.white = this.vt + 500; this.starts.dark = this.vt + 500; this.run(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+/* Sport art. Built only from the --court tokens, so every sport looks the same in every
+   look and accent. One signature element per court carries the accent. */
+.court { position: relative; width: 100%; }
+.court svg { display: block; width: 100%; height: 100%; overflow: hidden; }
+.kt, .kf { fill: var(--court-fill); }
+.ktl { stroke: var(--court-fill); stroke-width: 1; }
+.kl { stroke: var(--court); stroke-width: 1; }
+.kd { stroke: var(--court); stroke-width: 1; stroke-dasharray: 3 4; }
+.ks { stroke: var(--court-strong); stroke-width: 1.25; }
+.km { fill: var(--court-strong); }
+.kk { stroke: var(--court-key); stroke-width: 1.5; }
+.kkm { fill: var(--court-key); }
+
+/* where a position plays: a mark, and its name beside it */
+.spot {
+  position: absolute; width: 0; height: 0; padding: 0; border: 0; background: none; color: var(--ink);
+  font: inherit; text-align: center;
+}
+button.spot { cursor: pointer; }
+.spot > i {
+  position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ink); box-shadow: 0 0 0 3px var(--surface); transition: transform .3s var(--ease), background-color .2s;
+}
+.spot.open > i { background: transparent; box-shadow: inset 0 0 0 1px var(--ink-3); border-radius: 0; }
+.spot.active > i { background: var(--acc-line); }
+.spot > span {
+  position: absolute; left: 50%; top: 10px; transform: translateX(-50%); display: grid; justify-items: center; gap: 1px;
+  white-space: nowrap; pointer-events: none;
+}
+.spot.lab-t > span { top: auto; bottom: 10px; }
+.spot.lab-l > span { left: auto; right: 12px; top: 50%; transform: translateY(-50%); justify-items: end; }
+.spot.lab-r > span { left: 12px; top: 50%; transform: translateY(-50%); justify-items: start; }
+.spot b { font: 600 13px/1.2 var(--sans); padding: 0 3px; background: var(--surface); }
+.spot small { font: 500 10px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); padding: 0 3px; background: var(--surface); }
+.spot.open b { color: var(--ink-3); font-weight: 500; }
+button.spot:hover > i, button.spot:focus-visible > i { transform: scale(1.5); background: var(--acc-line); }
+button.spot:focus-visible { outline: none; }
+button.spot:focus-visible > span b { outline: 2px solid var(--acc-line); outline-offset: 2px; }

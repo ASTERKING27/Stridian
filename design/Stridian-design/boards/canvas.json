@@ -1,0 +1,260 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-30T19:45:00Z"
+  },
+  "title": "Stridian Motion Design",
+  "launch": {
+    "view": "canvas",
+    "page": "haptics"
+  },
+  "pages": [
+    {
+      "id": "designs",
+      "name": "Designs"
+    },
+    {
+      "id": "logos",
+      "name": "Logo options"
+    },
+    {
+      "id": "screens",
+      "name": "App screens"
+    },
+    {
+      "id": "system",
+      "name": "System"
+    },
+    {
+      "id": "haptics",
+      "name": "Haptics"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1360,
+      "h": 900,
+      "title": "Logo · S runner"
+    },
+    "Launch.dc.html": {
+      "x": 1440,
+      "y": 0,
+      "w": 980,
+      "h": 1070,
+      "title": "Launch · sparks to app",
+      "is_interactive": true
+    },
+    "TabSwitch.dc.html": {
+      "x": 0,
+      "y": 1190,
+      "w": 800,
+      "h": 944,
+      "title": "Tab change · line sweep",
+      "is_interactive": true
+    },
+    "TabBar.dc.html": {
+      "x": 880,
+      "y": 1190,
+      "w": 1010,
+      "h": 700,
+      "title": "Glass tab bar",
+      "is_interactive": true
+    },
+    "Themes.dc.html": {
+      "x": 1970,
+      "y": 1190,
+      "w": 1330,
+      "h": 944,
+      "title": "E-ink template · White & Dark"
+    },
+    "Refresh.dc.html": {
+      "x": 2500,
+      "y": 0,
+      "w": 980,
+      "h": 1060,
+      "title": "Pull to refresh",
+      "is_interactive": true
+    },
+    "LogoOptions.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1360,
+      "h": 900,
+      "title": "Logo options · A / B / C",
+      "page": "logos"
+    },
+    "Achievement.dc.html": {
+      "x": 3560,
+      "y": 0,
+      "w": 980,
+      "h": 1060,
+      "title": "Achievement · level reached",
+      "is_interactive": true,
+      "page": "designs"
+    },
+    "Badges.dc.html": {
+      "x": 3380,
+      "y": 1190,
+      "w": 1360,
+      "h": 960,
+      "title": "Badges & focus streak",
+      "is_interactive": true,
+      "page": "designs"
+    },
+    "Results.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1420,
+      "h": 1050,
+      "title": "Results · recommended position",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Upload.dc.html": {
+      "x": 1500,
+      "y": 0,
+      "w": 1864,
+      "h": 1050,
+      "title": "Video · upload & processing",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Pose.dc.html": {
+      "x": 3444,
+      "y": 0,
+      "w": 996,
+      "h": 1050,
+      "title": "Video · pose overlay",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Coach.dc.html": {
+      "x": 0,
+      "y": 1170,
+      "w": 1864,
+      "h": 1050,
+      "title": "Coach · entry, squad, weights, footage",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Onboarding.dc.html": {
+      "x": 1944,
+      "y": 1170,
+      "w": 2780,
+      "h": 1050,
+      "title": "Onboarding · role, sign in, permissions",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "States.dc.html": {
+      "x": 0,
+      "y": 2340,
+      "w": 2322,
+      "h": 1050,
+      "title": "States · empty & loading",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Errors.dc.html": {
+      "x": 2402,
+      "y": 2340,
+      "w": 1406,
+      "h": 1050,
+      "title": "States · errors",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Streaks.dc.html": {
+      "x": 3888,
+      "y": 2340,
+      "w": 1406,
+      "h": 1050,
+      "title": "Focus streak · edge cases",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Feedback.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1840,
+      "h": 1090,
+      "title": "Feedback · buttons & confirmations",
+      "is_interactive": true,
+      "page": "system"
+    },
+    "Motion.dc.html": {
+      "x": 1920,
+      "y": 0,
+      "w": 1800,
+      "h": 1060,
+      "title": "Reduced motion",
+      "is_interactive": true,
+      "page": "system"
+    },
+    "Icons.dc.html": {
+      "x": 0,
+      "y": 1210,
+      "w": 1800,
+      "h": 1150,
+      "title": "Icon set · sports & UI",
+      "page": "system"
+    },
+    "Profile.dc.html": {
+      "x": 0,
+      "y": 3510,
+      "w": 1864,
+      "h": 1050,
+      "title": "Profile & settings",
+      "is_interactive": true,
+      "page": "screens"
+    },
+    "Haptics.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1840,
+      "h": 4600,
+      "title": "Haptics · mid-range & high-end",
+      "is_interactive": true,
+      "page": "haptics"
+    },
+    "HapticsBudget.dc.html": {
+      "x": 1920,
+      "y": 0,
+      "w": 1840,
+      "h": 3150,
+      "title": "Haptics · budget phones",
+      "is_interactive": true,
+      "page": "haptics"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Launch.dc.html",
+    "TabSwitch.dc.html",
+    "TabBar.dc.html",
+    "Themes.dc.html",
+    "Refresh.dc.html",
+    "LogoOptions.dc.html",
+    "Achievement.dc.html",
+    "Badges.dc.html",
+    "Results.dc.html",
+    "Upload.dc.html",
+    "Pose.dc.html",
+    "Coach.dc.html",
+    "Onboarding.dc.html",
+    "States.dc.html",
+    "Errors.dc.html",
+    "Streaks.dc.html",
+    "Feedback.dc.html",
+    "Motion.dc.html",
+    "Icons.dc.html",
+    "Profile.dc.html",
+    "Haptics.dc.html",
+    "HapticsBudget.dc.html"
+  ],
+  "notes": {},
+  "designSystems": []
+}

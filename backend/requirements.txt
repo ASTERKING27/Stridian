@@ -1,0 +1,19 @@
+# Everything for your laptop / the lab iMac: the website's packages, plus the worker's
+# video analysis. Needs Python 3.11 or 3.12 (mediapipe 0.10.14 has no wheels for 3.13+).
+# Check with: python --version
+#
+# mediapipe is pinned to 0.10.14 on purpose - that release still bundles the pose
+# model inside the wheel, so video analysis works offline with no model download.
+# It requires numpy < 2, which is why opencv is pinned to the 4.10 line.
+# mediapipe itself depends on opencv-contrib-python, so only that one is listed
+# (installing opencv-python as well leads to two cv2 packages fighting over the import).
+
+-r ../requirements.txt
+
+uvicorn[standard]==0.53.0
+python-dotenv==1.2.3
+google-auth-oauthlib==1.4.1
+
+numpy==1.26.4
+opencv-contrib-python==4.10.0.84
+mediapipe==0.10.14
