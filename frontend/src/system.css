@@ -96,7 +96,7 @@ h3 { font-size: .95rem; line-height: 1.3; font-weight: 600; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 0; box-shadow: none; padding: 26px; margin-bottom: 16px; }
 .card.flush { padding: 0; }
 .card-head { margin-bottom: 18px; }
-main { max-width: 1280px; padding: 34px clamp(20px, 3.2vw, 44px) 64px; }
+main { --mx: clamp(20px, 3.2vw, 44px); --my: 34px; max-width: 1280px; padding: var(--my) var(--mx) 64px; }
 .pagehead { margin-bottom: 26px; }
 .sitefoot { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); font: 400 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--ink-3); }
 .sitefoot a { color: var(--ink-2); text-decoration: none; }
@@ -224,7 +224,7 @@ button.whoami:hover:not(:disabled) b { text-decoration: underline; text-underlin
 /* ============================== the shell: athlete bar ============================== */
 
 .ashell { min-height: 100%; }
-.ashell main { max-width: 1440px; margin: 0 auto; padding-top: 0; }
+.ashell main { --my: 0px; max-width: 1440px; margin: 0 auto; }
 .abar {
   position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 22px;
   height: 76px; padding: 0 clamp(16px, 3.2vw, 48px);
@@ -338,7 +338,8 @@ dialog.record::backdrop { background: color-mix(in oklab, var(--plane) 82%, tran
 @keyframes blink { 50% { opacity: 0; } }
 
 @media (max-width: 900px) {
-  main { padding: 18px 16px 96px; }
+  main { --mx: 16px; --my: 18px; padding-bottom: 96px; }
+  .ashell main { --my: 0px; }
   .card { padding: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -358,7 +359,7 @@ dialog.record::backdrop { background: color-mix(in oklab, var(--plane) 82%, tran
 /* ============================== the band across a signed-in page ============================== */
 .band {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, min(46%, 560px)); gap: clamp(20px, 4vw, 56px); align-items: center;
-  margin: 0 calc(-1 * clamp(20px, 3.2vw, 44px)) 0; padding: clamp(28px, 4vw, 52px) clamp(20px, 3.2vw, 44px);
+  margin: calc(-1 * var(--my)) calc(-1 * var(--mx)) 0; padding: clamp(28px, 4vw, 52px) var(--mx);
   border-bottom: 1px solid var(--line); overflow: hidden;
   background: repeating-linear-gradient(90deg, transparent 0 72px, color-mix(in oklab, var(--ink) 2.2%, transparent) 72px 144px);
 }
@@ -374,9 +375,81 @@ dialog.record::backdrop { background: color-mix(in oklab, var(--plane) 82%, tran
   font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
 }
 .tagline.wait { background: transparent; color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line-2); }
-.ashell .band { margin-inline: calc(-1 * clamp(20px, 3.2vw, 44px)); }
 @media (max-width: 900px) {
-  .band { grid-template-columns: minmax(0, 1fr); margin-inline: -16px; padding: 26px 16px 24px; }
+  .band { grid-template-columns: minmax(0, 1fr); padding-block: 26px 24px; }
   .band-art { order: 2; max-width: 520px; }
-  .ashell .band { margin-inline: -16px; }
 }
+}
+
+.band-ico { width: 64px; height: 64px; flex: none; display: grid; place-items: center; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink); }
+.band .btn svg { margin-right: 2px; }
+
+/* the stats strip hangs under the band, edge to edge */
+.tiles.strip { margin: 0 calc(-1 * var(--mx)) 24px; border-inline: 0; border-top: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tiles.strip .tile { padding: 22px var(--mx) 24px; }
+.tiles.strip .tile + .tile { padding-left: 26px; }
+@media (max-width: 700px) { .tiles.strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tiles.strip .tile + .tile { padding-left: var(--mx); } }
+
+/* two columns of panels: the main story and what sits beside it */
+.deck { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr); gap: 16px; align-items: start; margin-bottom: 16px; }
+.deck.flip { grid-template-columns: minmax(300px, 1fr) minmax(0, 1.9fr); }
+.deck.one { grid-template-columns: minmax(0, 1fr); }
+.deck > .card, .deck-side > :last-child { margin-bottom: 0; }
+.deck-side { display: grid; gap: 16px; }
+@media (max-width: 1100px) { .deck, .deck.flip { grid-template-columns: minmax(0, 1fr); } }
+.feed .feeditem { flex-wrap: nowrap; align-items: flex-start; }      /* "verify" is also a row utility */
+.feed .feeditem:first-child, .feed .feeditem:nth-child(2) { border-top-color: var(--line); }
+.corner .card-head { margin-bottom: 6px; }
+
+/* the enrolment code: the one filled cell on the page */
+.codecell { background: var(--volt); color: var(--on-acc); padding: 26px; }
+.codecell .k { color: var(--on-acc); }
+.codecell code.enrolcode { display: block; margin: 22px 0 18px; padding: 0; background: none; font: 500 clamp(40px, 4.4vw, 62px)/1 var(--mono); letter-spacing: .06em; }
+.codecell p { margin: 0 0 16px; font-size: .92rem; opacity: .84; }
+.codecell .linkbtn { color: var(--on-acc); text-decoration-color: currentColor; }
+.codecell .linkbtn:disabled { opacity: .5; }
+
+/* the squad on its court */
+.lineup-grid { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; }
+.lineup-court { padding: 18px 8px 26px; min-width: 0; }
+.lineup-list { list-style: none; margin: 0; padding: 0; }
+.lineup-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: .92rem; }
+.lineup-list .lineup-head { grid-template-columns: 1fr auto; padding-top: 0; }
+.lineup-list .mono { font-size: 11px; color: var(--ink-3); }
+.lineup-list small { font-size: .8rem; color: var(--ink-3); text-align: right; }
+.lineup-list li.open > span:nth-child(2) { color: var(--ink-3); }
+.lineup-list .linkbtn { text-align: left; font-size: .92rem; text-decoration-color: transparent; }
+.lineup-list .linkbtn:hover { text-decoration-color: var(--acc-line); }
+@media (max-width: 1000px) { .lineup-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .lineup-court .spot small { display: none; } .lineup-court .spot b { font-size: 11px; } }
+
+/* an athlete's level, across the page */
+.levelstrip { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 2.1fr); margin: 0 calc(-1 * var(--mx)) 24px; border-bottom: 1px solid var(--line); }
+.ls-main { display: flex; align-items: center; gap: 24px; padding: 26px 28px 26px var(--mx); }
+.ls-main .headline { margin: 0 0 12px; font-size: 1.12rem; }
+.ls-main .ring-in small { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.ls-main .ring-in b { font-family: var(--sans); font-stretch: 112%; font-size: 1.4rem; letter-spacing: -.02em; margin: 3px 0; }
+.lvl-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.lvl-tiles li { display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 22px; border-left: 1px solid var(--line); min-width: 0; color: var(--ink-3); }
+.lvl-tiles b { font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1; letter-spacing: -.03em; color: var(--ink-3); }
+.lvl-tiles b small { font-size: .5em; font-weight: 500; letter-spacing: 0; color: var(--ink-3); }
+.lvl-tiles .pips { display: flex; gap: 3px; }
+.lvl-tiles .pips i { width: 10px; height: 10px; box-shadow: inset 0 0 0 1px var(--line-2); }
+.lvl-tiles .pips i.on { background: var(--ink); box-shadow: none; }
+.lvl-tiles em { min-height: 1.3em; font-style: normal; font-size: .84rem; color: var(--ink-2); }
+.lvl-tiles li:is(.reached, .here, .next) b { color: var(--ink); }
+.lvl-tiles li.here { box-shadow: inset 0 3px 0 var(--acc-line); background: linear-gradient(var(--accent-wash), transparent 78%); }
+.lvl-tiles li.here .k, .lvl-tiles li.here em { color: var(--acc-text); }
+.lvl-tiles li.here em { font-weight: 600; }
+.lvl-tiles li.here .pips i.on { background: var(--acc-line); }
+@media (max-width: 1100px) { .levelstrip { grid-template-columns: minmax(0, 1fr); } .lvl-tiles { border-top: 1px solid var(--line); } .lvl-tiles li:first-child { border-left: 0; } }
+@media (max-width: 640px) {
+  .ls-main { flex-direction: column; align-items: flex-start; }
+  .lvl-tiles li { padding: 16px 10px 14px; gap: 8px; }
+  .lvl-tiles .k { font-size: 9px; letter-spacing: .06em; overflow: hidden; text-overflow: ellipsis; }
+  .lvl-tiles .pips i { width: 6px; height: 6px; }
+  .lvl-tiles em { font-size: .7rem; }
+}
+.sayspanel > h2 { margin-bottom: 18px; }
+.sayspanel .says { margin: 0; gap: 0 28px; }
+.sayspanel .say { border: 0; border-top: 1px solid var(--line); background: none; padding: 20px 0; }

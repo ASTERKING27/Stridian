@@ -201,10 +201,14 @@ function Home({ me, achievements, onGo, onRefresh }) {
   return (
     <>
       {error && <div className="banner bad">{error}</div>}
-      {!c && !error && <div className="card brief"><p className="skeleton">Your coach is reading your numbers…</p></div>}
-      {c && <Brief c={c} s={s} busy={busy} onRefresh={refresh} onGo={onGo} />}
-      {c && c.cards.length > 0 && <Says cards={c.cards} onGo={onGo} />}
-      {c?.focus && <Focus f={c.focus} busy={ticking} onTick={tick} onGo={onGo} />}
+      {!c && !error && <p className="skeleton">Your coach is reading your numbers</p>}
+      {c && <Brief c={c} s={s} busy={busy} onRefresh={refresh} />}
+      {c && (c.focus || c.cards.length > 0) && (
+        <div className={`deck${c.focus && c.cards.length > 0 ? ' flip' : ' one'}`}>
+          {c.focus && <Focus f={c.focus} busy={ticking} onTick={tick} onGo={onGo} />}
+          {c.cards.length > 0 && <Says cards={c.cards} onGo={onGo} />}
+        </div>
+      )}
       {c && c.rings.length > 0 && <Rings rings={c.rings} />}
       {c && <Milestones list={c.badges} />}
 
@@ -290,42 +294,56 @@ function Ladder({ levels, standing, level, fresh = false }) {
   )
 }
 
-/* The headline, the level they play at as a ring, and the ladder under it. */
-function Brief({ c, s, busy, onRefresh, onGo }) {
+/* The same five levels as a strip of tiles across the dashboard. */
+function LevelTiles({ levels, standing, level }) {
+  return (
+    <ol className="lvl-tiles" aria-label="How many of your measures reach each level">
+      {levels.map((word, i) => {
+        const st = standing[i]
+        const state = level == null ? '' : i < level ? 'reached' : i === level ? 'here' : i === level + 1 ? 'next' : ''
+        return (
+          <li key={word} className={state} aria-current={i === level ? 'step' : undefined}>
+            <span className="k">{word}</span>
+            <b className="d">{st?.met ?? 0}<small>/{st?.of ?? 0}</small></b>
+            <span className="pips" aria-hidden="true">
+              {Array.from({ length: st?.of ?? 0 }, (_, k) => <i key={k} className={k < st.met ? 'on' : ''} />)}
+            </span>
+            <em>{{ reached: 'Reached', here: 'You play here', next: 'Next level' }[state] ?? ''}</em>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+/* The level they play at as a ring, the coach's headline beside it, and the five levels. */
+function Brief({ c, s, busy, onRefresh }) {
   const lv = c.level
   const next = lv == null || lv >= 4 ? null : lv + 1
   // they reach the next level once more than half their measures (by weight) do
   const progress = lv == null ? 0 : next == null ? 1 : Math.min(1, (c.standing[next]?.share ?? 0) / 0.5)
-  const name = lv == null ? '—' : lv < 0 ? 'Starter' : c.levels[lv]
+  const name = lv == null ? 'Not yet' : lv < 0 ? 'Starter' : c.levels[lv]
   return (
-    <section className="card brief swap">
-      <div className="brief-text">
-        <span className="eyebrow">{c.verified ? 'Your second coach' : 'Getting you set up'}</span>
-        <p className="headline">{c.headline}</p>
-        {c.verified && c.standing.length > 0 && <Ladder levels={c.levels} standing={c.standing} level={lv} />}
-        <div className="verify brief-status">
-          {s.status === 'verified' ? (
-            <>
-              <span className="pill good"><i className="dot" />Verified · {s.verified_position}</span>
-              <button className="btn sm" onClick={() => onGo('My report')}>Open my report</button>
-            </>
-          ) : (
-            <>
-              <span className="pill warn"><i className="dot" />Waiting for your coach</span>
-              <button className="btn sec sm" disabled={busy} onClick={onRefresh}>{busy ? 'Checking…' : 'Check again'}</button>
-            </>
+    <section className="levelstrip swap">
+      <div className="ls-main">
+        {c.verified && (
+          <Ring value={progress} size={132} stroke={9}
+                label={lv == null ? 'Level: not enough results yet'
+                  : `Playing at ${name} level${next != null ? `, ${Math.round(progress * 100)}% of the way to ${c.levels[next]}` : ''}`}>
+            <small>Playing at</small>
+            <b>{name}</b>
+            <small>{lv == null ? 'needs more tests' : next != null ? `${Math.round(progress * 100)}% to ${c.levels[next]}` : 'top of the ladder'}</small>
+          </Ring>
+        )}
+        <div>
+          <span className="eyebrow">{c.verified ? 'Your second coach' : 'Getting you set up'}</span>
+          <p className="headline">{c.headline}</p>
+          {s.status !== 'verified' && (
+            <button className="btn sec sm" disabled={busy} onClick={onRefresh}>{busy ? 'Checking' : 'Check again'}</button>
           )}
         </div>
       </div>
-      {c.verified && (
-        <Ring value={progress} size={150} stroke={11}
-              label={lv == null ? 'Level: not enough results yet'
-                : `Playing at ${name} level${next != null ? `, ${Math.round(progress * 100)}% of the way to ${c.levels[next]}` : ''}`}>
-          <small>Playing at</small>
-          <b>{name}</b>
-          <small>{lv == null ? 'needs more tests' : next != null ? `${Math.round(progress * 100)}% to ${c.levels[next]}` : 'top of the ladder'}</small>
-        </Ring>
-      )}
+      {c.verified && c.standing.length > 0 && <LevelTiles levels={c.levels} standing={c.standing} level={lv} />}
     </section>
   )
 }
@@ -345,7 +363,9 @@ const SAY = {
 
 function Says({ cards, onGo }) {
   return (
-    <section className="says" aria-label="What your coach says">
+    <section className="card sayspanel">
+      <h2>What your coach says</h2>
+      <div className="says">
       {cards.map((card, i) => {
         const [icon, sub, cta] = SAY[card.kind] ?? ['chart', null, 'Open']
         return (
@@ -355,12 +375,13 @@ function Says({ cards, onGo }) {
               <h3>{card.title}</h3>
               <p>{card.body}</p>
               {card.tab && (
-                <button className="linkbtn" onClick={() => onGo(card.tab, sub ?? 'Overview')}>{cta} →</button>
+                <button className="linkbtn" onClick={() => onGo(card.tab, sub ?? 'Overview')}>{cta}</button>
               )}
             </div>
           </article>
         )
       })}
+      </div>
     </section>
   )
 }
@@ -394,13 +415,13 @@ function Focus({ f, busy, onTick, onGo }) {
           </i>
         ))}
         <span>{f.complete ? 'Week done. That’s how it’s done.'
-          : `${n} of ${f.target} sessions · ${left} more this week`}</span>
+          : `${n} of ${f.target} sessions, ${left} more this week`}</span>
       </div>
       <div className="row">
         <button className="btn" disabled={f.doneToday || busy} onClick={onTick}>
-          {f.doneToday ? 'Done for today' : busy ? 'Saving…' : 'I trained this today'}
+          {f.doneToday ? 'Done for today' : busy ? 'Saving' : 'I trained this today'}
         </button>
-        <button className="linkbtn" onClick={() => onGo('My report', 'Training')}>See the drills →</button>
+        <button className="linkbtn" onClick={() => onGo('My report', 'Training')}>See the drills</button>
       </div>
     </section>
   )

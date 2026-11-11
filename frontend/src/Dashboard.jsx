@@ -4,6 +4,8 @@ import { Seg, Switcher } from './fx'
 import Icon from './Icon'
 import { levelWord } from './people'
 import Report from './Report'
+import Court from './site/Court'
+import { SPORTKIT } from './site/sportkit'
 
 export default function Dashboard({ coach, sports, version, onChanged, onCoach, onGo }) {
   const [students, setStudents] = useState(null)
@@ -72,74 +74,70 @@ export default function Dashboard({ coach, sports, version, onChanged, onCoach, 
     if (!students) return <div className="skeleton">Loading your squad…</div>
     return (
     <>
-      <div className="pagehead row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1>{coach.sport} squad</h1>
-          <p className="lede" style={{ marginBottom: 0 }}>
+      <header className="band">
+        <div className="band-copy">
+          <div className="band-title">
+            <i className="band-ico" aria-hidden="true"><Icon path={SPORTKIT[coach.sport]?.icon} name="chart" size={34} /></i>
+            <h1>{coach.sport} squad</h1>
+          </div>
+          <p className="lede">
             Everyone who registered for {coach.sport}. Open a student for their details and
             achievements, position prediction, training priorities and diet plan.
           </p>
-        </div>
-        <div className="row">
-          <button className="btn sec sm" disabled={!!busy} onClick={() => save('sport')}>
-            {busy === 'sport' ? 'Preparing…' : 'Download Excel'}
-          </button>
-          {coach.is_admin && (
-            <button className="btn sec sm" disabled={!!busy} onClick={() => save('all')}>
-              {busy === 'all' ? 'Preparing…' : 'All sports (Excel)'}
+          <div className="row">
+            <button className="btn sec" disabled={!!busy} onClick={() => save('sport')}>
+              <Icon name="download" size={18} />{busy === 'sport' ? 'Preparing' : 'Download Excel'}
             </button>
-          )}
+            {coach.is_admin && (
+              <button className="btn sec" disabled={!!busy} onClick={() => save('all')}>
+                {busy === 'all' ? 'Preparing' : 'All sports (Excel)'}
+              </button>
+            )}
+          </div>
         </div>
+        {SPORTKIT[coach.sport] && <div className="band-art" aria-hidden="true"><Court sport={coach.sport} /></div>}
+      </header>
+
+      <div className="tiles strip">
+        {[['Students', stats.total, `registered for ${coach.sport}`], ['Analysed', stats.analysed, 'have test results'],
+          ['Verified', stats.verified, 'position confirmed'], ['Pending', stats.pending, 'position not confirmed yet']].map(([k, v, note]) => (
+          <div className="tile" key={k}>
+            <div className="k">{k}</div>
+            <div className="v">{v}</div>
+            <div className="s">{note}</div>
+          </div>
+        ))}
       </div>
 
       {(!coach.employee_id || !coach.phone) && <MyDetails coach={coach} onSaved={onCoach} missing />}
 
-      <CoachCorner version={version} onOpen={openReport} onGo={onGo} />
-
-      <div className="tiles">
-        <div className="tile">
-          <div className="k">Students</div>
-          <div className="v">{stats.total}</div>
-          <div className="s">registered for {coach.sport}</div>
-        </div>
-        <div className="tile">
-          <div className="k">Analysed</div>
-          <div className="v">{stats.analysed}</div>
-          <div className="s">have test results</div>
-        </div>
-        <div className="tile">
-          <div className="k">Verified</div>
-          <div className="v">{stats.verified}</div>
-          <div className="s">position confirmed</div>
-        </div>
-        <div className="tile">
-          <div className="k">Pending</div>
-          <div className="v">{stats.pending}</div>
-          <div className="s">position not confirmed yet</div>
+      <div className="deck">
+        <CoachCorner version={version} onOpen={openReport} onGo={onGo} />
+        <div className="deck-side">
+          <EnrolCode sport={coach.sport} />
+          {waiting.length > 0 && (
+            <div className="card flush">
+              <div style={{ padding: '22px 22px 8px' }}>
+                <h2>Achievements to check</h2>
+                <p className="muted">Look at each certificate, then verify it or say what&apos;s wrong.</p>
+              </div>
+              <div className="rows">
+                {waiting.map(a => (
+                  <button key={a.id} className="rowitem" onClick={() => openReport({ id: a.student_id, tab: 'Profile' })}>
+                    <span className="who">
+                      <b>{a.title}</b>
+                      <span>{a.student_name}, {[levelWord(a.level), a.year, a.result].filter(Boolean).join(', ')}</span>
+                    </span>
+                    <span className="pill accent">Check</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {waiting.length > 0 && (
-        <div className="card flush">
-          <div style={{ padding: '16px 18px 4px' }}>
-            <h2>Achievements to check</h2>
-            <p className="muted">Look at each certificate, then verify it or say what&apos;s wrong.</p>
-          </div>
-          <div className="rows">
-            {waiting.map(a => (
-              <button key={a.id} className="rowitem" onClick={() => openReport({ id: a.student_id, tab: 'Profile' })}>
-                <span className="who">
-                  <b>{a.title}</b>
-                  <span>{a.student_name} · {[levelWord(a.level), a.year, a.result].filter(Boolean).join(' · ')}</span>
-                </span>
-                <span className="pill warn"><i className="dot" />Check</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <EnrolCode sport={coach.sport} />
+      <Lineup students={students} sport={coach.sport} onOpen={openReport} />
 
       <div className="card flush">
         <div className="row" style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)', gap: 10 }}>
@@ -208,12 +206,18 @@ function CoachCorner({ version, onOpen, onGo }) {
   useEffect(() => {
     api.coachFeed().then(r => setFeed(r.feed)).catch(() => setFeed([]))
   }, [version])
-  if (!feed?.length) return null
+  if (!feed?.length) {
+    return (
+      <section className="card corner">
+        <h2>Today&apos;s brief</h2>
+        <p className="muted">{feed ? 'Nothing needs you right now. It fills in as results and certificates arrive.' : 'Reading your squad'}</p>
+      </section>
+    )
+  }
   return (
     <section className="card corner swap">
       <div className="card-head">
         <div>
-          <span className="eyebrow">Your second coach</span>
           <h2>Today&apos;s brief</h2>
         </div>
       </div>
@@ -237,12 +241,71 @@ function CoachCorner({ version, onOpen, onGo }) {
                   </div>
                 )}
                 {f.tab === 'coach' && onGo && (
-                  <button className="linkbtn" onClick={() => onGo('coach')}>Open Coach Entry →</button>
+                  <button className="linkbtn" onClick={() => onGo('coach')}>Open Coach Entry</button>
                 )}
               </div>
             </article>
           )
         })}
+      </div>
+    </section>
+  )
+}
+
+/* The squad on its own court: every verified player where their position plays, the open
+   positions left dashed. Each sport names its list its own way. */
+const LINEUP = {
+  Football: ['Starting XI', 'pitch'], Basketball: ['Starting five', 'court'], Volleyball: ['Rotation', 'court'],
+  Cricket: ['Batting order', 'field'], Badminton: ['Playing styles', 'court'], Tennis: ['Playing styles', 'court'],
+  'Kho-Kho': ['Chasing order', 'field'],
+}
+const shortName = name => { const [first, ...rest] = name.trim().split(/\s+/); return rest.length ? `${first} ${rest.at(-1)[0]}.` : first }
+
+function Lineup({ students, sport, onOpen }) {
+  const kit = SPORTKIT[sport]
+  const verified = students.filter(s => s.status === 'verified')
+  const teams = ['M', 'W'].filter(t => verified.some(s => s.category === t))
+  const [team, setTeam] = useState(null)
+  if (!kit) return null
+  const shown = teams.includes(team) ? team : teams[0]
+  const pool = teams.length > 1 ? verified.filter(s => s.category === shown) : verified
+  const taken = new Set()
+  const players = kit.spots.map(spot => {
+    const p = pool.find(s => s.verified_position === spot.pos && !taken.has(s.id))
+    if (p) taken.add(p.id)
+    return p ? { id: p.id, name: shortName(p.name), full: p.name } : null
+  })
+  const held = players.filter(Boolean).length
+  const [title, ground] = LINEUP[sport] ?? ['Line-up', 'court']
+  return (
+    <section className="card lineup">
+      <div className="card-head">
+        <div>
+          <h2>Squad on the {ground}</h2>
+          <p className="muted">
+            {shown ? `${shown === 'W' ? 'Women’s' : 'Men’s'} team. ` : ''}{held} of {kit.spots.length} positions held by verified players.
+          </p>
+        </div>
+        {teams.length > 1 && (
+          <Seg options={[['M', 'Men'], ['W', 'Women']]} value={shown} onChange={setTeam} label="Team" style={{ marginBottom: 0 }} />
+        )}
+      </div>
+      <div className="lineup-grid">
+        <div className="lineup-court" key={shown}>
+          <Court sport={sport} players={players} onSpot={m => m?.id && onOpen({ id: m.id })} />
+        </div>
+        <ol className="lineup-list">
+          <li className="lineup-head"><span className="k">{title}</span><span className="mono">{held} of {kit.spots.length}</span></li>
+          {kit.spots.map((spot, i) => (
+            <li key={i} className={players[i] ? '' : 'open'}>
+              <span className="mono">{String(i + 1).padStart(2, '0')}</span>
+              {players[i]
+                ? <button className="linkbtn" onClick={() => onOpen({ id: players[i].id })}>{players[i].full}</button>
+                : <span>Open</span>}
+              <small>{spot.pos}</small>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   )
@@ -372,16 +435,14 @@ function EnrolCode({ sport }) {
   }
 
   return (
-    <div className="card">
-      <div className="verify">
-        <span>{sport} enrolment code</span>
-        <code className="enrolcode">{code ?? '······'}</code>
-        <button className="linkbtn" onClick={renew} disabled={!code}>Make a new code</button>
-      </div>
-      <p className="muted" style={{ marginTop: 8 }}>
+    <div className="codecell">
+      <span className="k">{sport} enrolment code</span>
+      <code className="enrolcode">{code ?? '······'}</code>
+      <p>
         Give this to your students. They sign in with their university email, pick {sport} and
         type this code to enrol. Make a new one if it has been shared too widely.
       </p>
+      <button className="linkbtn" onClick={renew} disabled={!code}>Make a new code</button>
       {error && <div className="note err">{error}</div>}
     </div>
   )
