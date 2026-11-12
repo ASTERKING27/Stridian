@@ -167,6 +167,9 @@ def held_out_accuracy(sport_name, prior, samples):
 
 def train(sport_name, prior, live, samples):
     """Fit a candidate and decide whether it should replace the live weights."""
+    # a starting point saved before a measure existed says nothing about it. That is not a
+    # coach switching it off (a weight set to 0 is saved as 0), so it starts from the live one
+    prior = {position: {**weights, **prior.get(position, {})} for position, weights in live.items()}
     candidate = fit(sport_name, prior, samples)
     candidate_acc = held_out_accuracy(sport_name, prior, samples)
     # ponytail: the live model is scored in-sample, which flatters it if it was trained

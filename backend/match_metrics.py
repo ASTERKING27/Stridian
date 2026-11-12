@@ -70,6 +70,8 @@ def make_homography(image_points, world_points):
         return None
     src = np.array(image_points, dtype=np.float64)
     dst = np.array(world_points, dtype=np.float64)
+    if not (np.isfinite(src).all() and np.isfinite(dst).all()):
+        return None
     if len({tuple(p) for p in src}) < 4 or len({tuple(p) for p in dst}) < 4:
         return None
 

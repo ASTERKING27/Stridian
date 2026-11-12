@@ -195,6 +195,7 @@ export const api = {
 
   results: id => get(`/api/students/${id}/results`),
   saveResults: (id, body) => send('PUT', `/api/students/${id}/results`, body),
+  deleteResult: (id, resultId) => send('DELETE', `/api/students/${id}/results/${resultId}`),
   history: id => get(`/api/students/${id}/history`),
   analysis: id => get(`/api/students/${id}/analysis`),
 
@@ -309,7 +310,7 @@ export async function download(url) {
 
 // Coaches can type "8:30" or "510" for a time trial; both land as seconds.
 export function parseValue(text) {
-  const s = String(text ?? '').trim()
+  const s = String(text ?? '').trim().replace(',', '.')     // "5,2" is 5.2
   if (!s) return null
   if (s.includes(':')) {
     const [m, sec] = s.split(':').map(Number)
@@ -317,6 +318,29 @@ export function parseValue(text) {
   }
   const n = Number(s)
   return Number.isNaN(n) ? null : n
+}
+
+/* What a results form sends: only the fields the coach changed. The saved numbers are
+   shown in the fields (`shown`), and sending those back would add a copy of each to the
+   student's history — which hides what really changed since the test before. */
+export const changedResults = (tests, values, shown) => Object.fromEntries(
+  tests.filter(t => (values[t.key] ?? '') !== (shown[t.key] ?? '') && parseValue(values[t.key]) !== null)
+    .map(t => [t.key, parseValue(values[t.key])]))
+
+/* What's wrong with a typed test result, if anything: not a number, or outside what the
+   test gives (the sport's poor → elite span, 0.6× below and 1.6× above — the phone app's
+   rule, mobile/src/lib/entry.js). `fix` is the likely slip of the decimal point. */
+export function checkValue(metric, text) {
+  if (!String(text ?? '').trim()) return null
+  const v = parseValue(text)
+  if (v === null || !Number.isFinite(v)) return { text: metric.key === 'timeTrial2km' ? 'Type minutes and seconds, like 8:30.' : 'That isn’t a number.' }
+  const lo = Math.min(metric.poor, metric.elite) * 0.6
+  const hi = Math.max(metric.poor, metric.elite) * 1.6
+  if (v >= lo && v <= hi) return null
+  const show = x => formatValue(Math.round(x * 100) / 100, { key: metric.key })
+  const unit = metric.key === 'timeTrial2km' || metric.unit === 'level' ? '' : ` ${metric.unit}`
+  const fix = [v / 10, v * 10, v / 100, v * 100].find(x => x >= lo && x <= hi)
+  return { text: `Usually between ${show(lo)} and ${show(hi)}${unit}.`, fix: fix == null ? null : show(fix), range: true }
 }
 
 export function formatValue(value, metric) {

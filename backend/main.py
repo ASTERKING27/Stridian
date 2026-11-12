@@ -72,6 +72,7 @@ log = logging.getLogger("stridian")
 ALLOWED_VIDEO_EXT = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v"}
 MAX_VIDEO_BYTES = 200 * 1024 * 1024   # 200 MB — drill clips
 MAX_MATCH_BYTES = 600 * 1024 * 1024   # 600 MB — match footage is longer
+STUDENT_CLIPS_PER_DAY = 10            # clips a student sends themselves: each is Drive space and a job
 WORKER_ONLINE_SECONDS = 120           # the worker says hello at least this often when idle
 
 
@@ -156,7 +157,8 @@ def history_rows(db: Session, student_id: int) -> list:
         select(TestResult).where(TestResult.student_id == student_id)
         .order_by(TestResult.recorded_at.asc(), TestResult.id.asc())
     ).all()
-    return [{"metric_key": r.metric_key, "value": r.value, "recorded_at": r.recorded_at} for r in rows]
+    return [{"id": r.id, "metric_key": r.metric_key, "value": r.value, "recorded_at": r.recorded_at}
+            for r in rows]
 
 
 def latest_results(db: Session, student_id: int) -> dict:
@@ -202,10 +204,16 @@ def score_inputs(db: Session, student: Student, entries: list):
     return card_values, ranges, context
 
 
+def match_values_of(student: Student) -> dict:
+    """A student's footage metrics over every clip they were identified in. A clip counts
+    by how long they were tracked in it, which is kept in the assignment's context."""
+    return match_metrics.aggregate([{**a.metrics, "_context": a.context or {}}
+                                    for a in student.match_assignments if a.metrics])
+
+
 def metric_rows(db: Session, student: Student) -> list:
     """A student's 0-100 score on every metric — what the trainer learns from."""
-    match_values = match_metrics.aggregate(
-        [a.metrics for a in student.match_assignments if a.metrics])
+    match_values = match_values_of(student)
     card_values, ranges, _ = score_inputs(db, student, card_entries(student))
     values = scoring.build_metric_values(
         student.sport, {"height_cm": student.height_cm, "weight_kg": student.weight_kg},
@@ -303,9 +311,7 @@ def build_report(db: Session, student: Student) -> dict:
     profile = {"height_cm": student.height_cm, "weight_kg": student.weight_kg}
     tests = latest_results(db, student.id)
     weights = load_weights(db, student.sport)
-    match_values = match_metrics.aggregate(
-        [a.metrics for a in student.match_assignments if a.metrics]
-    )
+    match_values = match_values_of(student)
     entries = card_entries(student)
     card_values, ranges, card_context = score_inputs(db, student, entries)
 
@@ -1274,8 +1280,8 @@ def put_weights(sport: str, payload: WeightsIn, db: Session = Depends(get_db),
         for metric_key, weight in weights.items():
             if metric_key not in valid:
                 raise HTTPException(400, f"'{metric_key}' is not a metric of {name}")
-            if weight < 0:
-                raise HTTPException(400, "Weights cannot be negative")
+            if not 0 <= weight < float("inf"):      # also turns away NaN, which no report survives
+                raise HTTPException(400, "A weight is a number, 0 or more")
     apply_weights(db, name, payload.weights)
     db.commit()
     record_baseline(db, name, f"Edited by {coach.name}")
@@ -1521,14 +1527,22 @@ def put_results(student_id: int, payload: ResultsIn, db: Session = Depends(get_d
                 coach: Coach = Depends(auth.current_coach)):
     """Each value is appended as a new dated row, so history is kept."""
     student = coach_student(student_id, coach, db)
-    valid = {m["key"] for m in sc.get_sport(student.sport)["metrics"] if m["source"] == "test"}
+    tests = {m["key"]: m for m in sc.get_sport(student.sport)["metrics"] if m["source"] == "test"}
 
     saved = 0
     for metric_key, value in payload.results.items():
         if value is None:
             continue
-        if metric_key not in valid:
+        test = tests.get(metric_key)
+        if test is None:
             raise HTTPException(400, f"'{metric_key}' is not a test of {student.sport}")
+        # a slip of the keyboard, not a result. Deliberately wide: the apps check closer
+        # (and let a coach keep an unusual one), this only stops what no athlete can post.
+        # It turns away NaN and infinity too, which once stored can't be sent in any report
+        top = 10 * max(test["poor"], test["elite"])
+        if not 0 < value <= top:
+            raise HTTPException(400, f"{test['label']}: {value:g} can't be right — it should be "
+                                     f"above 0 and no more than {top:g} {test['unit']}.")
         db.add(TestResult(student_id=student.id, metric_key=metric_key, value=float(value)))
         saved += 1
 
@@ -1542,6 +1556,20 @@ def put_results(student_id: int, payload: ResultsIn, db: Session = Depends(get_d
     db.commit()
     sync_sheet(db, [student])
     return {"saved": saved, "results": latest_results(db, student.id)}
+
+
+@app.delete("/api/students/{student_id}/results/{result_id}", status_code=204)
+def delete_result(student_id: int, result_id: int, db: Session = Depends(get_db),
+                  coach: Coach = Depends(auth.current_coach)):
+    """Take back one recorded measurement — a mistyped one. The value before it, if there
+    is one, is the current value again."""
+    student = coach_student(student_id, coach, db)
+    row = db.get(TestResult, result_id)
+    if row is None or row.student_id != student.id:
+        raise HTTPException(404, "Result not found")
+    db.delete(row)
+    db.commit()
+    sync_sheet(db, [student])
 
 
 @app.get("/api/students/{student_id}/history")
@@ -1780,6 +1808,12 @@ def _my_video(video_id: int, account: StudentAccount, db: Session) -> VideoAnaly
 def student_start_video(payload: UploadIn, db: Session = Depends(get_db),
                         account: StudentAccount = Depends(auth.current_student)):
     student = my_student(account)
+    sent = db.scalar(select(func.count()).select_from(VideoAnalysis).where(
+        VideoAnalysis.student_id == student.id, VideoAnalysis.uploaded_by == "student",
+        VideoAnalysis.created_at > utcnow() - timedelta(days=1))) or 0
+    if sent >= STUDENT_CLIPS_PER_DAY:
+        raise HTTPException(429, f"That's {STUDENT_CLIPS_PER_DAY} clips in a day — send more tomorrow, "
+                                 f"or ask your coach to upload this one.")
     record = VideoAnalysis(student_id=student.id, uploaded_by="student", label=payload.label,
                            **open_upload(payload, MAX_VIDEO_BYTES))
     db.add(record)
