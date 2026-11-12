@@ -757,18 +757,34 @@ for the screens. It talks to the same hosted API as the website (`extra.apiUrl` 
 - **Coaches** — the squad with Today's brief, a student's page (verify, team and shirt
   number, a missed focus session logged late, certificates to check, Excel), Coach Entry
   with checks on every number, the weights, match footage (upload, then tap who's who on
-  the frame), match cards (start one, photograph the paper, have it read) and AI training.
+  the frame), match cards (print one blank, then upload a photo of it filled in — the AI
+  reads it into the card and the phone shows what went in) and AI training.
 - **Admins** — everything a coach has, plus Add Student and switching sport.
+
+The motion is the design's: the launch (sparks, then the S-shaped window opening onto
+the app), the diagonal ink-line sweep between tabs, the level-reached card, badges earned
+and the streak's count rolling — and with Settings → Motion → Reduced, or the phone's own
+reduce-motion setting, each becomes a short fade. Loading blocks shimmer; a server that
+isn't answering gets its own screen that keeps trying by itself.
 
 Pitch calibration and editing a match card's grid stay on the website: both need a big
 screen. Accounts can be deleted from the app (Settings → Delete account, password asked
 again), as the stores require.
 
-**Running it on a phone.** `cd mobile`, `npm install`, then `npx expo start`. Most of the
-app runs in Expo Go; notifications and the finer haptics need a development build:
-`npx eas-cli@latest build --profile development --platform android`.
+**Running it on a phone.** `cd mobile`, `npm install`, then `npx expo start` and open it
+in Expo Go. Everything runs there except notifications and the rich haptics.
+
+**The installable app (APK).** Once: `npx eas-cli@latest login`, then
+`npx eas-cli@latest init`. Then `npx eas-cli@latest build --profile preview --platform android`
+builds it in Expo's cloud and gives a link to install it from (`eas.json` has the
+profiles; `production` makes the Play Store bundle). The installed app also carries
+`mobile/modules/stridian-haptics`, the app's own Android module that plays the design's
+haptic patterns (launch, the tab sweep): a vibration Composition where the phone's motor
+has the primitives, the simpler waveform where it doesn't. Expo Go and iPhone fall back to
+the system haptics.
+
 `npm run check` tests the app's pure logic (pose read-out, result checks, weights,
-match-card reading) with Node 22 or newer.
+match-card reading, the blank card, haptic patterns) with Node 22 or newer.
 
 ### Phone notifications
 
@@ -858,6 +874,7 @@ database: `python backend/test_mobile_api.py`.
 | `PUT` | `/api/videos/{id}/upload` | own sport | one piece, with `X-Chunk-Range: bytes a-b/total` |
 | `GET` | `/api/videos/{id}/thumbnail` | own sport | skeleton keyframe |
 | `GET` | `/api/videos/{id}/pose` | own sport | the pose track behind the phone's overlay |
+| `GET` | `/api/videos` | coach | every drill clip in the sport, newest first, with whose it is (the app's Footage › Drill) |
 | `DELETE` | `/api/videos/{id}` | own sport | remove a drill clip |
 | `POST` `GET` | `/api/matches` | own sport | announce a match upload / list clips |
 | `PUT` | `/api/matches/{id}/upload` | own sport | one piece of the match video |
@@ -979,6 +996,8 @@ backend/
 
 mobile/             the Android / iPhone app (Expo)
   app.json          name, icons, splash, package id, plugins, the API's address
+  eas.json          the cloud builds: preview (an APK to install), production
+  modules/stridian-haptics/  the app's own Android module: the design's haptic patterns
   scripts/check.mjs the app's pure logic, checked with Node
   src/app/          every screen (Expo Router): sign-in, the tabs, pages pushed over them
   src/tabs/         the tab screens — student/, coach/, admin/

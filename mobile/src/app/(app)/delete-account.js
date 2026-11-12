@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import { router } from 'expo-router'
 import { api } from '../../lib/api'
 import { useSession } from '../../lib/session'
 import { haptic } from '../../lib/haptics'
 import { Back, Btn, Field, Note, Screen, T, Title } from '../../ui'
+import { dialog } from '../../ui/Dialog'
 
 // Settings › Delete account — what the app stores require: gone for good, from the phone.
 export default function DeleteAccount() {
@@ -14,7 +15,7 @@ export default function DeleteAccount() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const go = () => Alert.alert('Delete your account?', 'This can’t be undone.', [
+  const go = () => dialog('Delete your account?', 'This can’t be undone.', [
     { text: 'Keep it', style: 'cancel' },
     { text: 'Delete', style: 'destructive', onPress: remove },
   ])

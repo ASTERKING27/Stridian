@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import { Image, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Image, Pressable, RefreshControl, Text, TextInput, View } from 'react-native'
+import KeyboardScroll from './KeyboardScroll'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Line, Path, Pattern, Rect } from 'react-native-svg'
-import Animated, { cubicBezier, Easing, useAnimatedProps, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'
+import Animated, { cancelAnimation, cubicBezier, Easing, FadeIn, FadeInLeft, FadeInRight, useAnimatedProps, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated'
 import { F, useTheme } from '../lib/theme'
 import { haptic } from '../lib/haptics'
 import { initials } from '../lib/api'
@@ -208,22 +209,23 @@ export function Choice({ options, value, onChange, disabled, wrap = true }) {
 
 /* ---------------------------------------------------------------- layout */
 
-// A plain page: safe area, the design's 22 px sides, scrolls, keeps clear of the keyboard.
+// A plain page: safe area, the design's 22 px sides, scrolls. While typing, the page rides
+// up with the keyboard so the field being typed in (and the line under it) stays in view.
 // `onRefresh` adds pull to refresh in the theme's colours.
-export function Screen({ children, bottom = 34, gap = 20, refreshControl, refreshing = false, onRefresh, scrollRef, fill }) {
+export function Screen({ children, bottom = 34, gap = 20, refreshControl, refreshing = false, onRefresh, fill }) {
   const { c } = useTheme()
   const inset = useSafeAreaInsets()
   const pull = refreshControl ?? (onRefresh && (
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.ink} colors={[c.ink]} progressBackgroundColor={c.bg} />
   ))
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" refreshControl={pull || undefined}
-                  contentContainerStyle={{ flexGrow: fill ? 1 : undefined, paddingTop: inset.top + 12,
-                                           paddingBottom: inset.bottom + bottom, paddingHorizontal: 22, gap }}>
-        {children}
-      </ScrollView>
-    </KeyboardAvoidingView>
+    // top: a field stops rising with its label still clear of the status bar
+    <KeyboardScroll top={inset.top + 44} keyboardShouldPersistTaps="handled" refreshControl={pull || undefined}
+                    style={{ flex: 1, backgroundColor: c.bg }}
+                    contentContainerStyle={{ flexGrow: fill ? 1 : undefined, paddingTop: inset.top + 12,
+                                             paddingBottom: inset.bottom + bottom, paddingHorizontal: 22, gap }}>
+      {children}
+    </KeyboardScroll>
   )
 }
 
@@ -307,11 +309,31 @@ export function OfflineBar({ note = 'SHOWING WHAT WAS LOADED', onRetry }) {
   )
 }
 
-// A still placeholder block for loading screens (the shimmer comes with the motion build).
-export function Placeholder({ h = 16, w = '100%', style }) {
-  const { c } = useTheme()
-  return <View style={[{ height: h, width: w, backgroundColor: c.soft }, style]} />
+// A placeholder block for loading screens: a slanted band of light crosses it every 1.6 s
+// (staggered by `delay`). With reduced motion it stays still.
+export function Placeholder({ h = 16, w = '100%', delay = 0, style }) {
+  const { c, reduced } = useTheme()
+  const [bw, setBw] = useState(0)
+  const x = useSharedValue(0)
+  useEffect(() => {
+    if (reduced || !bw) return undefined
+    x.value = withDelay(delay, withRepeat(withTiming(1, { duration: 1600, easing: Easing.linear }), -1, false))
+    return () => cancelAnimation(x)
+  }, [reduced, bw, delay, x])
+  const band = useAnimatedStyle(() => {
+    const p = x.value < 0.7 ? SKW(x.value / 0.7) : 1        // across in 70% of the beat, then a rest
+    return { transform: [{ translateX: -90 + p * (bw + 130) }, { rotate: '40deg' }] }
+  })
+  return (
+    <View onLayout={e => setBw(e.nativeEvent.layout.width)}
+          style={[{ height: h, width: w, backgroundColor: c.soft, overflow: 'hidden' }, style]}>
+      {!reduced && bw > 0 && (
+        <Animated.View style={[{ position: 'absolute', left: 0, top: -h * 0.6 - 30, bottom: -h * 0.6 - 30, width: 46, backgroundColor: c.line }, band]} />
+      )}
+    </View>
+  )
 }
+const SKW = Easing.bezierFn(0.5, 0, 0.2, 1)
 
 // "OR" / "NEW HERE" divider
 export function Divider({ label }) {
@@ -334,30 +356,54 @@ export function Switch({ value, onChange, label }) {
     <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value }}
                onPress={() => { haptic.toggle(!value); onChange(!value) }} hitSlop={8}
                style={{ width: 48, height: 28, borderWidth: 1.5, borderColor: c.ink, backgroundColor: value ? c.ink : 'transparent' }}>
-      <Animated.View style={{ position: 'absolute', top: 3, left: value ? 23 : 3, width: 18, height: 18,
-                              backgroundColor: value ? c.bg : c.ink, transitionProperty: 'left', transitionDuration: 220,
+      <Animated.View style={{ position: 'absolute', top: 3, left: 3, width: 18, height: 18, transform: [{ translateX: value ? 20 : 0 }],
+                              backgroundColor: value ? c.bg : c.ink, transitionProperty: 'transform', transitionDuration: 220,
                               transitionTimingFunction: cubicBezier(0.5, 0, 0.2, 1) }} />
     </Pressable>
   )
 }
 
 // A full-width segmented control in mono caps (Settings › Appearance, Results › radar/bars).
+// The ink block slides to the new choice, its paper-coloured labels moving with it.
 export function Seg({ options, value, onChange }) {
-  const { c } = useTheme()
+  const { c, reduced } = useTheme()
+  const [w, setW] = useState(0)
+  const at = Math.max(0, options.findIndex(([k]) => k === value))
+  const cell = w / options.length
+  const move = { transitionProperty: 'transform', transitionDuration: reduced ? 0 : 320, transitionTimingFunction: SEG_EASE }
+  const label = (text, on) => <Mono size={11} color={on ? c.bg : c.ink} style={{ letterSpacing: 0.88 }}>{text}</Mono>
   return (
-    <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', borderWidth: 1, borderColor: c.ink }}>
-      {options.map(([k, label]) => {
+    <View accessibilityRole="radiogroup" onLayout={e => setW(e.nativeEvent.layout.width - 2)}
+          style={{ flexDirection: 'row', borderWidth: 1, borderColor: c.ink }}>
+      {options.map(([k, text]) => {
         const on = k === value
         return (
           <Pressable key={k} accessibilityRole="radio" accessibilityState={{ checked: on }}
                      onPress={() => { if (!on) { haptic.tick(); onChange(k) } }}
-                     style={{ flex: 1, height: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? c.ink : 'transparent' }}>
-            <Mono size={11} color={on ? c.bg : c.ink} style={{ letterSpacing: 0.88 }}>{label}</Mono>
+                     style={{ flex: 1, height: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: on && !w ? c.ink : 'transparent' }}>
+            {label(text, on && !w)}
           </Pressable>
         )
       })}
+      {w > 0 && (
+        <Animated.View pointerEvents="none"
+                       style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, width: cell, backgroundColor: c.ink, overflow: 'hidden', transform: [{ translateX: at * cell }] }, move]}>
+          <Animated.View style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, width: w, flexDirection: 'row', transform: [{ translateX: -at * cell }] }, move]}>
+            {options.map(([k, text]) => <View key={k} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>{label(text, true)}</View>)}
+          </Animated.View>
+        </Animated.View>
+      )}
     </View>
   )
+}
+const SEG_EASE = cubicBezier(0.5, 0, 0.2, 1)
+
+// What sits under a Seg: when the choice changes, the new content slides in from the side
+// its choice is on (dir 1: from the right; 0: no animation) — or, with reduced motion, fades in.
+export function Swap({ k, dir = 1, style, children }) {
+  const { reduced } = useTheme()
+  const enter = !dir ? undefined : reduced ? FadeIn.duration(150) : (dir > 0 ? FadeInRight : FadeInLeft).duration(280).easing(Easing.out(Easing.cubic))
+  return <Animated.View key={k} entering={enter} style={style}>{children}</Animated.View>
 }
 
 // A row that opens something: label (and a line under it), a chevron.
@@ -485,24 +531,42 @@ export function SearchField({ value, onChangeText, placeholder = 'Name or RA num
 export function Slider({ value, onChange, min = 0, max = 100, step = 1, tick = 5, label }) {
   const { c } = useTheme()
   const [w, setW] = useState(0)
+  const [drag, setDrag] = useState(null)          // the value under the finger, ahead of the screen behind it
+  const shown = drag ?? value
+  const pending = useRef(null)
+  const frame = useRef(0)
+  // the screen hears about it at most once a frame, so a slow page can't make the thumb lag
+  const tell = v => {
+    pending.current = v
+    if (!frame.current) frame.current = requestAnimationFrame(() => { frame.current = 0; onChange(pending.current) })
+  }
   const set = v => {
     const next = Math.min(max, Math.max(min, Math.round(v / step) * step))
-    if (next === value) return
-    if (Math.floor(next / tick) !== Math.floor(value / tick) || next % tick === 0) haptic.tick()
-    onChange(next)
+    if (next === shown) return
+    if (Math.floor(next / tick) !== Math.floor(shown / tick) || next % tick === 0) haptic.tick()
+    setDrag(next)
+    tell(next)
+  }
+  const end = () => {
+    if (frame.current) { cancelAnimationFrame(frame.current); frame.current = 0; onChange(pending.current) }
+    setDrag(null)
   }
   const at = x => (w ? set(min + (x / w) * (max - min)) : null)
-  const p = ((value - min) / (max - min)) * 100
+  const p = ((shown - min) / (max - min)) * 100
   return (
+    // once a finger is on it, it keeps the gesture: drifting up or down doesn't scroll the page
     <View onLayout={e => setW(e.nativeEvent.layout.width)}
           onStartShouldSetResponder={() => true} onMoveShouldSetResponder={() => true}
           onResponderTerminationRequest={() => false}
-          onResponderGrant={e => at(e.nativeEvent.locationX)} onResponderMove={e => at(e.nativeEvent.locationX)}
+          onResponderGrant={e => { at(e.nativeEvent.locationX); return true }}
+          onResponderMove={e => at(e.nativeEvent.locationX)}
+          onResponderRelease={end} onResponderTerminate={end}
           accessible accessibilityRole="adjustable" accessibilityLabel={label}
           accessibilityValue={{ min, max, now: value, text: `${value}%` }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-          onAccessibilityAction={e => set(value + (e.nativeEvent.actionName === 'increment' ? tick : -tick))}
-          style={{ height: 28, justifyContent: 'center' }}>
+          onAccessibilityAction={e => onChange(Math.min(max, Math.max(min, value + (e.nativeEvent.actionName === 'increment' ? tick : -tick))))}
+          hitSlop={{ top: 8, bottom: 8 }}
+          style={{ height: 36, justifyContent: 'center' }}>
       <View pointerEvents="none" style={{ height: 4, backgroundColor: c.line }}>
         <View style={{ height: 4, width: `${p}%`, backgroundColor: c.ink }} />
       </View>

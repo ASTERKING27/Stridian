@@ -160,6 +160,7 @@ export const api = {
   verify: (id, position) => send('POST', `/api/students/${id}/verify`, { position }),
   unverify: id => send('DELETE', `/api/students/${id}/verify`),
   videos: id => get(`/api/students/${id}/videos`),
+  squadVideos: () => get('/api/videos'),          // every drill clip in the sport, with whose it is
   startVideo: (id, body) => send('POST', `/api/students/${id}/videos`, body),
   videoPose: videoId => get(`/api/videos/${videoId}/pose`),
   logFocus: (id, day) => send('POST', `/api/students/${id}/focus/log`, { day }),

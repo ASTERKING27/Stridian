@@ -67,3 +67,13 @@ export function ThemeProvider({ children }) {
 }
 
 export const useTheme = () => useContext(ThemeContext)
+
+// The theme turned inside out (the level card, dialogs): inside, paper is the page's ink
+export function Inverted({ children }) {
+  const t = useTheme()
+  const value = useMemo(() => {
+    const name = t.name === 'dark' ? 'white' : 'dark'
+    return { ...t, name, c: { ...PALETTES[name], bg: t.c.ink, ink: t.c.bg } }
+  }, [t])
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+}

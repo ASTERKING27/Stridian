@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stridian streak states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#55544F}a:hover{color:#121211}
+.t-white{--bg:#F3F2EE;--ink:#121211;--ink2:#55544F;--line:rgba(18,18,17,.14);--soft:rgba(18,18,17,.07);--glass:rgba(246,245,241,.56);--glassEdge:rgba(18,18,17,.10);--hi:rgba(255,255,255,.8);--shadow:0 14px 34px rgba(18,18,17,.16)}
+.t-dark{--bg:#0F0F0E;--ink:#EEEDE8;--ink2:#9D9C96;--line:rgba(238,237,232,.16);--soft:rgba(238,237,232,.08);--glass:rgba(34,34,32,.5);--glassEdge:rgba(238,237,232,.12);--hi:rgba(255,255,255,.09);--shadow:0 14px 34px rgba(0,0,0,.55)}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.wm{font-family:Archivo,'Helvetica Neue',sans-serif;font-stretch:125%;font-weight:620;letter-spacing:.2em}
+.eyebrow{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;color:var(--ink2)}
+.h1{margin:0;font-size:30px;line-height:1.06;font-weight:600;font-stretch:112%;letter-spacing:-.015em;text-wrap:balance}
+.phone{width:410px;height:864px;box-sizing:border-box;padding:10px;border-radius:58px;background:#0A0A09;box-shadow:0 30px 60px rgba(18,18,17,.18);flex-shrink:0}
+.scr{position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Archivo,'Helvetica Neue',sans-serif}
+.pad{position:absolute;inset:0;padding:56px 22px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.cap{font:500 11px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;color:#55544F}
+.back{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;height:44px;font:500 14px/1 Archivo,sans-serif;cursor:pointer;color:var(--ink);align-self:flex-start}
+.btn{all:unset;box-sizing:border-box;height:52px;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ink);color:var(--bg);font:600 15px/1 Archivo,'Helvetica Neue',sans-serif;letter-spacing:.01em;cursor:pointer;text-align:center}
+.btn2{all:unset;box-sizing:border-box;height:52px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--ink);color:var(--ink);font:600 15px/1 Archivo,'Helvetica Neue',sans-serif;cursor:pointer;text-align:center}
+.btn3{all:unset;box-sizing:border-box;height:44px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font:500 14px/1 Archivo,sans-serif;cursor:pointer}
+.btn:focus-visible,.btn2:focus-visible,.btn3:focus-visible,.back:focus-visible,.opt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.fld{font:400 16px/1.2 Archivo,'Helvetica Neue',sans-serif;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:0 0 9px;width:100%;box-sizing:border-box;outline:none}
+.fld::placeholder{color:var(--ink2)}
+.fld:focus{border-bottom-width:2px;padding-bottom:8px}
+.fld.bad{border-bottom:2px dashed var(--ink);padding-bottom:8px}
+.hatch{background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 9px)}
+.opt{all:unset;box-sizing:border-box;cursor:pointer}
+.tab{all:unset;box-sizing:border-box;position:absolute;top:3px;height:52px;display:flex;align-items:center;justify-content:center;font:600 12.5px/1 Archivo,'Helvetica Neue',sans-serif;border-radius:26px}
+.stripes{background:repeating-linear-gradient(135deg,var(--ink) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:stripes .8s linear infinite}
+@keyframes stripes{to{background-position:17px 0}}
+.blink{animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.ctl{font:500 12px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.06em;height:40px;padding:0 14px;border:1px solid #121211;background:transparent;color:#121211;border-radius:20px;cursor:pointer}
+.ctl:hover{background:rgba(18,18,17,.06)}
+.ctl.on{background:#121211;color:#F3F2EE}
+
+.sweep{position:absolute;border-radius:6px;background:var(--ink);transform:rotate(140deg)}
+.sk{position:relative;overflow:hidden;background:var(--soft)}
+.sk::after{content:'';position:absolute;top:-60%;bottom:-60%;width:46px;left:-80px;background:var(--line);transform:rotate(40deg);animation:skw 1.6s cubic-bezier(.5,0,.2,1) infinite;animation-delay:inherit}
+@keyframes skw{0%{left:-90px}70%,100%{left:calc(100% + 40px)}}
+.lap{animation:lap 1s linear infinite}
+@keyframes lap{to{stroke-dashoffset:-100}}
+.dim{opacity:.4;pointer-events:none}
+.pulse{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+</style>
+</helmet>
+<div style="width: 1406px; height: 1050px; box-sizing: border-box; padding: 34px 40px 40px; background: #E6E5E0; color: #121211; font-family: Archivo, 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; align-items: center; gap: 8px">
+    <span class="mono" style="font-size: 12px; letter-spacing: .12em; color: #55544F">FOCUS STREAK · EDGE CASES</span>
+    <span style="flex-grow: 1"></span>
+    
+    <sc-for list="{{themes}}" as="th" hint-placeholder-count="2">
+      <button class="ctl {{th.cls}}" onClick="{{th.pick}}" aria-pressed="{{th.on}}">{{th.label}}</button>
+    </sc-for>
+  </div>
+  <div class="t-{{theme}}" style="display: flex; gap: 48px">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="cap">09 · STREAK · ABOUT TO BREAK</span>
+      <div class="phone"><div class="scr">
+        <div class="pad" style="gap: 20px">
+          <button class="back" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Dashboard</button>
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span class="eyebrow">FOCUS STREAK · 30M SPRINT</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; color: var(--ink2)">{{a.when}}</span></div>
+          <div style="position: relative; display: flex; align-items: flex-end; gap: 14px">
+            <div style="height: 110px; overflow: hidden">
+              <div style="display: flex; flex-direction: column; transform: translateY({{a.numY}}px)">
+                <span style="font-size: 110px; line-height: 110px; font-weight: 700; font-stretch: 125%; color: {{a.numC}}">{{a.n1}}</span>
+                <span style="font-size: 110px; line-height: 110px; font-weight: 700; font-stretch: 125%">{{a.n2}}</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px">
+              <span style="font-size: 17px; font-weight: 600; font-stretch: 112%">{{a.unit}}</span>
+              <span class="mono" style="font-size: 10.5px; color: var(--ink2)">{{a.best}}</span>
+            </div>
+            <sc-for list="{{a.sparks}}" as="s" hint-placeholder-count="0"><span style="position: absolute; left: 0; top: 0; height: 2px; background: var(--ink); clip-path: polygon(0 50%,70% 0,100% 50%,70% 100%); width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for>
+          </div>
+          <div role="status" style="padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; background: {{a.bannerBg}}; color: {{a.bannerFg}}; border: 1px {{a.bannerBs}} var(--ink)">
+            <span class="{{a.dotCls}}" style="width: 10px; height: 10px; margin-top: 5px; flex-shrink: 0; background: currentColor; transform: rotate(45deg)"></span>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 600">{{a.title}}</span><span style="font-size: 13.5px; line-height: 1.45; opacity: .85">{{a.body}}</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span class="eyebrow">LAST 8 WEEKS</span>
+            <div style="display: flex; gap: 8px">
+              <sc-for list="{{a.weeks}}" as="w" hint-placeholder-count="8">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: center">
+                  <div class="{{w.cls}}" style="position: relative; width: 100%; height: 60px; clip-path: polygon(38% 0, 100% 0, 62% 100%, 0 100%); background: var(--line)">
+                    <div style="position: absolute; inset: 0; background: var(--ink); transform: translateY({{w.fy}}%)"></div>
+                  </div>
+                  <span class="mono" style="font-size: 9.5px; letter-spacing: .04em; color: {{w.lc}}">{{w.label}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span class="eyebrow">{{a.sessHead}}</span>
+            <div style="display: flex; gap: 10px">
+              <sc-for list="{{a.sessions}}" as="se" hint-placeholder-count="3">
+                <div style="flex: 1; height: 50px; box-sizing: border-box; border: 1px {{se.bs}} var(--ink); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden">
+                  <div style="position: absolute; inset: 0; background: var(--ink); transform: scale({{se.s}})"></div>
+                  <span class="mono" style="position: relative; font-size: 11px; letter-spacing: .12em; color: {{se.c}}">{{se.day}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <button class="btn" style="margin-top: 4px">{{a.cta}}</button>
+        </div>
+      </div></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="cap">10 · STREAK · BROKEN</span>
+      <div class="phone"><div class="scr">
+        <div class="pad" style="gap: 20px">
+          <button class="back" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Dashboard</button>
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span class="eyebrow">FOCUS STREAK · 30M SPRINT</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; color: var(--ink2)">{{b.when}}</span></div>
+          <div style="position: relative; display: flex; align-items: flex-end; gap: 14px">
+            <div style="height: 110px; overflow: hidden">
+              <div style="display: flex; flex-direction: column; transform: translateY({{b.numY}}px)">
+                <span style="font-size: 110px; line-height: 110px; font-weight: 700; font-stretch: 125%; color: {{b.numC}}">{{b.n1}}</span>
+                <span style="font-size: 110px; line-height: 110px; font-weight: 700; font-stretch: 125%">{{b.n2}}</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px">
+              <span style="font-size: 17px; font-weight: 600; font-stretch: 112%">{{b.unit}}</span>
+              <span class="mono" style="font-size: 10.5px; color: var(--ink2)">{{b.best}}</span>
+            </div>
+            <sc-for list="{{b.sparks}}" as="s" hint-placeholder-count="0"><span style="position: absolute; left: 0; top: 0; height: 2px; background: var(--ink); clip-path: polygon(0 50%,70% 0,100% 50%,70% 100%); width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for>
+          </div>
+          <div role="status" style="padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; background: {{b.bannerBg}}; color: {{b.bannerFg}}; border: 1px {{b.bannerBs}} var(--ink)">
+            <span class="{{b.dotCls}}" style="width: 10px; height: 10px; margin-top: 5px; flex-shrink: 0; background: currentColor; transform: rotate(45deg)"></span>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 600">{{b.title}}</span><span style="font-size: 13.5px; line-height: 1.45; opacity: .85">{{b.body}}</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span class="eyebrow">LAST 8 WEEKS</span>
+            <div style="display: flex; gap: 8px">
+              <sc-for list="{{b.weeks}}" as="w" hint-placeholder-count="8">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: center">
+                  <div class="{{w.cls}}" style="position: relative; width: 100%; height: 60px; clip-path: polygon(38% 0, 100% 0, 62% 100%, 0 100%); background: var(--line)">
+                    <div style="position: absolute; inset: 0; background: var(--ink); transform: translateY({{w.fy}}%)"></div>
+                  </div>
+                  <span class="mono" style="font-size: 9.5px; letter-spacing: .04em; color: {{w.lc}}">{{w.label}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span class="eyebrow">{{b.sessHead}}</span>
+            <div style="display: flex; gap: 10px">
+              <sc-for list="{{b.sessions}}" as="se" hint-placeholder-count="3">
+                <div style="flex: 1; height: 50px; box-sizing: border-box; border: 1px {{se.bs}} var(--ink); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden">
+                  <div style="position: absolute; inset: 0; background: var(--ink); transform: scale({{se.s}})"></div>
+                  <span class="mono" style="position: relative; font-size: 11px; letter-spacing: .12em; color: {{se.c}}">{{se.day}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <button class="btn" style="margin-top: 4px">{{b.cta}}</button>
+        </div>
+      </div></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="cap">11 · STREAK · RESTORED</span>
+      <div class="phone"><div class="scr">
+        <div class="pad" style="gap: 20px">
+          <button class="back" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Dashboard</button>
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span class="eyebrow">FOCUS STREAK · 30M SPRINT</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; color: var(--ink2)">{{c.when}}</span></div>
+          <div style="position: relative; display: flex; align-items: flex-end; gap: 14px">
+            <div style="height: 110px; overflow: hidden">
+              <div style="display: flex; flex-direction: column; transform: translateY({{c.numY}}px)">
+                <span style="font-size: 110px; line-height: 110px; font-weight: 700; font-stretch: 125%; color: {{c.numC}}">{{c.n1}}</span>
+                <span style="font-size: 110px; line-height: 110px; font-weight: 700; font-stretch: 125%">{{c.n2}}</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px">
+              <span style="font-size: 17px; font-weight: 600; font-stretch: 112%">{{c.unit}}</span>
+              <span class="mono" style="font-size: 10.5px; color: var(--ink2)">{{c.best}}</span>
+            </div>
+            <sc-for list="{{c.sparks}}" as="s" hint-placeholder-count="0"><span style="position: absolute; left: 0; top: 0; height: 2px; background: var(--ink); clip-path: polygon(0 50%,70% 0,100% 50%,70% 100%); width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for>
+          </div>
+          <div role="status" style="padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; background: {{c.bannerBg}}; color: {{c.bannerFg}}; border: 1px {{c.bannerBs}} var(--ink)">
+            <span class="{{c.dotCls}}" style="width: 10px; height: 10px; margin-top: 5px; flex-shrink: 0; background: currentColor; transform: rotate(45deg)"></span>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 600">{{c.title}}</span><span style="font-size: 13.5px; line-height: 1.45; opacity: .85">{{c.body}}</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span class="eyebrow">LAST 8 WEEKS</span>
+            <div style="display: flex; gap: 8px">
+              <sc-for list="{{c.weeks}}" as="w" hint-placeholder-count="8">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: center">
+                  <div class="{{w.cls}}" style="position: relative; width: 100%; height: 60px; clip-path: polygon(38% 0, 100% 0, 62% 100%, 0 100%); background: var(--line)">
+                    <div style="position: absolute; inset: 0; background: var(--ink); transform: translateY({{w.fy}}%)"></div>
+                  </div>
+                  <span class="mono" style="font-size: 9.5px; letter-spacing: .04em; color: {{w.lc}}">{{w.label}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span class="eyebrow">{{c.sessHead}}</span>
+            <div style="display: flex; gap: 10px">
+              <sc-for list="{{c.sessions}}" as="se" hint-placeholder-count="3">
+                <div style="flex: 1; height: 50px; box-sizing: border-box; border: 1px {{se.bs}} var(--ink); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden">
+                  <div style="position: absolute; inset: 0; background: var(--ink); transform: scale({{se.s}})"></div>
+                  <span class="mono" style="position: relative; font-size: 11px; letter-spacing: .12em; color: {{se.c}}">{{se.day}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <button class="btn" style="margin-top: 4px">{{c.cta}}</button>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1406,"height":1050}}'>
+const LOGO_D = 'M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z';
+
+const cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const eIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eOut = t => 1 - Math.pow(1 - t, 3);
+const r2 = v => Math.round(v * 100) / 100;
+function burst(u, cx, cy, n, dist) {
+  if (u < 0 || u > 1) return [];
+  return Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2 + (i % 2) * .2, dd = (dist + (i % 3) * 8) * eOut(u), w = (8 + (i % 4) * 3) * (1 - .5 * u);
+    return { w: r2(w), o: r2(1 - u), x: r2(cx + Math.cos(a) * dd - w / 2), y: r2(cy + Math.sin(a) * dd - 1), r: r2(a * 180 / Math.PI) }; });
+}
+
+const LABELS = ['W35', 'W36', 'W37', 'W38', 'W39', 'W40', 'W41', 'W42'];
+const wk = (fills, cur, curCls) => LABELS.map((label, i) => ({ label, fy: r2(100 * (1 - fills[i])), cls: i === 7 ? curCls : '', lc: i === 7 ? 'var(--ink)' : 'var(--ink2)' }));
+const sess = (vals, bs) => ['MON', 'WED', 'FRI'].map((day, i) => ({ day, s: r2(vals[i]), c: vals[i] > .5 ? 'var(--bg)' : 'var(--ink)', bs: bs[i] }));
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { theme: 'white', t: 0 }; this.raf = null; this.t0 = 0; }
+  componentDidMount() { this.t0 = performance.now(); const step = () => { this.setState({ t: performance.now() - this.t0 }); this.raf = requestAnimationFrame(step); }; this.raf = requestAnimationFrame(step); }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); }
+  renderVals() {
+    const t = this.state.t % 6000;
+    // about to break: 4 weeks going, this week 1 of 3 done, week ends Sunday
+    const a = { when: 'SATURDAY', best: 'BEST · 4 WEEKS', n1: '4', n2: '4', numY: 0, numC: 'var(--ink)', unit: 'weeks in a row', sparks: [],
+      title: 'Ends Sunday night', body: 'Two sessions still to do this week. Miss them and the streak starts again from zero.',
+      bannerBg: 'var(--ink)', bannerFg: 'var(--bg)', bannerBs: 'solid', dotCls: 'pulse',
+      weeks: wk([0, 0, 0, 1, 1, 1, 1, .33], 7, 'pulse'), sessHead: 'THIS WEEK · 1 OF 3 · 1 DAY LEFT',
+      sessions: sess([1, 0, 0], ['solid', 'dashed', 'dashed']), cta: 'Log today’s session' };
+    // broken: the count drops 4 → 0 once, the missed week stays open
+    const drop = eIO(cl((t - 700) / 700));
+    const b = { when: 'MONDAY', best: 'BEST · 4 WEEKS', n1: '4', n2: '0', numY: r2(-110 * drop), numC: 'var(--ink2)', unit: 'weeks in a row', sparks: [],
+      title: 'The streak reset', body: 'Last week ended at 1 of 3. Your best stays at 4 weeks — and badges you earned are yours to keep.',
+      bannerBg: 'transparent', bannerFg: 'var(--ink)', bannerBs: 'dashed', dotCls: '',
+      weeks: wk([0, 0, 1, 1, 1, 1, .33, 0], 7, ''), sessHead: 'NEW WEEK · 0 OF 3',
+      sessions: sess([0, 0, 0], ['solid', 'solid', 'solid']), cta: 'Start a new streak' };
+    // restored: the coach logs the missed session late, the gap fills and the count rolls back 0 → 5
+    const fill = eIO(cl((t - 600) / 700)), roll = eIO(cl((t - 1200) / 700));
+    const c = { when: 'TUESDAY', best: roll > .5 ? 'NEW BEST · 5 WEEKS' : 'BEST · 4 WEEKS', n1: '0', n2: '5', numY: r2(-110 * roll), numC: 'var(--ink2)', unit: 'weeks — back on', sparks: burst((t - 1800) / 560, 60, 55, 12, 64),
+      title: 'Streak restored', body: 'Your coach logged Friday’s session late, so last week counts. You’re at 5 weeks — a new best.',
+      bannerBg: 'var(--ink)', bannerFg: 'var(--bg)', bannerBs: 'solid', dotCls: '',
+      weeks: wk([0, 0, 1, 1, 1, 1, .33 + .67 * fill, 0], 7, ''), sessHead: 'LAST WEEK · 3 OF 3 · FRI ADDED BY COACH',
+      sessions: sess([1, 1, fill], ['solid', 'solid', 'dashed']), cta: 'Keep it going' };
+    c.weeks[6].lc = 'var(--ink)';
+    return { theme: this.state.theme, a, b, c, themes: [['white', 'White'], ['dark', 'Dark']].map(([k, label]) => ({ label, on: this.state.theme === k, cls: this.state.theme === k ? 'on' : '', pick: () => this.setState({ theme: k }) })) };
+  }
+}
+</script>
+</body>
+</html>

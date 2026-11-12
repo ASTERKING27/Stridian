@@ -5,8 +5,9 @@ import { api, shortUnits } from '../../lib/api'
 import { useBackInView, useData } from '../../lib/useData'
 import { contextLine, useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
-import { Btn, Eyebrow, H1, I, IconBtn, Mono, Note, OfflineBar, PersonRow, Placeholder, Screen, SearchField, Seg, T, Tag, Top } from '../../ui'
+import { Btn, Eyebrow, H1, I, Mono, Note, OfflineBar, PersonRow, Placeholder, Screen, SearchField, Seg, T, Tag, Top } from '../../ui'
 import { CertRow } from '../student/Achievements'
+import { LoadError } from '../../ui/States'
 
 // "RA…0214 · WINGER · NO RESULTS" — a squad row's second line
 export function metaOf(s) {
@@ -53,17 +54,14 @@ export default function Squad({ go, active }) {
       <Screen bottom={110} gap={18} refreshing={squad.refreshing} onRefresh={() => { squad.refresh(); feed.reload(); certs.reload() }}>
         <Top context={contextLine(s)} onContext={s.isAdmin ? () => router.push('/sport') : undefined} />
         {offline && <View style={{ height: 40 }} />}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <View style={{ gap: 8 }}>
-            <Eyebrow>{list ? `${list.length} PLAYER${list.length === 1 ? '' : 'S'}` : 'YOUR SQUAD'}</Eyebrow>
-            <H1>Squad</H1>
-          </View>
-          <IconBtn icon={I.profile} label="Your details" onPress={() => router.push('/coach-details')} style={{ alignItems: 'flex-end' }} />
+        <View style={{ gap: 8 }}>
+          <Eyebrow>{list ? `${list.length} PLAYER${list.length === 1 ? '' : 'S'}` : 'YOUR SQUAD'}</Eyebrow>
+          <H1>Squad</H1>
         </View>
-        {squad.error && !offline && <Note>{squad.error.message}</Note>}
+        <LoadError error={squad.error} onRetry={squad.refresh} hasData={!!squad.data} />
 
         {missing && (
-          <Pressable onPress={() => router.push('/coach-details')} accessibilityRole="button">
+          <Pressable onPress={() => go('profile')} accessibilityRole="button">
             <Note tone="info">Add your employee ID and mobile — the sports directorate keeps them for every coach.</Note>
           </Pressable>
         )}
@@ -90,7 +88,7 @@ export default function Squad({ go, active }) {
         </View>
 
         {!list && !squad.error && (
-          <View style={{ gap: 12 }}>{[0, 1, 2, 3, 4].map(i => <Placeholder key={i} h={50} />)}</View>
+          <View style={{ gap: 12 }}>{[0, 1, 2, 3, 4].map(i => <Placeholder key={i} h={50} delay={i * 60} />)}</View>
         )}
         {list && visible.length === 0 && (
           <View style={{ gap: 10, paddingVertical: 8 }}>
@@ -100,7 +98,7 @@ export default function Squad({ go, active }) {
                 ? `Students enrol themselves from the app or the website with their university email and your ${sport} enrolment code.`
                 : 'Try a different name or filter.'}
             </T>
-            {list.length === 0 && <Btn kind="secondary" small label="Show the enrolment code" onPress={() => router.push('/coach-details')} />}
+            {list.length === 0 && <Btn kind="secondary" small label="Show the enrolment code" onPress={() => go('profile')} />}
           </View>
         )}
         {visible.length > 0 && (

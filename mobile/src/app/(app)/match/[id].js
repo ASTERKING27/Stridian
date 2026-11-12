@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, Image, Pressable, View } from 'react-native'
+import { Image, Pressable, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { api, authedSource } from '../../../lib/api'
 import { useData } from '../../../lib/useData'
@@ -8,6 +8,8 @@ import { haptic } from '../../../lib/haptics'
 import { Back, Btn, Eyebrow, H1, Lap, Mono, Note, Screen, SearchField, T } from '../../../ui'
 import { toast } from '../../../ui/Toast'
 import { inFlight } from '../../../tabs/coach/Footage'
+import { LoadError } from '../../../ui/States'
+import { dialog } from '../../../ui/Dialog'
 
 const PANEL = '#151514'
 const CHALK = '#EEEDE8'
@@ -45,7 +47,7 @@ export default function Match() {
     return (
       <Screen>
         <Back label="Match footage" onPress={() => router.back()} />
-        {clip.error ? <Note>{clip.error.message}</Note> : <Lap size={28} />}
+        {clip.error ? <LoadError error={clip.error} onRetry={clip.reload} /> : <Lap size={28} />}
       </Screen>
     )
   }
@@ -70,7 +72,7 @@ export default function Match() {
   const assign = () => run('assign', () => api.assignTrack(m.id, track, who),
     { title: `Track #${track} is ${picked.name}`, sub: 'THEIR MOVEMENT JOINS THEIR REPORT' }).then(() => setWho(null))
   const clear = () => run('clear', () => api.unassignTrack(m.id, track), { title: `Track #${track} cleared`, sub: named.name.toUpperCase() })
-  const remove = () => Alert.alert('Delete this clip?', 'Every identification made on it goes too — and the movement it added to those reports.', [
+  const remove = () => dialog('Delete this clip?', 'Every identification made on it goes too — and the movement it added to those reports.', [
     { text: 'Keep', style: 'cancel' },
     { text: 'Delete', style: 'destructive', onPress: async () => {
       try { await api.deleteMatch(m.id); haptic.success(); router.back() } catch (err) { setError(err.message) }

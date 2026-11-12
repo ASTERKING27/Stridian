@@ -3,10 +3,17 @@ import { View } from 'react-native'
 import { router } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
 import Svg, { Polygon } from 'react-native-svg'
+import Animated, { Easing, useAnimatedProps, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { api } from '../../lib/api'
 import { useTheme } from '../../lib/theme'
-import { haptic } from '../../lib/haptics'
+import { haptic, play } from '../../lib/haptics'
 import { Back, Btn, Eyebrow, Lap, Mono, Note, Screen, T } from '../../ui'
+import { cl, eIO } from '../../ui/Sweep'
+import Burst from '../../ui/Burst'
+
+const AnimatedPolygon = Animated.createAnimatedComponent(Polygon)
+// weeks in a row ending with week i (the history's own count)
+const runTo = (hist, target, i) => { let n = 0; while (i >= 0 && hist[i].sessions >= target) { n++; i-- } return n }
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 const WORDS = ['No', 'One', 'Two', 'Three']
@@ -17,10 +24,19 @@ const dayOf = iso => DAYS[new Date(`${iso}T00:00:00Z`).getUTCDay()]
 /* Streaks board: the count, the last eight weeks, this week's sessions — and the three
    edge cases: about to break, broken, restored by the coach. */
 export default function Streak() {
-  const { c } = useTheme()
+  const { c, reduced } = useTheme()
   const [f, setF] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  // a change being shown (Streaks board): { from, to, roll (ms the count rolls at), week, fillFrom, fillAt, sparks }
+  const [moving, setMoving] = useState(null)
+  const t = useSharedValue(0)
+  const run = m => {
+    if (reduced) return
+    setMoving(m)
+    t.value = 0
+    t.value = withTiming(2600, { duration: 2600, easing: Easing.linear })
+  }
 
   useEffect(() => { api.studentCoach().then(r => setF(r.focus), setError) }, [])
 
@@ -47,9 +63,34 @@ export default function Streak() {
     }).catch(() => {})
   }, [state]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // restored or broken: shown moving once, the first time it's seen
+  useEffect(() => {
+    if (state !== 'restored' && state !== 'broken') return
+    const key = `${state}:${hist.at(-1)?.week}`
+    SecureStore.getItemAsync('stridian.streakShown').catch(() => null).then(v => {
+      if (v === key) return
+      SecureStore.setItemAsync('stridian.streakShown', key).catch(() => {})
+      const w = hist.length - 2
+      if (state === 'restored') {
+        play('streakUp')
+        run({ from: 0, to: f.streak, roll: 1200, week: w, fillFrom: Math.max(0, hist[w].sessions - 1) / f.target, fillAt: 600, sparks: 1800 })
+      } else {
+        play('streakDown')
+        run({ from: runTo(hist, f.target, hist.length - 3), to: 0, roll: 700 })
+      }
+    }).catch(() => {})
+  }, [state])
+
   async function tick() {
     setBusy(true)
-    try { setF((await api.focusTick()).focus); haptic.success() } catch (err) { haptic.error(); setError(err) }
+    try {
+      const next = (await api.focusTick()).focus
+      // this week's bar fills to the new session; a week completed rolls the count up
+      run({ from: f.streak, to: next.streak, roll: next.streak !== f.streak ? 950 : null, week: hist.length - 1,
+            fillFrom: Math.min(1, n / f.target), fillAt: 0 })
+      setF(next)
+      haptic.success()
+    } catch (err) { haptic.error(); setError(err) }
     setBusy(false)
   }
 
@@ -78,7 +119,10 @@ export default function Streak() {
             <Mono size={10.5} color="ink2" style={{ letterSpacing: 1.05 }}>{['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][dow]}</Mono>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 14 }}>
-            <T font="display" size={110} color={state === 'broken' ? 'ink2' : 'ink'} style={{ lineHeight: 112 }}>{f.streak}</T>
+            <View>
+              <Count t={t} m={moving} now={f.streak} color={state === 'broken' ? c.ink2 : c.ink} />
+              {moving?.sparks && <Burst t={t} at={moving.sparks} x={40} y={56} n={12} dist={64} pad={90} color={c.ink} />}
+            </View>
             <View style={{ gap: 6, paddingBottom: 14 }}>
               <T font="title" size={17}>{state === 'restored' ? 'weeks — back on' : f.streak === 1 ? 'week in a row' : 'weeks in a row'}</T>
               {f.best != null && <Mono size={10.5} color="ink2">{f.streak >= f.best && f.best > 0 ? 'NEW BEST' : 'BEST'} · {f.best} WEEK{f.best === 1 ? '' : 'S'}</Mono>}
@@ -102,7 +146,8 @@ export default function Streak() {
             <View style={{ gap: 10 }}>
               <Eyebrow>LAST {hist.length} WEEKS</Eyebrow>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {hist.map((w, i) => <Week key={w.week} w={w} target={f.target} current={i === hist.length - 1} />)}
+                {hist.map((w, i) => <Week key={w.week} w={w} target={f.target} current={i === hist.length - 1}
+                                           t={t} from={moving?.week === i ? moving.fillFrom : null} at={moving?.fillAt} />)}
               </View>
             </View>
           )}
@@ -131,22 +176,39 @@ export default function Streak() {
   )
 }
 
-// one week as the design's slanted bar, filled by how many sessions it got
-function Week({ w, target, current }) {
+// one week as the design's slanted bar, filled by how many sessions it got — rising from
+// `from` (0–1) when it has just changed, 520 ms from `at` on the clock `t`
+function Week({ w, target, current, t, from, at = 0 }) {
   const { c } = useTheme()
   const fill = Math.min(1, w.sessions / target)
   const H = 60
+  const rise = useAnimatedProps(() => {
+    const f = from == null ? fill : from + (fill - from) * eIO(cl((t.value - at) / 520))
+    return { points: `${38 * f},${100 - f * 100} ${62 + 38 * f},${100 - f * 100} 62,100 0,100` }
+  })
   return (
     <View style={{ flex: 1, gap: 8, alignItems: 'center' }}>
       <View style={{ width: '100%', height: H }}>
         <Svg width="100%" height={H} viewBox="0 0 100 100" preserveAspectRatio="none">
           <Polygon points="38,0 100,0 62,100 0,100" fill={c.line} />
-          {fill > 0 && (
-            <Polygon points={`${38 * fill},${100 - fill * 100} ${62 + 38 * fill},${100 - fill * 100} 62,100 0,100`} fill={c.ink} />
-          )}
+          <AnimatedPolygon animatedProps={rise} fill={c.ink} />
         </Svg>
       </View>
       <Mono size={9.5} color={current ? 'ink' : 'ink2'}>{w.week.slice(-3)}</Mono>
+    </View>
+  )
+}
+
+// The count: rolling from the old number up to the new one (700 ms from m.roll), or still.
+function Count({ t, m, now, color }) {
+  const roll = useAnimatedStyle(() => ({
+    transform: [{ translateY: m?.roll != null ? -112 * eIO(cl((t.value - m.roll) / 700)) : 0 }],
+  }))
+  const text = n => <T font="display" size={110} color={color} style={{ lineHeight: 112 }}>{n}</T>
+  if (m?.roll == null || m.from === m.to) return text(now)
+  return (
+    <View style={{ height: 112, overflow: 'hidden' }}>
+      <Animated.View style={roll}>{text(m.from)}{text(m.to)}</Animated.View>
     </View>
   )
 }

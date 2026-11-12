@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Linking, Pressable, View } from 'react-native'
+import { Linking, Pressable, View } from 'react-native'
 import { router } from 'expo-router'
 import Constants from 'expo-constants'
 import * as SecureStore from 'expo-secure-store'
@@ -7,8 +7,9 @@ import { BASE } from '../../lib/api'
 import { useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
 import { haptic } from '../../lib/haptics'
-import { NOTIFY_DEFAULT, NOTIFY_KEY, registerPush } from '../../lib/notifications'
+import { NOTIFY_DEFAULT, NOTIFY_KEY, pushAvailable, registerPush } from '../../lib/notifications'
 import { Back, Eyebrow, I, Icon, Mono, Screen, Seg, Switch, T, Title } from '../../ui'
+import { dialog } from '../../ui/Dialog'
 
 
 // Profile board, 03: appearance, notifications, account.
@@ -60,6 +61,11 @@ export default function Settings() {
       </View>
       <View>
         <Eyebrow style={{ paddingTop: 8, paddingBottom: 4 }}>NOTIFICATIONS</Eyebrow>
+        {!pushAvailable && (
+          <T size={12.5} color="ink2" style={{ paddingBottom: 8, lineHeight: 18 }}>
+            Expo Go can’t receive notifications on Android — the installed Stridian app can. Your choices here are kept for it.
+          </T>
+        )}
         {toggle('Video analysed', 'When a clip is ready', 'video')}
         {toggle(student ? 'Coach updates' : 'Squad updates', student ? 'Verification and achievements' : 'New enrolments and certificates', 'coach')}
         {student && toggle('Weekly focus nudge', 'One reminder before the week ends', 'focus')}
@@ -67,7 +73,7 @@ export default function Settings() {
       <View>
         <Eyebrow style={{ paddingTop: 8, paddingBottom: 4 }}>ACCOUNT</Eyebrow>
         {action(I.lock, 'Change password', () => router.push({ pathname: '/password', params: { role: student ? 'student' : 'coach', email, fixed: '1' } }), true)}
-        {action(I.signout, 'Sign out', () => Alert.alert('Sign out of Stridian?', '', [
+        {action(I.signout, 'Sign out', () => dialog('Sign out of Stridian?', '', [
           { text: 'Stay', style: 'cancel' }, { text: 'Sign out', onPress: s.signOut }]))}
         {action(I.delete, 'Delete account', () => router.push('/delete-account'), true)}
       </View>

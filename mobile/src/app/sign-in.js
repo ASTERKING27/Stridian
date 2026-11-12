@@ -36,7 +36,7 @@ export default function SignIn() {
     <Screen fill>
       <Back onPress={() => router.back()} />
       <Title eyebrow={student ? 'STUDENT' : 'COACH'}>Sign in</Title>
-      <Field label={student ? 'UNIVERSITY EMAIL' : 'EMAIL'} placeholder={student ? 'name@srmist.edu.in' : 'you@example.com'}
+      <Field label={student ? 'UNIVERSITY EMAIL' : 'EMAIL'} placeholder={student ? 'netid@srmist.edu.in' : 'you@example.com'}
              value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false}
              keyboardType="email-address" autoComplete="email" textContentType="username" />
       <Field label="STRIDIAN PASSWORD" value={password} onChangeText={setPassword} secureTextEntry

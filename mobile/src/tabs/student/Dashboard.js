@@ -5,10 +5,10 @@ import Svg, { Circle } from 'react-native-svg'
 import { api, formatValue, shortUnits } from '../../lib/api'
 import { contextLine, useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
-import { haptic } from '../../lib/haptics'
-import { Btn, Eyebrow, I, Mono, Note, OfflineBar, Placeholder, Row, Screen, T, Top } from '../../ui'
+import { Btn, Eyebrow, I, Mono, OfflineBar, Placeholder, Row, Screen, T, Top } from '../../ui'
 import LevelReached from '../../ui/LevelReached'
 import { toast } from '../../ui/Toast'
+import { LoadError } from '../../ui/States'
 
 /* The student's home: what the second coach says today (backend/coach.py writes the
    words), the level they play at, this week's focus, and the next level for each result.
@@ -39,8 +39,7 @@ export default function Dashboard({ go }) {
     handled.current = c
     const party = c.celebrate
     if (party.level || party.levelUps.length) {
-      setRecord({ party, snapshot: c.snapshot, rings: c.rings })
-      haptic.success()
+      setRecord({ party, snapshot: c.snapshot, rings: c.rings })     // it plays its own haptics
     } else if (party.badges.length) {
       announce(party.badges)
       api.studentCoachSeen(c.snapshot).catch(() => {})
@@ -74,7 +73,7 @@ export default function Dashboard({ go }) {
                                               colors={[col.ink]} progressBackgroundColor={col.bg} />}>
         <Top context={contextLine(s)} />
         {offline && <View style={{ height: 40 }} />}
-        {error && !offline && <Note>{error.message}</Note>}
+        <LoadError error={error} onRetry={refresh} hasData={!!c} />
         {!c && !error && <Loading />}
         {c && (
           <>
@@ -213,13 +212,13 @@ function Loading() {
   return (
     <View style={{ gap: 18 }}>
       <Eyebrow>LOADING</Eyebrow>
-      <Placeholder h={27} w="90%" />
-      <Placeholder h={27} w="60%" />
+      <Placeholder h={27} w="90%" delay={60} />
+      <Placeholder h={27} w="60%" delay={120} />
       <View style={{ flexDirection: 'row', gap: 24, alignItems: 'center' }}>
-        <Placeholder h={112} w={112} />
-        <View style={{ flex: 1, gap: 8 }}>{[0, 1, 2, 3, 4].map(i => <Placeholder key={i} h={13} />)}</View>
+        <Placeholder h={112} w={112} delay={240} />
+        <View style={{ flex: 1, gap: 8 }}>{[0, 1, 2, 3, 4].map(i => <Placeholder key={i} h={13} delay={260 + i * 30} />)}</View>
       </View>
-      <Placeholder h={96} />
+      <Placeholder h={96} delay={420} />
     </View>
   )
 }

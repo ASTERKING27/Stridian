@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Alert, Image, View } from 'react-native'
+import { Image, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { api, authedSource, utc } from '../../lib/api'
 import { openAuthedFile } from '../../lib/media'
@@ -9,6 +9,7 @@ import { Back, Btn, Choice, Eyebrow, Field, Mono, Note, Row, Screen, T, Title } 
 import { LEVELS, levelWord } from '../../ui/DetailsForm'
 import { toast } from '../../ui/Toast'
 import { CERT_STATUS } from '../../tabs/student/Achievements'
+import { dialog } from '../../ui/Dialog'
 
 /* One certificate. A student fills in (or checks the AI's reading of) the event, level,
    year and result, then sends it; a coach opens it and verifies or rejects it with a
@@ -55,7 +56,7 @@ export default function Achievement() {
     toast({ title: decision === 'verified' ? 'Certificate verified' : 'Sent back to the student', sub: (item.title || '').toUpperCase() })
     router.back()
   })
-  const remove = () => Alert.alert('Delete this certificate?', 'It can’t be brought back.', [
+  const remove = () => dialog('Delete this certificate?', 'It can’t be brought back.', [
     { text: 'Keep it', style: 'cancel' },
     { text: 'Delete', style: 'destructive', onPress: () => run('delete', async () => { await api.deleteMyAchievement(item.id); router.back() }) },
   ])

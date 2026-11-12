@@ -78,7 +78,7 @@ export default function CodeFlow() {
             ? 'We’ll email a 6-digit code to your university inbox. With it you choose your Stridian password.'
             : 'Type your account’s email. We’ll send a 6-digit code to it, then you choose a new password.'}
         </T>
-        <Field label={student ? 'UNIVERSITY EMAIL' : 'EMAIL'} placeholder={student ? 'name@srmist.edu.in' : 'you@example.com'}
+        <Field label={student ? 'UNIVERSITY EMAIL' : 'EMAIL'} placeholder={student ? 'netid@srmist.edu.in' : 'you@example.com'}
                value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} editable={!fixed}
                keyboardType="email-address" autoComplete="email" returnKeyType="send" onSubmitEditing={send} />
         <Note>{error}</Note>

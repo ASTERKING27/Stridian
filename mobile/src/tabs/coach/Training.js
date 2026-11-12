@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Alert, Linking, View } from 'react-native'
+import { Linking, View } from 'react-native'
 import { api, utc } from '../../lib/api'
 import { useData } from '../../lib/useData'
 import { contextLine, useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
 import { haptic } from '../../lib/haptics'
-import { Bar, Btn, Eyebrow, H1, Lap, Mono, Note, OfflineBar, Row, Screen, T, Tag, Top } from '../../ui'
+import { Bar, Btn, Eyebrow, H1, Lap, Mono, OfflineBar, Row, Screen, T, Tag, Top } from '../../ui'
 import { toast } from '../../ui/Toast'
+import { LoadError } from '../../ui/States'
+import { dialog } from '../../ui/Dialog'
 
 const pct = v => (v == null ? '—' : `${Math.round(v * 100)}%`)
 const ago = s => (s < 90 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} days ago`)
@@ -27,7 +29,7 @@ export default function Training({ active }) {
   }, [active, t.reload])
 
   const d = t.data
-  const rollback = v => Alert.alert(`Put model #${v.id} back live?`, 'The current one stays in the history, so you can switch back.', [
+  const rollback = v => dialog(`Put model #${v.id} back live?`, 'The current one stays in the history, so you can switch back.', [
     { text: 'Cancel', style: 'cancel' },
     { text: 'Use this one', onPress: async () => {
       setBusy(v.id)
@@ -35,7 +37,7 @@ export default function Training({ active }) {
         t.setData(await api.rollback(v.id))
         haptic.success()
         toast({ title: `Model #${v.id} is live`, sub: 'EVERY REPORT NOW USES IT' })
-      } catch (err) { haptic.error(); Alert.alert('Couldn’t switch models', err.message) }
+      } catch (err) { haptic.error(); dialog('Couldn’t switch models', err.message) }
       setBusy(null)
     } },
   ])
@@ -54,7 +56,7 @@ export default function Training({ active }) {
           Every student you verify is a lesson: the model looks at what sets the players in each position apart and adjusts
           that position’s weights. A new model only goes live if it predicts your verified students better than the current one.
         </T>
-        {t.error && !t.error.offline && <Note>{t.error.message}</Note>}
+        <LoadError error={t.error} onRetry={t.refresh} hasData={!!d} />
         {!d && !t.error && <Lap size={28} />}
         {d && (
           <>

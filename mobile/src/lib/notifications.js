@@ -1,5 +1,5 @@
 import { Platform } from 'react-native'
-import * as Notifications from 'expo-notifications'
+import { isRunningInExpoGo } from 'expo'
 import * as Device from 'expo-device'
 import Constants from 'expo-constants'
 import * as SecureStore from 'expo-secure-store'
@@ -10,9 +10,19 @@ export const NOTIFY_KEY = 'stridian.notify'
 export const NOTIFY_DEFAULT = { video: true, coach: true, focus: false }
 const TOKEN_KEY = 'stridian.pushToken'
 
-Notifications.setNotificationHandler({
+/* Expo Go on Android dropped push notifications in SDK 53, and expo-notifications throws
+   the moment it loads there. So in Expo Go on Android it is never loaded: notifications
+   are simply off, and everything else works. The installed app (a development or store
+   build) has them. */
+export const pushAvailable = !(Platform.OS === 'android' && isRunningInExpoGo())
+const Notifications = pushAvailable ? require('expo-notifications') : null
+
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
 })
+
+// the notification the person tapped to open the app (none on the web build, nor without push)
+export const useTappedNotification = Notifications && Platform.OS !== 'web' ? Notifications.useLastNotificationResponse : () => null
 
 export const notifyPrefs = async () => {
   try { return { ...NOTIFY_DEFAULT, ...JSON.parse((await SecureStore.getItemAsync(NOTIFY_KEY)) ?? '{}') } } catch { return NOTIFY_DEFAULT }
@@ -23,7 +33,7 @@ export const notifyPrefs = async () => {
    Expo Go on Android and emulators can't receive push — the development build can. */
 export async function registerPush(ask = false) {
   try {
-    if (!Device.isDevice) return null
+    if (!Notifications || !Device.isDevice) return null
     let { status } = await Notifications.getPermissionsAsync()
     if (status !== 'granted' && ask) status = (await Notifications.requestPermissionsAsync()).status
     if (status !== 'granted') return null

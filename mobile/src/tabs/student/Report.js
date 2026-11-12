@@ -4,8 +4,9 @@ import { router } from 'expo-router'
 import { useReport } from '../../lib/report'
 import { contextLine, useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
-import { Btn, Eyebrow, Note, OfflineBar, Placeholder, Screen, Top } from '../../ui'
+import { Btn, Eyebrow, OfflineBar, Placeholder, Screen, Top } from '../../ui'
 import ReportHome, { ReportWaiting } from '../../report/ReportHome'
+import { LoadError } from '../../ui/States'
 
 // My report: read-only, and only once the coach has verified them.
 export default function Report({ go }) {
@@ -35,7 +36,7 @@ function Verified() {
                                               colors={[c.ink]} progressBackgroundColor={c.bg} />}>
         <Top context={contextLine(s)} />
         {error?.offline && <View style={{ height: 40 }} />}
-        {error && !error.offline && <Note>{error.message}</Note>}
+        <LoadError error={error} onRetry={refresh} hasData={!!data} />
         {!data && !error && <Loading />}
         {data && <ReportHome data={data} />}
       </Screen>
@@ -47,9 +48,9 @@ function Loading() {
   return (
     <View style={{ gap: 12 }}>
       <Eyebrow>LOADING</Eyebrow>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Placeholder h={34} w={180} /><Placeholder h={30} w={48} /></View>
-      <Placeholder h={12} /><Placeholder h={12} w="80%" />
-      <Placeholder h={222} style={{ marginTop: 8 }} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Placeholder h={34} w={180} delay={60} /><Placeholder h={30} w={48} delay={90} /></View>
+      <Placeholder h={12} delay={140} /><Placeholder h={12} w="80%" delay={170} />
+      <Placeholder h={222} delay={240} style={{ marginTop: 8 }} />
     </View>
   )
 }

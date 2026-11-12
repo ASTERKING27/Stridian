@@ -1,9 +1,11 @@
 import assert from 'node:assert'
 import { measure } from '../src/lib/pose.js'
-import { check, parseValue } from '../src/lib/entry.js'
+import { check, parseValue, rangeOf } from '../src/lib/entry.js'
 import { changes, shares, toDraft, unfinished } from '../src/lib/weights.js'
 import { mergeReading } from '../src/lib/cards.js'
 import { formatValue } from '../src/lib/format.js'
+import { blankCardHtml, printedSquad } from '../src/lib/blankCard.js'
+import { PATTERNS, PRIM, launchWave, levels, onOff, waveform } from '../src/lib/patterns.js'
 
 /* The app's pure logic, checked without a phone:  node scripts/check.mjs  (Node 22+). */
 
@@ -47,6 +49,12 @@ assert.equal(check(sprint, 'abc').kind, 'nan')
 assert.equal(check(sprint, '38').fix, '3.8')                    // the slipped decimal point
 assert.equal(check(sprint, '38', { kept: true }), null)
 assert.equal(check(trial, '8:30'), null)
+assert.equal(rangeOf({ ...sprint, direction: 'lower' }).text, '2.34–8.32 s')     // shown before anything is typed
+assert.equal(rangeOf(sprint).better, 'LOWER IS BETTER')                            // no direction sent: read from poor → elite
+assert.equal(rangeOf({ key: 'cmj', unit: 'cm', poor: 28, elite: 55, direction: 'higher' }).better, 'HIGHER IS BETTER')
+assert.equal(rangeOf(trial).text, '4:30–16:00')
+assert.equal(rangeOf({ key: 'yoyoLevel', unit: 'level', poor: 14, elite: 21 }).text, '8.4–33.6')
+assert.equal(check(trial, '30:00').text, 'Between 4:30 and 16:00.')
 assert.equal(formatValue(599.6, trial), '10:00')
 
 // --- weights: whole percentages per source, only changed groups sent back
@@ -78,4 +86,44 @@ assert.equal(merged.body.lines.length, 2)
 assert.deepEqual([merged.unread, merged.unmatched, merged.body.final], [1, 1, false])
 assert.deepEqual(card.lines[0].tallies.passing, [1, 0, 0])        // the card itself is untouched
 
+// --- the blank card: the team's numbered players, numbers first; names escaped; spare rows
+const squad = printedSquad([{ name: 'Zed', jersey_number: 9, category: 'M' }, { name: 'Amy', jersey_number: 4, category: 'W' },
+  { name: 'Bo <b>', jersey_number: 2, category: null }, { name: 'Cy', jersey_number: null, category: 'M' }], 'M')
+assert.deepEqual(squad.map(p => p.name), ['Bo <b>', 'Zed'])
+assert.deepEqual(printedSquad([{ name: 'Cy', category: 'M' }], 'M').map(p => p.name), ['Cy'])   // nobody numbered: everyone
+const cfg = { sport: 'Volleyball', category: 'M', format: null, categories: [{ key: 'M', label: 'Men' }, { key: 'W', label: 'Women' }],
+  formats: [], levels: ['University'], results: ['Won', 'Lost'], score: { label: 'Set score', parts: ['S1', 'S2'] },
+  headerExtra: [], layout: 'grid', sheetNote: '', fields: [{ key: 'min', short: 'Min', label: 'Minutes', sheet: true }],
+  skills: [{ key: 'serve', sheet: 'SERVE', legend: ['ace', 'in', 'err'], marks: '+0-', merged: false },
+           { key: 'coord', sheet: 'COORD', legend: ['good', '', 'poor'], marks: '+-', merged: true }] }
+const html = blankCardHtml(cfg, squad)
+assert.ok(html.includes('#2&nbsp;&nbsp;Bo &lt;b&gt;') && !html.includes('<b>Bo'))
+assert.equal(html.match(/<td class="name">/g).length, 14)                      // 2 players + 12 blank rows
+assert.ok(html.includes('☑ Men') && html.includes('☐ Women'))
+assert.equal((blankCardHtml({ ...cfg, layout: 'player' }, squad).match(/<section>/g) ?? []).length, 2)   // racket: a sheet each
+assert.equal((blankCardHtml({ ...cfg, layout: 'player' }, []).match(/<section>/g) ?? []).length, 1)
+assert.ok(blankCardHtml(cfg, Array(15).fill({ name: 'X', jersey: 1 })).includes('<section class="long">'))
+
+// --- haptics: budget pulses become still/strong segments; overlaps are clipped, never doubled
+assert.deepEqual(waveform([[100, 50, 1], [0, 12, 0.5], [140, 60, 0.2]]), [12, 128, 88, 0, 50, 255, 50, 51])
+for (const [name, x] of Object.entries(PATTERNS)) {       // known primitives, in time order
+  assert.ok((x.rich ?? []).every(([k, at], i, r) => k in PRIM && (!i || at >= r[i - 1][1])), name)
+}
+// launch: a tick per spark, the kick, a buzz that only grows, a breath, the dot
+const births = [40, 300, 305, 900, 1160, 1190]
+const wave = launchWave(births, 1160, 2060)
+assert.equal(wave.length, 2086)
+assert.ok(wave[45] > 0 && wave[60] === 0 && wave[302] > wave[45] && wave[312] > 0 && wave[316] === 0)   // 300 and 305 overlap into one
+assert.ok(wave[1100] === 0 && wave[1165] === 1 && wave[1225] === 0)           // still while it squashes; the kick
+const buzz = wave.slice(1230, 2000)
+assert.ok(buzz[0] > 0.1 && buzz[0] < 0.2 && buzz.every((v, i) => !i || v >= buzz[i - 1]) && buzz[769] > 0.95)
+assert.ok(wave.slice(2000, 2060).every(v => v === 0) && wave.slice(2060).every(v => v === 1))
+const lv = levels(wave)
+assert.equal(lv.filter((_, i) => i % 2 === 0).reduce((a, b) => a + b, 0), 2086)
+assert.ok(lv.length < 300)
+assert.deepEqual(onOff([0, 0, 1, 1, 0, 0.5, 0.5, 0, 0, 0], 5), [2, 2, 1, 1, 4])        // one ms of 0.5 + 0.5 = one ms on
+assert.deepEqual(onOff([1, 1, 1, 1, 1, 1], 3), [0, 6])                              // strong: unbroken
+const plain = onOff(wave)
+assert.equal(plain.reduce((a, b) => a + b, 0), 2086)
+assert.ok(plain.every((v, i) => v > 0 || i === 0))
 console.log('logic: ok')

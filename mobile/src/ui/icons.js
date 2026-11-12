@@ -28,10 +28,12 @@ export const I = {
   achievements: 'M8 3h8l-2 6h-4L8 3Zm4 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z',
   profile: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20.5c.8-3.6 3.8-6 7.5-6s6.7 2.4 7.5 6',
   entry: 'M9 4h6M9 4a2 2 0 0 0-2 2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-1a2 2 0 0 0-2-2M8 12h8M8 16h5',
-  footage: 'M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6ZM3 10h18M3 15h18M8 4v16M16 4v16',
-  squad: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  footage: 'M3 6h12v12H3V6ZM15 10l6-3.5v11L15 14',                    // a video camera
+  cards: 'M4 4h16v16H4V4ZM4 9h16M4 14.5h16M10 9v11',                   // a scoresheet
+  squad: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M15.5 4.3a3.5 3.5 0 0 1 0 6.4M18 14.8c1.9.7 3.1 2.5 3.5 5.2',   // the team
   weights: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M14 4v4M8 10v4M16 16v4',
-  ai: 'M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3M7 6h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1ZM10 10h4v4h-4Z',
+  ai: 'M10 3l1.8 5.2L17 10l-5.2 1.8L10 17l-1.8-5.2L3 10l5.2-1.8L10 3ZM18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14Z',   // sparkles
+  addPerson: 'M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM3 20.5c.7-3.6 3.5-6 7-6 1.4 0 2.7.4 3.8 1.1M18 14v7M14.5 17.5h7',
   add: 'M12 5v14M5 12h14',
   back: 'M15 18l-6-6 6-6',
   next: 'M9 6l6 6-6 6',
@@ -44,6 +46,7 @@ export const I = {
   upload: 'M12 16V4M7 9l5-5 5 5M4 15v5h16v-5',
   download: 'M12 4v12M7 11l5 5 5-5M4 15v5h16v-5',
   share: 'M12 3v12M7 8l5-5 5 5M5 12v9h14v-9',
+  print: 'M7 9V3h10v6M7 17H3v-8h18v8h-4M7 13h10v8H7v-8Z',
   camera: 'M4 8h3l2-3h6l2 3h3v11H4V8Zm8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',
   gallery: 'M4 5h16v14H4V5Zm0 10 5-5 4 4 3-3 4 4M15.5 9.5h.01',
   bell: 'M6 17V11a6 6 0 1 1 12 0v6l2 2H4l2-2ZM10 21h4',

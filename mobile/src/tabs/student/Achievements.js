@@ -6,15 +6,16 @@ import { chooseCertificate } from '../../lib/media'
 import { contextLine, useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
 import { haptic } from '../../lib/haptics'
-import { Btn, Eyebrow, H1, I, Icon, Mono, Note, OfflineBar, Screen, T, Top } from '../../ui'
+import { Btn, Eyebrow, H1, I, Icon, Mono, OfflineBar, Screen, T, Top } from '../../ui'
 import Badge from '../../ui/Badge'
 import { levelWord } from '../../ui/DetailsForm'
+import { LoadError } from '../../ui/States'
 
 export const CERT_STATUS = { draft: 'NOT SENT', pending: 'WITH YOUR COACH', verified: 'VERIFIED', rejected: 'NEEDS FIXING' }
 const STREAKS = { streak_2: 2, streak_4: 4, streak_8: 8 }
 
 // Badges (Badges board), the focus streak, and certificates for the coach to verify.
-export default function Achievements() {
+export default function Achievements({ active }) {
   const s = useSession()
   const { c } = useTheme()
   const [coach, setCoach] = useState(null)
@@ -53,7 +54,7 @@ export default function Achievements() {
                                               onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false) }} />}>
         <Top context={contextLine(s)} />
         {error?.offline && <View style={{ height: 40 }} />}
-        {error && !error.offline && <Note>{error.message}</Note>}
+        <LoadError error={error} onRetry={load} hasData={!!coach} />
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <View style={{ gap: 8 }}>
@@ -74,7 +75,7 @@ export default function Achievements() {
             const going = need && !b.earned && streak > 0
             return (
               <View key={b.id} style={{ width: '33.33%', paddingHorizontal: 4 }}>
-                <Badge badge={b} size={72} progress={going ? streak / need : 0} prog={going ? `${streak} / ${need} WEEKS` : ''} />
+                <Badge badge={b} size={72} live={active} progress={going ? streak / need : 0} prog={going ? `${streak} / ${need} WEEKS` : ''} />
               </View>
             )
           })}

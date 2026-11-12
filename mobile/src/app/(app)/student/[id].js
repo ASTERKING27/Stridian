@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Linking, View } from 'react-native'
+import { Linking, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { api, authedSource, initials, utc } from '../../../lib/api'
 import { forgetReport, useReport } from '../../../lib/report'
@@ -14,6 +14,8 @@ import { toast } from '../../../ui/Toast'
 import ReportHome from '../../../report/ReportHome'
 import { CertRow } from '../../../tabs/student/Achievements'
 import { fmtDate, masked } from '../../../tabs/student/Profile'
+import { LoadError } from '../../../ui/States'
+import { dialog } from '../../../ui/Dialog'
 
 const DIETS = { nonveg: 'Non-veg', egg: 'Eggetarian', veg: 'Vegetarian', vegan: 'Vegan' }
 
@@ -48,7 +50,7 @@ export default function StudentPage() {
     return (
       <Screen>
         <Back label="Squad" onPress={() => router.back()} />
-        {error ? <Note>{error.message}</Note> : <Lap size={28} />}
+        {error ? <LoadError error={error} onRetry={reload} /> : <Lap size={28} />}
       </Screen>
     )
   }
@@ -58,7 +60,7 @@ export default function StudentPage() {
   const photo = authedSource(`/api/students/${id}/photo`, st.photo_version)
   const admin = s.isAdmin
   const call = n => (n ? () => Linking.openURL(`tel:${n}`) : undefined)
-  const remove = () => Alert.alert(`Delete ${st.name}?`, 'Their results, videos, certificates and record all go. This can’t be undone.', [
+  const remove = () => dialog(`Delete ${st.name}?`, 'Their results, videos, certificates and record all go. This can’t be undone.', [
     { text: 'Keep', style: 'cancel' },
     { text: 'Delete', style: 'destructive', onPress: () => run('delete', async () => {
       await api.deleteStudent(id)
@@ -153,7 +155,7 @@ function Verify({ data, busy, run, reload }) {
   const rec = data.recommended?.position
   const [pick, setPick] = useState(rec ?? data.positions[0]?.position ?? '')
   if (st.status === 'verified') {
-    const undo = () => Alert.alert('Undo the verification?', `${st.name} goes back to pending.`, [
+    const undo = () => dialog('Undo the verification?', `${st.name} goes back to pending.`, [
       { text: 'Keep it', style: 'cancel' },
       { text: 'Undo', onPress: () => run('verify', async () => { await api.unverify(st.id); await reload() }) },
     ])

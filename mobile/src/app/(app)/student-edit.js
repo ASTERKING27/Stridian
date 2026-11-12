@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { api, authedSource, getSports, initials } from '../../lib/api'
 import { forgetReport } from '../../lib/report'
@@ -8,6 +8,7 @@ import { useTheme } from '../../lib/theme'
 import { Back, Btn, Lap, Note, Screen, T, Tile, TileImage, Title } from '../../ui'
 import DetailsForm from '../../ui/DetailsForm'
 import { toast } from '../../ui/Toast'
+import { dialog } from '../../ui/Dialog'
 
 // An admin correcting anyone's record — the university's details, the sport, the photo.
 export default function StudentEdit() {
@@ -41,7 +42,7 @@ export default function StudentEdit() {
     forgetReport(id)
     if (saved.sport !== st.sport) {
       // they've left this sport's squad, so their page here would be empty
-      Alert.alert(`${saved.name} moved to ${saved.sport}`, 'Switch sport to see them there.')
+      dialog(`${saved.name} moved to ${saved.sport}`, 'Switch sport to see them there.')
       router.dismissTo('/')
       return null
     }

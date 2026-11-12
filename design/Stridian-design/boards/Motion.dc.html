@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stridian reduced motion</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#55544F}a:hover{color:#121211}
+.t-white{--bg:#F3F2EE;--ink:#121211;--ink2:#55544F;--line:rgba(18,18,17,.14);--soft:rgba(18,18,17,.07);--glass:rgba(246,245,241,.56);--glassEdge:rgba(18,18,17,.10);--hi:rgba(255,255,255,.8);--shadow:0 14px 34px rgba(18,18,17,.16)}
+.t-dark{--bg:#0F0F0E;--ink:#EEEDE8;--ink2:#9D9C96;--line:rgba(238,237,232,.16);--soft:rgba(238,237,232,.08);--glass:rgba(34,34,32,.5);--glassEdge:rgba(238,237,232,.12);--hi:rgba(255,255,255,.09);--shadow:0 14px 34px rgba(0,0,0,.55)}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.wm{font-family:Archivo,'Helvetica Neue',sans-serif;font-stretch:125%;font-weight:620;letter-spacing:.2em}
+.eyebrow{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;color:var(--ink2)}
+.h1{margin:0;font-size:30px;line-height:1.06;font-weight:600;font-stretch:112%;letter-spacing:-.015em;text-wrap:balance}
+.phone{width:410px;height:864px;box-sizing:border-box;padding:10px;border-radius:58px;background:#0A0A09;box-shadow:0 30px 60px rgba(18,18,17,.18);flex-shrink:0}
+.scr{position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Archivo,'Helvetica Neue',sans-serif}
+.pad{position:absolute;inset:0;padding:56px 22px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.cap{font:500 11px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;color:#55544F}
+.back{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;height:44px;font:500 14px/1 Archivo,sans-serif;cursor:pointer;color:var(--ink);align-self:flex-start}
+.btn{all:unset;box-sizing:border-box;height:52px;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ink);color:var(--bg);font:600 15px/1 Archivo,'Helvetica Neue',sans-serif;letter-spacing:.01em;cursor:pointer;text-align:center}
+.btn2{all:unset;box-sizing:border-box;height:52px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--ink);color:var(--ink);font:600 15px/1 Archivo,'Helvetica Neue',sans-serif;cursor:pointer;text-align:center}
+.btn3{all:unset;box-sizing:border-box;height:44px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font:500 14px/1 Archivo,sans-serif;cursor:pointer}
+.btn:focus-visible,.btn2:focus-visible,.btn3:focus-visible,.back:focus-visible,.opt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.fld{font:400 16px/1.2 Archivo,'Helvetica Neue',sans-serif;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:0 0 9px;width:100%;box-sizing:border-box;outline:none}
+.fld::placeholder{color:var(--ink2)}
+.fld:focus{border-bottom-width:2px;padding-bottom:8px}
+.fld.bad{border-bottom:2px dashed var(--ink);padding-bottom:8px}
+.hatch{background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 9px)}
+.opt{all:unset;box-sizing:border-box;cursor:pointer}
+.tab{all:unset;box-sizing:border-box;position:absolute;top:3px;height:52px;display:flex;align-items:center;justify-content:center;font:600 12.5px/1 Archivo,'Helvetica Neue',sans-serif;border-radius:26px}
+.stripes{background:repeating-linear-gradient(135deg,var(--ink) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:stripes .8s linear infinite}
+@keyframes stripes{to{background-position:17px 0}}
+.blink{animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.ctl{font:500 12px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.06em;height:40px;padding:0 14px;border:1px solid #121211;background:transparent;color:#121211;border-radius:20px;cursor:pointer}
+.ctl:hover{background:rgba(18,18,17,.06)}
+.ctl.on{background:#121211;color:#F3F2EE}
+
+.stage{position:relative;width:150px;height:184px;overflow:hidden;background:var(--bg);border:1px solid var(--line);box-sizing:border-box;flex-shrink:0}
+.blk{position:absolute;left:12px;background:var(--line)}
+.lap{animation:lap 1s linear infinite}
+@keyframes lap{to{stroke-dashoffset:-100}}
+.sk{position:absolute;left:12px;overflow:hidden;background:var(--soft)}
+.sk.on::after{content:'';position:absolute;top:-60%;bottom:-60%;width:30px;left:-60px;background:var(--line);transform:rotate(40deg);animation:skw 1.6s cubic-bezier(.5,0,.2,1) infinite}
+@keyframes skw{0%{left:-60px}70%,100%{left:calc(100% + 30px)}}
+.spk{position:absolute;left:0;top:0;height:2px;background:var(--ink);clip-path:polygon(0 50%,70% 0,100% 50%,70% 100%)}
+.lbl2{font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--ink2)}
+
+</style>
+</helmet>
+<div style="width: 1800px; height: 1060px; box-sizing: border-box; padding: 34px 40px 40px; background: #E6E5E0; color: #121211; font-family: Archivo, 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; align-items: center; gap: 8px">
+    <span class="mono" style="font-size: 12px; letter-spacing: .12em; color: #55544F">SYSTEM · REDUCED MOTION</span>
+    <span style="flex-grow: 1"></span>
+    
+    <sc-for list="{{themes}}" as="th" hint-placeholder-count="2">
+      <button class="ctl {{th.cls}}" onClick="{{th.pick}}" aria-pressed="{{th.on}}">{{th.label}}</button>
+    </sc-for>
+  </div>
+  <div class="t-{{theme}}" style="display: flex; gap: 48px">
+    <div style="display: flex; flex-direction: column; gap: 20px; width: 100%">
+      <section style="background: var(--bg); color: var(--ink); padding: 24px 28px; display: flex; gap: 40px; align-items: center">
+        <div style="display: flex; flex-direction: column; gap: 8px; width: 520px; flex-shrink: 0"><span class="eyebrow">REDUCED MOTION</span><span class="h1">Every animation has a quiet twin</span>
+          <span style="font-size: 14px; line-height: 1.45; color: var(--ink2)">Turns on when the phone’s Reduce Motion or Remove animations setting is on — or from Settings › Motion in Stridian.</span></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px"><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; padding: 7px 10px; border: 1px solid var(--ink)">NO ZOOMS</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; padding: 7px 10px; border: 1px solid var(--ink)">NO SWEEPS OR SLIDES</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; padding: 7px 10px; border: 1px solid var(--ink)">NO SPARKS</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; padding: 7px 10px; border: 1px solid var(--ink)">NO FLASHES</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; padding: 7px 10px; border: 1px solid var(--ink)">FADES ≤ 200 MS</span><span class="mono" style="font-size: 10.5px; letter-spacing: .1em; padding: 7px 10px; border: 1px solid var(--ink)">NOTHING IS SAID ONLY BY MOTION</span></div>
+      </section>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px"><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; inset: 0; background: var(--bg); opacity: {{launch.std.splashO}}"></div>
+              <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true" style="position: absolute; left: 54.0px; top: 71.0px; transform: scale({{launch.std.logoS}}); opacity: {{launch.std.logoO}}"><path d="M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z" style="fill: var(--ink)"></path></svg>
+              <sc-for list="{{launch.std.sparks}}" as="s" hint-placeholder-count="0"><span class="spk" style="width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; inset: 0; background: var(--bg); opacity: {{launch.red.splashO}}"></div>
+              <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true" style="position: absolute; left: 54.0px; top: 71.0px; transform: scale({{launch.red.logoS}}); opacity: {{launch.red.logoO}}"><path d="M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z" style="fill: var(--ink)"></path></svg>
+              <sc-for list="{{launch.red.sparks}}" as="s" hint-placeholder-count="0"><span class="spk" style="width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Launch</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">Sparks and the runner-shaped zoom are gone. The logo fades up, then the app fades in.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><div style="position: absolute; inset: 0; background: var(--bg); "><span style="position: absolute; left: 12px; top: 16px; font: 700 15px/1 Archivo, sans-serif; font-stretch: 112%">Dashboard</span><span class="blk" style="top: 200px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span></div><div style="position: absolute; inset: 0; background: var(--bg); {{tab.std.clip}}; opacity: {{tab.std.bO}}"><span style="position: absolute; left: 12px; top: 16px; font: 700 15px/1 Archivo, sans-serif; font-stretch: 112%">Report</span><span class="blk" style="top: 200px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span></div><sc-for list="{{tab.std.lines}}" as="l" hint-placeholder-count="0"><span style="position: absolute; left: 0; top: 0; background: var(--ink); width: {{l.len}}px; height: {{l.th}}px; border-radius: {{l.rad}}px; transform: translate({{l.x}}px, {{l.y}}px) rotate(140deg)"></span></sc-for></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><div style="position: absolute; inset: 0; background: var(--bg); "><span style="position: absolute; left: 12px; top: 16px; font: 700 15px/1 Archivo, sans-serif; font-stretch: 112%">Dashboard</span><span class="blk" style="top: 200px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span></div><div style="position: absolute; inset: 0; background: var(--bg); {{tab.red.clip}}; opacity: {{tab.red.bO}}"><span style="position: absolute; left: 12px; top: 16px; font: 700 15px/1 Archivo, sans-serif; font-stretch: 112%">Report</span><span class="blk" style="top: 200px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span></div><sc-for list="{{tab.red.lines}}" as="l" hint-placeholder-count="0"><span style="position: absolute; left: 0; top: 0; background: var(--ink); width: {{l.len}}px; height: {{l.th}}px; border-radius: {{l.rad}}px; transform: translate({{l.x}}px, {{l.y}}px) rotate(140deg)"></span></sc-for></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Tab change</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">No diagonal lines, no slide. The new tab fades in over 150 ms.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; left: 8px; right: 8px; bottom: 14px; height: 32px; border-radius: 16px; border: 1px solid var(--line); background: var(--soft)">
+                <span style="position: absolute; top: 2px; height: 26px; border-radius: 13px; background: var(--ink); left: {{pill.std.l}}px; width: {{pill.std.w}}px"></span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; left: 8px; right: 8px; bottom: 14px; height: 32px; border-radius: 16px; border: 1px solid var(--line); background: var(--soft)">
+                <span style="position: absolute; top: 2px; height: 26px; border-radius: 13px; background: var(--ink); left: {{pill.red.l}}px; width: {{pill.red.w}}px"></span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Tab pill</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">The pill jumps straight to the new tab — no stretch.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><div style="position: absolute; left: 0; right: 0; top: 0; height: {{pull.std.d}}px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; padding-bottom: 6px; box-sizing: border-box; overflow: hidden">
+                <svg viewBox="-4 -4 108 108" width="20" height="20" aria-hidden="true"><path d="M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z" pathLength="100" class="{{pull.std.lapCls}}" fill="none" stroke-width="8" style="stroke: var(--ink); stroke-dasharray: {{pull.std.dash}}"></path></svg>
+                <span class="lbl2" style="font-size: 7.5px">{{pull.std.cap}}</span></div>
+              <div style="position: absolute; inset: 0; background: var(--bg); transform: translateY({{pull.std.d}}px); filter: {{pull.std.filter}}"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><div style="position: absolute; left: 0; right: 0; top: 0; height: {{pull.red.d}}px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; padding-bottom: 6px; box-sizing: border-box; overflow: hidden">
+                <svg viewBox="-4 -4 108 108" width="20" height="20" aria-hidden="true"><path d="M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z" pathLength="100" class="{{pull.red.lapCls}}" fill="none" stroke-width="8" style="stroke: var(--ink); stroke-dasharray: {{pull.red.dash}}"></path></svg>
+                <span class="lbl2" style="font-size: 7.5px">{{pull.red.cap}}</span></div>
+              <div style="position: absolute; inset: 0; background: var(--bg); transform: translateY({{pull.red.d}}px); filter: {{pull.red.filter}}"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Pull to refresh</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">Content still follows your finger. No lap loop and no black-and-white flash — the caption does the work.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; inset: 0; background: var(--line); opacity: {{ach.std.scrim}}"></div>
+              <div style="position: absolute; left: 14px; right: 14px; top: 34px; height: 116px; background: var(--ink); color: var(--bg); {{ach.std.clip}}; opacity: {{ach.std.cardO}}; display: flex; flex-direction: column; justify-content: center; padding: 0 12px; gap: 6px; overflow: hidden">
+                <span class="lbl2" style="color: inherit; opacity: .7; font-size: 7.5px">NEW LEVEL</span>
+                <div style="display: flex; height: 30px; overflow: hidden"><sc-for list="{{ach.std.letters}}" as="c" hint-placeholder-count="5"><span style="font: 700 26px/30px Archivo, sans-serif; font-stretch: 125%; display: inline-block; transform: translateY({{c.y}}px)">{{c.ch}}</span></sc-for></div>
+                <span class="mono" style="font-size: 11px">{{ach.std.val}}</span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; inset: 0; background: var(--line); opacity: {{ach.red.scrim}}"></div>
+              <div style="position: absolute; left: 14px; right: 14px; top: 34px; height: 116px; background: var(--ink); color: var(--bg); {{ach.red.clip}}; opacity: {{ach.red.cardO}}; display: flex; flex-direction: column; justify-content: center; padding: 0 12px; gap: 6px; overflow: hidden">
+                <span class="lbl2" style="color: inherit; opacity: .7; font-size: 7.5px">NEW LEVEL</span>
+                <div style="display: flex; height: 30px; overflow: hidden"><sc-for list="{{ach.red.letters}}" as="c" hint-placeholder-count="5"><span style="font: 700 26px/30px Archivo, sans-serif; font-stretch: 125%; display: inline-block; transform: translateY({{c.y}}px)">{{c.ch}}</span></sc-for></div>
+                <span class="mono" style="font-size: 11px">{{ach.red.val}}</span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Level reached</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">The card fades in with the final numbers already there. No sweep, no rising letters, no count.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><div style="position: absolute; left: 39px; top: 38px; width: 72px; height: 80px">
+                <svg viewBox="-1 -1 74 82" width="72" height="80" aria-hidden="true" style="position: absolute; inset: 0"><path d="M19 0H72V64L53 80H0V16Z" pathLength="100" fill="none" stroke-width="1.6" style="stroke: var(--ink); stroke-dasharray: {{badge.std.dash}}"></path></svg>
+                <svg viewBox="-1 -1 74 82" width="72" height="80" aria-hidden="true" style="position: absolute; inset: 0; {{badge.std.clip}}; opacity: {{badge.std.fillO}}"><path d="M19 0H72V64L53 80H0V16Z" style="fill: var(--ink)"></path></svg>
+                <sc-for list="{{badge.std.sparks}}" as="s" hint-placeholder-count="0"><span class="spk" style="width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for>
+              </div>
+              <span class="mono" style="position: absolute; left: 50%; top: 132px; transform: translateX(-50%); font-size: 8.5px; letter-spacing: .12em; padding: 3px 5px; border: 1px solid var(--ink); opacity: {{badge.std.newO}}">NEW</span></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><div style="position: absolute; left: 39px; top: 38px; width: 72px; height: 80px">
+                <svg viewBox="-1 -1 74 82" width="72" height="80" aria-hidden="true" style="position: absolute; inset: 0"><path d="M19 0H72V64L53 80H0V16Z" pathLength="100" fill="none" stroke-width="1.6" style="stroke: var(--ink); stroke-dasharray: {{badge.red.dash}}"></path></svg>
+                <svg viewBox="-1 -1 74 82" width="72" height="80" aria-hidden="true" style="position: absolute; inset: 0; {{badge.red.clip}}; opacity: {{badge.red.fillO}}"><path d="M19 0H72V64L53 80H0V16Z" style="fill: var(--ink)"></path></svg>
+                <sc-for list="{{badge.red.sparks}}" as="s" hint-placeholder-count="0"><span class="spk" style="width: {{s.w}}px; opacity: {{s.o}}; transform: translate({{s.x}}px, {{s.y}}px) rotate({{s.r}}deg)"></span></sc-for>
+              </div>
+              <span class="mono" style="position: absolute; left: 50%; top: 132px; transform: translateX(-50%); font-size: 8.5px; letter-spacing: .12em; padding: 3px 5px; border: 1px solid var(--ink); opacity: {{badge.red.newO}}">NEW</span></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Badge earned</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">No drawing and no sparks. The badge swaps to filled and the NEW tag appears.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><div style="position: absolute; left: 20px; top: 50px; height: 64px; overflow: hidden">
+                <div style="display: flex; flex-direction: column; transform: translateY({{streak.std.y}}px)">
+                  <span style="font: 700 64px/64px Archivo, sans-serif; font-stretch: 125%; opacity: {{streak.std.o1}}">3</span>
+                  <span style="font: 700 64px/64px Archivo, sans-serif; font-stretch: 125%; opacity: {{streak.std.o2}}; margin-top: {{streak.std.mt}}px">4</span>
+                </div></div>
+              <span class="lbl2" style="position: absolute; left: 20px; top: 124px">WEEKS IN A ROW</span></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><div style="position: absolute; left: 20px; top: 50px; height: 64px; overflow: hidden">
+                <div style="display: flex; flex-direction: column; transform: translateY({{streak.red.y}}px)">
+                  <span style="font: 700 64px/64px Archivo, sans-serif; font-stretch: 125%; opacity: {{streak.red.o1}}">3</span>
+                  <span style="font: 700 64px/64px Archivo, sans-serif; font-stretch: 125%; opacity: {{streak.red.o2}}; margin-top: {{streak.red.mt}}px">4</span>
+                </div></div>
+              <span class="lbl2" style="position: absolute; left: 20px; top: 124px">WEEKS IN A ROW</span></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Streak count</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">The number changes in place with a short fade instead of rolling.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><span class="sk {{skel.std.cls}}" style="top: 20px; width: 60px; height: 6px"></span><span class="sk {{skel.std.cls}}" style="top: 34px; width: 118px; height: 10px"></span><span class="sk {{skel.std.cls}}" style="top: 50px; width: 90px; height: 10px"></span><span class="sk {{skel.std.cls}}" style="top: 74px; width: 124px; height: 40px"></span><span class="sk {{skel.std.cls}}" style="top: 124px; width: 124px; height: 8px"></span><span class="sk {{skel.std.cls}}" style="top: 140px; width: 124px; height: 8px"></span><span class="sk {{skel.std.cls}}" style="top: 156px; width: 80px; height: 8px"></span></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><span class="sk {{skel.red.cls}}" style="top: 20px; width: 60px; height: 6px"></span><span class="sk {{skel.red.cls}}" style="top: 34px; width: 118px; height: 10px"></span><span class="sk {{skel.red.cls}}" style="top: 50px; width: 90px; height: 10px"></span><span class="sk {{skel.red.cls}}" style="top: 74px; width: 124px; height: 40px"></span><span class="sk {{skel.red.cls}}" style="top: 124px; width: 124px; height: 8px"></span><span class="sk {{skel.red.cls}}" style="top: 140px; width: 124px; height: 8px"></span><span class="sk {{skel.red.cls}}" style="top: 156px; width: 80px; height: 8px"></span></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Loading</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">Placeholder blocks stay still. The diagonal shimmer is switched off.</span></div>
+        </div><div style="background: var(--bg); color: var(--ink); padding: 18px 18px 18px 18px; display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2">STANDARD</span><div class="stage"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; left: 8px; right: 8px; top: 10px; height: 36px; background: var(--ink); color: var(--bg); display: flex; align-items: center; gap: 8px; padding: 0 10px; transform: translateY({{toast.std.y}}px); opacity: {{toast.std.o}}">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5 10 17 19 7" pathLength="30" style="stroke-dasharray: 30; stroke-dashoffset: {{toast.std.dash}}"></path></svg>
+                <span style="font: 600 11px/1 Archivo, sans-serif">Results saved</span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl2" style="color: var(--ink)">REDUCED</span><div class="stage" style="border-color: var(--ink)"><span class="blk" style="top: 20px; width: 60px; height: 6px"></span><span class="blk" style="top: 34px; width: 118px; height: 10px"></span><span class="blk" style="top: 50px; width: 90px; height: 10px"></span><span class="blk" style="top: 74px; width: 124px; height: 40px"></span><span class="blk" style="top: 124px; width: 124px; height: 8px"></span><span class="blk" style="top: 140px; width: 124px; height: 8px"></span><span class="blk" style="top: 156px; width: 80px; height: 8px"></span><div style="position: absolute; left: 8px; right: 8px; top: 10px; height: 36px; background: var(--ink); color: var(--bg); display: flex; align-items: center; gap: 8px; padding: 0 10px; transform: translateY({{toast.red.y}}px); opacity: {{toast.red.o}}">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5 10 17 19 7" pathLength="30" style="stroke-dasharray: 30; stroke-dashoffset: {{toast.red.dash}}"></path></svg>
+                <span style="font: 600 11px/1 Archivo, sans-serif">Results saved</span></div></div></div>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px"><span style="font-size: 17px; font-weight: 600; font-stretch: 112%">Confirmation</span><span style="font-size: 13px; line-height: 1.45; color: var(--ink2)">The toast appears where it lands, with the tick already drawn.</span></div>
+        </div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1800,"height":1060}}'>
+const LOGO_D = 'M8.0 52.3L58.8 58.1L27.1 83.3L4.7 78.8L4.2 79.2L28.6 94.7L97.0 47.9L27.7 39.6L32.0 24.0L53.0 20.7L68.6 7.6L22.6 12.9ZM81.8 16.0L88.0 25.3L88.7 24.6L88.5 5.3L72.9 7.1L57.6 19.9Z';
+
+const cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const eIO = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eOut = t => 1 - Math.pow(1 - t, 3);
+const r2 = v => Math.round(v * 100) / 100;
+const seg = (p, a, b) => cl((p - a) / (b - a));
+const W = 148, H = 182;
+const PHI = 50 * Math.PI / 180, NX = Math.cos(PHI), NY = Math.sin(PHI), UX = -Math.sin(PHI), UY = Math.cos(PHI);
+function half(b, behind, w, h) {
+  const T = 800, s = behind ? -1 : 1;
+  return 'clip-path: polygon(' + [[b, -T], [b, T], [b + s * T, T], [b + s * T, -T]].map(([c, t]) => r2(NX * c + UX * t) + 'px ' + r2(NY * c + UY * t) + 'px').join(', ') + ')';
+}
+function lines(c0, w, h) {
+  const out = [];
+  [[7, 0], [5, 12], [4, 22]].forEach(([th, off]) => {
+    const c = c0 - off, x0 = NX * c, y0 = NY * c;
+    const lo = Math.max((x0 - w) / (-UX), -y0 / UY), hi = Math.min(x0 / (-UX), (h - y0) / UY);
+    if (hi - lo <= 0) return;
+    const t1 = lo + .05 * (hi - lo), t2 = lo + .9 * (hi - lo), mid = (t1 + t2) / 2, len = t2 - t1 + th;
+    out.push({ len: r2(len), th, rad: th / 2, x: r2(NX * c + UX * mid - len / 2), y: r2(NY * c + UY * mid - th / 2) });
+  });
+  return out;
+}
+function burst(u, cx, cy, n, dist) {
+  if (u <= 0 || u >= 1) return [];
+  return Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2, d = dist * eOut(u), w = 7 * (1 - .5 * u);
+    return { w: r2(w), o: r2(1 - u), x: r2(cx + Math.cos(a) * d - w / 2), y: r2(cy + Math.sin(a) * d - 1), r: r2(a * 180 / Math.PI) }; });
+}
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { theme: 'white', t: 0 }; this.raf = null; this.t0 = 0; }
+  componentDidMount() { this.t0 = performance.now(); const step = () => { this.setState({ t: performance.now() - this.t0 }); this.raf = requestAnimationFrame(step); }; this.raf = requestAnimationFrame(step); }
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); }
+  renderVals() {
+    const p = (this.state.t % 3600) / 3600;
+    const CM = W * NX + H * NY;
+    // launch
+    const zoom = seg(p, .62, .82);
+    const launch = {
+      std: { splashO: p < .8 ? 1 : r2(1 - seg(p, .8, .86)), logoS: r2(p < .15 ? .6 + .4 * eOut(seg(p, 0, .15)) : p < .62 ? 1 : Math.pow(16, zoom * zoom)), logoO: p < .86 ? 1 : 0,
+        sparks: burst(seg(p, .25, .55), 74, 91, 8, 44) },
+      red: { splashO: r2(1 - seg(p, .55, .61)), logoS: 1, logoO: r2(seg(p, 0, .06) * (1 - seg(p, .55, .61))), sparks: [] } };
+    // tab change
+    const tu = seg(p, .25, .5), lead = lerp(-10, CM + 10, eIO(tu));
+    const tab = {
+      std: { clip: p < .25 ? half(-50, true) : p < .5 ? half(lead, true) : '', bO: p < .92 ? 1 : 0, lines: p > .25 && p < .5 ? lines(lead, W, H) : [] },
+      red: { clip: '', bO: r2(seg(p, .3, .34) * (1 - seg(p, .92, .96))), lines: [] } };
+    // pill
+    const X = [6, 50, 94], PW = 132, ws = 38;
+    const idx = p < .12 ? 0 : p < .45 ? 1 : p < .78 ? 2 : 0;
+    const from = p < .12 ? 2 : p < .45 ? 0 : p < .78 ? 1 : 2, t0 = p < .12 ? -.21 : p < .45 ? .12 : p < .78 ? .45 : .78;
+    const u = seg(p, t0, t0 + .14), dir = X[idx] > X[from] ? 1 : -1;
+    const fast = eOut(cl(u * 1.5)), slow = eIO(u);
+    const L = lerp(X[from], X[idx], dir > 0 ? slow : fast), R = lerp(X[from] + ws, X[idx] + ws, dir > 0 ? fast : slow);
+    const pill = { std: { l: r2(L), w: r2(R - L) }, red: { l: X[idx], w: ws } };
+    // pull
+    const d = p < .05 ? 0 : p < .3 ? 46 * eOut(seg(p, .05, .3)) : p < .62 ? 46 : 46 * (1 - eIO(seg(p, .62, .8)));
+    const loading = p >= .3 && p < .6;
+    const pull = {
+      std: { d: r2(d), lapCls: loading ? 'lap' : '', dash: loading ? '24 76' : r2(Math.min(1, d / 46) * 100) + ' 100', cap: loading ? 'UPDATING' : 'PULL', filter: p > .6 && p < .63 ? 'invert(1)' : 'none' },
+      red: { d: r2(d), lapCls: '', dash: '100 0', cap: loading ? 'UPDATING…' : p >= .6 && p < .85 ? 'UPDATED' : 'PULL', filter: 'none' } };
+    // achievement
+    const inU = seg(p, .1, .3), outU = seg(p, .85, .97);
+    const letters = ch => 'STATE'.split('').map((c, i) => ({ ch: c, y: ch ? r2(32 * (1 - eOut(seg(p, .3 + i * .03, .42 + i * .03)))) : 0 }));
+    const ach = {
+      std: { scrim: r2(seg(p, .08, .16) * (1 - seg(p, .9, .97))), clip: p < .1 ? half(-50, true) : p < .3 ? half(lerp(-10, 150, eIO(inU)), true) : p < .85 ? '' : half(lerp(-10, 150, eIO(outU)), false), cardO: 1, letters: letters(true), val: (4.38 - Math.round(5 * eOut(seg(p, .4, .6))) * .01).toFixed(2) + ' s' },
+      red: { scrim: r2(seg(p, .1, .16) * (1 - seg(p, .85, .91))), clip: '', cardO: r2(seg(p, .1, .16) * (1 - seg(p, .85, .91))), letters: letters(false), val: '4.33 s' } };
+    // badge
+    const bu = seg(p, .2, .36);
+    const badge = {
+      std: { dash: r2(eOut(seg(p, .08, .24)) * 100) + ' 100', clip: p < .2 ? 'clip-path: polygon(0 0, 0 0, 0 0)' : half(lerp(-10, 120, eIO(bu)), true), fillO: p < .92 ? 1 : 0, sparks: burst(seg(p, .34, .52), 36, 40, 8, 40), newO: r2(seg(p, .4, .45) * (p < .92 ? 1 : 0)) },
+      red: { dash: '100 0', clip: '', fillO: r2(seg(p, .2, .26) * (p < .92 ? 1 : 0)), sparks: [], newO: r2(seg(p, .26, .3) * (p < .92 ? 1 : 0)) } };
+    // streak
+    const ru = eIO(seg(p, .3, .45)), back = p > .92;
+    const streak = {
+      std: { y: back ? 0 : r2(-64 * ru), o1: 1, o2: 1, mt: 0 },
+      red: { y: 0, o1: back ? 1 : r2(1 - seg(p, .3, .34)), o2: back ? 0 : r2(seg(p, .32, .36)), mt: -64 } };
+    const skel = { std: { cls: 'on' }, red: { cls: '' } };
+    const tu2 = seg(p, .2, .3);
+    const toast = {
+      std: { y: r2(p < .85 ? -50 + 50 * eOut(tu2) : -50 * eIO(seg(p, .85, .93))), o: 1, dash: r2(30 * (1 - eOut(seg(p, .3, .38)))) },
+      red: { y: 0, o: r2(seg(p, .2, .26) * (1 - seg(p, .85, .9))), dash: 0 } };
+    return { theme: this.state.theme, launch, tab, pill, pull, ach, badge, streak, skel, toast, themes: [['white', 'White'], ['dark', 'Dark']].map(([k, label]) => ({ label, on: this.state.theme === k, cls: this.state.theme === k ? 'on' : '', pick: () => this.setState({ theme: k }) })) };
+  }
+}
+</script>
+</body>
+</html>

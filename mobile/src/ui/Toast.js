@@ -41,7 +41,7 @@ export default function ToastHost() {
   }
 
   const slide = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }))
-  const line = useAnimatedStyle(() => ({ width: `${left.value * 100}%` }))
+  const line = useAnimatedStyle(() => ({ transform: [{ scaleX: left.value }] }))
   if (!now) return null
   return (
     <Animated.View accessibilityRole="alert" accessibilityLiveRegion="polite"
@@ -59,7 +59,7 @@ export default function ToastHost() {
         </Pressable>
       )}
       <View style={{ position: 'absolute', left: 0, bottom: 0, right: 0, height: 2 }}>
-        <Animated.View style={[{ height: 2, backgroundColor: c.bg }, line]} />
+        <Animated.View style={[{ height: 2, width: '100%', backgroundColor: c.bg, transformOrigin: 'left center' }, line]} />
       </View>
     </Animated.View>
   )

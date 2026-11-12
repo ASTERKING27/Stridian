@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { router } from 'expo-router'
 import { api, formatValue, getSports, initials } from '../../lib/api'
-import { check, parseValue } from '../../lib/entry'
+import { check, parseValue, rangeOf } from '../../lib/entry'
 import { forgetReport } from '../../lib/report'
 import { useBackInView, useData } from '../../lib/useData'
 import { contextLine, useSession } from '../../lib/session'
 import { useTheme } from '../../lib/theme'
 import { haptic } from '../../lib/haptics'
-import { Btn, Eyebrow, Field, H1, I, Icon, LinkRow, Mono, Note, PersonRow, Placeholder, Screen, SearchField, T, Top } from '../../ui'
+import { Btn, Eyebrow, Field, H1, I, Icon, Mono, Note, PersonRow, Placeholder, Screen, SearchField, T, Top } from '../../ui'
 import { toast } from '../../ui/Toast'
 import { metaOf } from './Squad'
 
@@ -17,7 +16,7 @@ const UNIT_WORD = { sec: 'SECONDS', cm: 'CM', level: 'LEVEL', 'km/h': 'KM/H', m:
 /* Record a testing session (Coach board, 07): pick the player, type each test, fix what
    can't be right, save. Only what's typed is sent — each value becomes a new dated
    result, so last time's numbers stay in their history rather than being saved again. */
-export default function Entry({ active, params }) {
+export default function Entry({ active, ask, go }) {
   const s = useSession()
   const sport = s.coach?.sport
   const squad = useData(api.students, [sport])
@@ -31,7 +30,7 @@ export default function Entry({ active, params }) {
   }, [sport])
   useEffect(() => { setPick(null) }, [sport])
   // "Record their results" on a student's page lands here with them picked
-  useEffect(() => { if (params?.student) setPick(Number(params.student)) }, [params?.student, params?.at])
+  useEffect(() => { if (ask?.student) setPick(Number(ask.student)) }, [ask?.at])
 
   const list = squad.data ?? []
   const student = list.find(x => x.id === pick)
@@ -50,11 +49,11 @@ export default function Entry({ active, params }) {
       </View>
       {squad.error && <Note>{squad.error.message}</Note>}
       {student ? (
-        <Sheet key={student.id} student={student} tests={tests} onChange={() => setPick(null)} reload={squad.reload} />
+        <Sheet key={student.id} student={student} tests={tests} onChange={() => setPick(null)} reload={squad.reload} go={go} />
       ) : (
         <>
           <SearchField value={q} onChangeText={setQ} />
-          {!squad.data && !squad.error && <View style={{ gap: 12 }}>{[0, 1, 2, 3].map(i => <Placeholder key={i} h={50} />)}</View>}
+          {!squad.data && !squad.error && <View style={{ gap: 12 }}>{[0, 1, 2, 3].map(i => <Placeholder key={i} h={50} delay={i * 60} />)}</View>}
           {squad.data && visible.length === 0 && (
             <T size={14} color="ink2" style={{ lineHeight: 20 }}>
               {list.length === 0 ? `No students yet — anyone who enrols in ${sport} appears here.` : 'Nobody matches that search.'}
@@ -72,7 +71,7 @@ export default function Entry({ active, params }) {
   )
 }
 
-function Sheet({ student, tests, onChange, reload }) {
+function Sheet({ student, tests, onChange, reload, go }) {
   const { c } = useTheme()
   const [last, setLast] = useState(null)
   const [values, setValues] = useState({})
@@ -85,6 +84,7 @@ function Sheet({ student, tests, onChange, reload }) {
 
   useEffect(() => { api.results(student.id).then(r => setLast(r.results)).catch(() => setLast({})) }, [student.id])
 
+  const range = Object.fromEntries(tests.map(m => [m.key, rangeOf(m)]))
   const problems = Object.fromEntries(tests.map(m => [m.key, check(m, values[m.key], { skipped: skip[m.key], kept: kept[m.key] })]))
   const count = Object.values(problems).filter(Boolean).length
   const typed = tests.filter(m => !skip[m.key] && parseValue(values[m.key]) != null)
@@ -166,10 +166,19 @@ function Sheet({ student, tests, onChange, reload }) {
                   : <Pill label="KEEP IT" onPress={() => { haptic.tick(); setKept(x => ({ ...x, [m.key]: true })) }} />)}
                 {p.kind === 'blank' && <Pill label="NOT TESTED" onPress={() => { haptic.tick(); setSkip(x => ({ ...x, [m.key]: true })) }} />}
               </View>
-            ) : !values[m.key] && (
-              <Pressable onPress={() => setSkip(x => ({ ...x, [m.key]: true }))} hitSlop={6} style={{ alignSelf: 'flex-start' }}>
-                <Mono size={10} color="ink2" style={{ letterSpacing: 0.8, textDecorationLine: 'underline' }}>NOT TESTED TODAY</Mono>
-              </Pressable>
+            ) : (
+              // before anything is typed: what it accepts, and which way is better
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <Mono size={10} color="ink2" style={{ letterSpacing: 0.6, flex: 1 }}
+                      accessibilityLabel={`Accepts ${range[m.key].text}, ${range[m.key].better.toLowerCase()}`}>
+                  {range[m.key].text} · {range[m.key].lower ? '↓' : '↑'} {range[m.key].better}
+                </Mono>
+                {!values[m.key] && (
+                  <Pressable onPress={() => setSkip(x => ({ ...x, [m.key]: true }))} hitSlop={6}>
+                    <Mono size={10} color="ink2" style={{ letterSpacing: 0.8, textDecorationLine: 'underline' }}>NOT TESTED TODAY</Mono>
+                  </Pressable>
+                )}
+              </View>
             )}
           </View>
         )
@@ -177,8 +186,12 @@ function Sheet({ student, tests, onChange, reload }) {
 
       <Note>{error}</Note>
       <Btn label="Save results" busy={busy} busyLabel="Saving" disabled={tried && (count > 0 || !typed.length)} onPress={save} />
-      <LinkRow label="Drill videos" sub={`Film ${student.name.split(' ')[0]} for pose analysis`} last
-               onPress={() => router.push({ pathname: '/videos', params: { id: student.id, name: student.name } })} />
+      {/* drill clips live in Footage › Drill: this takes the coach there, for this student */}
+      <View style={{ gap: 6, paddingTop: 6 }}>
+        <Btn kind="secondary" label="Add a drill video" icon={I.footage} iconRight={I.next}
+             onPress={() => go('footage', { section: 'drill', student: String(student.id), name: student.name })} />
+        <T size={12.5} color="ink2" style={{ textAlign: 'center' }}>Optional — opens Footage › Drill, where {student.name.split(' ')[0]}’s clips are kept.</T>
+      </View>
     </>
   )
 }

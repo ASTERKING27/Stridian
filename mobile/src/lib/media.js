@@ -1,10 +1,10 @@
-import { Alert, Platform } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import * as DocumentPicker from 'expo-document-picker'
 import * as Sharing from 'expo-sharing'
 import { Directory, File, Paths } from 'expo-file-system'
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator'
 import { BASE, authHeaders } from './api'
+import { dialog } from '../ui/Dialog'
 
 /* Pick (or take) a photo and shrink it on the phone before it goes up: a phone photo is
    3–8 MB, the server takes 4 MB at most. Resolves to { uri, type, name } or null. */
@@ -32,17 +32,16 @@ export async function pickPdf() {
   return { uri: a.uri, type: 'application/pdf', name: a.name }
 }
 
-// Camera, photos or a PDF — the phone's own chooser.
+// Camera, photos or a PDF.
 export function chooseCertificate() {
   return new Promise((resolve, reject) => {
     const run = fn => () => fn().then(resolve, reject)
-    Alert.alert('Add a certificate', 'A clear photo of the whole certificate works best.', [
+    dialog('Add a certificate', 'A clear photo of the whole certificate works best.', [
       { text: 'Take a photo', onPress: run(() => pickPhoto({ camera: true, maxSide: 2000 })) },
       { text: 'Choose a photo', onPress: run(() => pickPhoto({ maxSide: 2000 })) },
       { text: 'Choose a PDF', onPress: run(pickPdf) },
-      // Android dismisses on a tap outside; iOS needs the button
-      ...(Platform.OS === 'ios' ? [{ text: 'Cancel', style: 'cancel', onPress: () => resolve(null) }] : []),
-    ], { cancelable: true, onDismiss: () => resolve(null) })
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },     // a tap outside too
+    ])
   })
 }
 

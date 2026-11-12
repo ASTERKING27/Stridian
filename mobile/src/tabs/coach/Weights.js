@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import { api, getSports } from '../../lib/api'
 import { useData } from '../../lib/useData'
 import { changes, SOURCES, sum, toDraft, unfinished } from '../../lib/weights'
@@ -8,6 +8,8 @@ import { useTheme } from '../../lib/theme'
 import { haptic } from '../../lib/haptics'
 import { Btn, Choice, Eyebrow, H1, Lap, Mono, Note, Screen, Seg, Slider, T, Top } from '../../ui'
 import { toast } from '../../ui/Toast'
+import { LoadError } from '../../ui/States'
+import { dialog } from '../../ui/Dialog'
 
 /* How much each measure counts towards each position (Coach board, 09). Every report is
    worked out again from these as soon as they're saved. */
@@ -38,7 +40,7 @@ export default function Weights() {
     return (
       <Screen bottom={110}>
         <Top context={contextLine(s)} />
-        {data.error ? <Note>{data.error.message}</Note> : <Lap size={28} />}
+        {data.error ? <LoadError error={data.error} onRetry={data.reload} /> : <Lap size={28} />}
       </Screen>
     )
   }
@@ -70,7 +72,7 @@ export default function Weights() {
     } catch (err) { haptic.error(); setError(err.message) }
     setBusy('')
   }
-  const reset = () => Alert.alert('Back to the built-in weights?', `Every ${sport} position goes back to Stridian’s starting weights. The model’s history keeps the ones you had.`, [
+  const reset = () => dialog('Back to the built-in weights?', `Every ${sport} position goes back to Stridian’s starting weights. The model’s history keeps the ones you had.`, [
     { text: 'Keep mine', style: 'cancel' },
     { text: 'Reset', style: 'destructive', onPress: async () => {
       setBusy('reset')

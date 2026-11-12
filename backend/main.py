@@ -1712,6 +1712,17 @@ def list_videos(student_id: int, db: Session = Depends(get_db),
     return sorted(student.videos, key=lambda v: v.created_at, reverse=True)
 
 
+@app.get("/api/videos")
+def squad_videos(db: Session = Depends(get_db), coach: Coach = Depends(auth.current_coach)):
+    """Every drill clip in the coach's sport, newest first, with whose it is — the app's
+    Footage › Drill list. Unfinished uploads are left out, and so are the measurements
+    (the clip's own page fetches those)."""
+    rows = db.execute(select(VideoAnalysis, Student.name).join(Student, VideoAnalysis.student_id == Student.id)
+                      .where(Student.sport == coach.sport, VideoAnalysis.status != "uploading")
+                      .order_by(VideoAnalysis.created_at.desc(), VideoAnalysis.id.desc()).limit(200)).all()
+    return [{**VideoOut.model_validate(v).model_dump(exclude={"metrics"}), "student_name": name} for v, name in rows]
+
+
 def _coach_video(video_id: int, coach: Coach, db: Session) -> VideoAnalysis:
     record = db.get(VideoAnalysis, video_id)
     if record is None or record.student.sport != coach.sport:

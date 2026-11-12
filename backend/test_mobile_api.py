@@ -104,6 +104,9 @@ def main_test():
         assert r["done"] and r["status"] == "queued", r
         videos = ok(c.get("/api/student/videos", headers=SH))
         assert videos[0]["uploaded_by"] == "student" and videos[0]["has_pose"] is False and videos[0]["label"] == "Countermovement jump"
+        # the coach's Footage › Drill list: the whole squad's clips, with whose each is
+        squad = ok(c.get("/api/videos", headers=CH))
+        assert [(v["id"], v["student_name"]) for v in squad] == [(up["id"], "Aarav Menon")] and "metrics" not in squad[0], squad
         ok(c.get(f"/api/student/videos/{up['id']}/pose", headers=SH), 404)
         ok(c.get(f"/api/videos/{up['id']}/pose", headers=CH), 404)
         # once the worker has saved a pose track, both can read it

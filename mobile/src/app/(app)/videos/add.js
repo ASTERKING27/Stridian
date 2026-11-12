@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg'
-import { getSports } from '../../../lib/api'
+import { api, getSports } from '../../../lib/api'
+import { useData } from '../../../lib/useData'
 import { pickVideo } from '../../../lib/media'
 import { clipName, uploadClip } from '../../../lib/upload'
 import { useSession } from '../../../lib/session'
 import { useTheme } from '../../../lib/theme'
 import { haptic } from '../../../lib/haptics'
 import { primed } from '../../../lib/notifications'
-import { Back, Btn, Choice, Eyebrow, Field, I, Icon, Mono, Note, Screen, Seg, T, Title } from '../../../ui'
+import { Back, Btn, Choice, Eyebrow, Field, I, Icon, Mono, Note, Screen, SearchField, Seg, T, Title } from '../../../ui'
 
 const TIPS = ['Film side-on, whole body in frame', 'One athlete only', 'Keep the phone still — prop it up',
               'Up to 200 MB · MP4, MOV, AVI, MKV, WEBM, M4V']
@@ -19,11 +20,14 @@ const mb = b => `${Math.round(b / 1048576)} MB`
 const dur = ms => (ms ? `${Math.floor(ms / 60000)}:${String(Math.round((ms / 1000) % 60)).padStart(2, '0')}` : '')
 
 /* Upload board, 01–03: choose the drill, film or pick the clip, watch it go up in pieces.
+   `id` (and `name`): a coach filming that student. A coach without one picks who first.
    `match`: a coach's match footage instead — a label and the way the team attacks. */
 export default function AddVideo() {
-  const { id, match } = useLocalSearchParams()
+  const { id, name, match } = useLocalSearchParams()
   const isMatch = !!match
   const s = useSession()
+  const coach = s.role === 'coach'
+  const [who, setWho] = useState(id ? { id: Number(id), name } : null)
   const { c } = useTheme()
   const sport = s.role === 'student' ? s.me?.student?.sport : s.coach?.sport
   const [drills, setDrills] = useState([])
@@ -47,6 +51,7 @@ export default function AddVideo() {
 
   async function choose(camera) {
     setError(null)
+    if (coach && !isMatch && !who) { haptic.nope(); return setError(new Error('Pick who is in the clip first.')) }
     // the first time, say why the camera is needed before the phone asks
     if (camera && !(await primed('camera'))) return router.push({ pathname: '/primer', params: { kind: 'camera' } })
     try {
@@ -64,7 +69,7 @@ export default function AddVideo() {
     setError(null)
     try {
       await uploadClip(isMatch ? { uri: file.uri, name: file.name, label: label.trim() || null, match: dir }
-        : { uri: file.uri, name: file.name, label: drill || null, studentId: id }, p => setProg(p), abort.current.signal)
+        : { uri: file.uri, name: file.name, label: drill || null, studentId: who?.id }, p => setProg(p), abort.current.signal)
       haptic.success()
       setStage('done')
     } catch (err) {
@@ -130,7 +135,7 @@ export default function AddVideo() {
         : ['The upload was refused', error?.message]
     return (
       <Screen>
-        <Back label={isMatch ? 'Match footage' : 'Drill videos'} onPress={() => router.back()} />
+        <Back label={coach ? 'Back' : 'Drill videos'} onPress={() => router.back()} />
         <Title eyebrow="UPLOAD STOPPED">Couldn’t finish the upload</Title>
         <View style={{ gap: 10 }}>
           {pieces}
@@ -175,8 +180,11 @@ export default function AddVideo() {
   )
   return (
     <Screen>
-      <Back label={isMatch ? 'Match footage' : 'Drill videos'} onPress={() => router.back()} />
-      <Title eyebrow={isMatch ? 'NEW MATCH CLIP' : 'NEW DRILL CLIP'}>{isMatch ? 'Upload a match' : 'Add a video'}</Title>
+      <Back label={coach ? 'Back' : 'Drill videos'} onPress={() => router.back()} />
+      <Title eyebrow={isMatch ? 'NEW MATCH CLIP' : `NEW DRILL CLIP${who?.name ? ` · ${who.name.toUpperCase()}` : ''}`}>
+        {isMatch ? 'Upload a match' : 'Add a video'}
+      </Title>
+      {coach && !isMatch && !id && <WhoPicker who={who} onPick={setWho} />}
       {isMatch && (
         <>
           <Field label="LABEL (OPTIONAL)" value={label} onChangeText={setLabel} maxLength={160}
@@ -207,5 +215,21 @@ export default function AddVideo() {
       </View>
       <Mono size={10.5} color="ink2" style={{ lineHeight: 17 }}>VIDEOS ARE DELETED AFTER 30 DAYS.{'\n'}YOUR MEASUREMENTS ARE KEPT.</Mono>
     </Screen>
+  )
+}
+
+// A coach filming from Footage › Drill: who is in the clip.
+function WhoPicker({ who, onPick }) {
+  const squad = useData(api.students, [])
+  const [q, setQ] = useState('')
+  const term = q.trim().toLowerCase()
+  const list = (squad.data ?? []).filter(x => !term || x.name.toLowerCase().includes(term))
+  return (
+    <View style={{ gap: 10 }}>
+      <Eyebrow>WHO IS IN THE CLIP</Eyebrow>
+      {(squad.data ?? []).length > 10 && <SearchField value={q} onChangeText={setQ} placeholder="Name" />}
+      {squad.error && <Note>{squad.error.message}</Note>}
+      <Choice options={list.map(x => [x.id, x.name])} value={who?.id} onChange={k => onPick(list.find(x => x.id === k))} />
+    </View>
   )
 }
