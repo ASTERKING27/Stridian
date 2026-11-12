@@ -43,7 +43,7 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
   const byMetric = useMemo(() => {
     const out = {}
     for (const row of history) {
-      (out[row.metric_key] ??= []).push({ t: row.recorded_at, v: row.value })
+      (out[row.metric_key] ??= []).push({ t: row.recorded_at, v: row.value, id: row.id })
     }
     return out
   }, [history])
@@ -64,6 +64,21 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
     if (!confirm(`Delete ${student.name} and all their data? This can't be undone.`)) return
     await api.deleteStudent(id)
     onDeleted()
+  }
+
+  // a mistyped result: take the latest one back, and the one before it counts again
+  async function removeResult(m) {
+    const last = byMetric[m.key].at(-1)
+    if (!confirm(`Remove the latest ${m.label} result (${formatValue(last.v, m)})? `
+                 + 'The one before it, if there is one, counts again.')) return
+    try {
+      await api.deleteResult(id, last.id)
+      api.analysis(id).then(setData).catch(() => {})
+      api.history(id).then(setHistory).catch(() => {})
+      onChanged?.()
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   async function saveExcel() {
@@ -165,7 +180,9 @@ export default function Report({ id, readOnly = false, initialTab = 'Overview', 
                     </div>
                   </div>
                   {metrics.filter(physical).map(m => (
-                    <MetricRow key={m.key} metric={m} series={byMetric[m.key]} />
+                    <MetricRow key={m.key} metric={m} series={byMetric[m.key]}
+                               onRemove={!readOnly && m.source === 'test' && byMetric[m.key]?.length
+                                 ? () => removeResult(m) : undefined} />
                   ))}
                 </div>
               )}
@@ -1004,7 +1021,7 @@ function CardsTab({ data }) {
   )
 }
 
-function MetricRow({ metric: m, series }) {
+function MetricRow({ metric: m, series, onRemove }) {
   const points = (series ?? []).map(p => ({ t: p.t, v: p.v }))
   return (
     <div className="metric">
@@ -1043,6 +1060,11 @@ function MetricRow({ metric: m, series }) {
         <div style={{ marginTop: 10, maxWidth: 360 }}>
           <Sparkline series={points} unit={m.unit} lowerIsBetter={m.direction === 'lower'} />
         </div>
+      )}
+      {onRemove && (
+        <button className="linkbtn danger" style={{ marginTop: 8, fontSize: '.84rem' }} onClick={onRemove}>
+          Remove latest result
+        </button>
       )}
     </div>
   )

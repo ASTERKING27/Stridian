@@ -812,7 +812,9 @@ Drill clips a student uploads themselves, the pose track behind the overlay, the
 contribution of every measure to every fit (`contributions` on each ranked position),
 the streak's last eight weeks and who restored a week, push tokens, account deletion
 and the weekly cron. `backend/test_mobile_api.py` runs all of it against a throwaway
-database: `python backend/test_mobile_api.py`.
+database: `python backend/test_mobile_api.py`. `python backend/test_guards.py` checks what
+the server turns away (results no athlete can post, a student's eleventh clip of the day),
+and `npm run check` in `frontend/` the Coach Entry form's logic.
 
 ---
 
@@ -840,7 +842,7 @@ database: `python backend/test_mobile_api.py`.
 | `POST` | `/api/student/focus/tick` | student | today's session of this week's focus is done (once a day) |
 | `GET` | `/api/coach/feed` | coach | Today's brief for the coach's sport |
 | `POST` | `/api/students/{id}/focus/log` | own sport | a focus session the student forgot to tick (`day`, this week or last) |
-| `GET` `POST` | `/api/student/videos` | student | own drill clips / announce one filmed on the phone (`label`: the drill) |
+| `GET` `POST` | `/api/student/videos` | student | own drill clips / announce one filmed on the phone (`label`: the drill; 10 a day) |
 | `PUT` | `/api/student/videos/{id}/upload` | student | one piece, with `X-Chunk-Range` |
 | `GET` | `/api/student/videos/{id}/thumbnail` `/pose` | student | the skeleton keyframe / the pose track for the overlay |
 | `DELETE` | `/api/student/videos/{id}` | student | remove a clip they uploaded, before it is analysed |
@@ -865,6 +867,7 @@ database: `python backend/test_mobile_api.py`.
 | `GET` | `/api/export/squad[?scope=all]` | coach / admin | the squad (or every sport) as Excel |
 | `GET` | `/api/students/{id}/export` | own sport | one student as Excel |
 | `GET` `PUT` | `/api/students/{id}/results` | own sport | read / record test results |
+| `DELETE` | `/api/students/{id}/results/{result_id}` | own sport | take back one recorded result (a mistyped one) |
 | `GET` | `/api/students/{id}/history` | own sport | every measurement ever recorded |
 | `GET` | `/api/students/{id}/analysis` | own sport | **the report** — ranking, why, plan, diet |
 | `GET` | `/api/students/{id}/diet` | own sport | the diet plan on its own |
@@ -900,6 +903,11 @@ sent twice is recognised rather than stored twice.
 
 Test results are **appended, never overwritten** — `/history` returns the full series
 for the progress sparklines, while the analysis always uses the newest value per metric.
+So the Coach Entry form saves only the numbers that were changed (sending back the ones it
+shows would add a copy of each to the history, and hide what really changed since the test
+before), and it questions a number outside what the test gives before saving it. A
+mistyped result is taken back with **Remove latest result** on the report's Measurements
+tab; the one before it counts again.
 
 ---
 

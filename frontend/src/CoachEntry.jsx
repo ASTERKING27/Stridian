@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, formatValue, inFlight, initials, parseValue, usePoll } from './api'
+import { api, changedResults, checkValue, formatValue, inFlight, initials, usePoll } from './api'
 import VideoCard, { VideoUploader } from './VideoCard'
 
 export default function CoachEntry({ coach, sports, version, onSaved }) {
@@ -82,6 +82,9 @@ function ResultsPanel({ student, sports, onSaved }) {
   const tests = sport.metrics.filter(m => m.source === 'test')
 
   const [values, setValues] = useState({})
+  const [shown, setShown] = useState({})         // the saved results, as the fields were filled with them
+  const [kept, setKept] = useState({})           // an unusual number the coach says is right
+  const [tried, setTried] = useState(false)
   const [position, setPosition] = useState(student.declared_position ?? '')
   const [notes, setNotes] = useState(student.coach_notes ?? '')
   const [sessions, setSessions] = useState(student.sessions_observed ?? '')
@@ -101,39 +104,50 @@ function ResultsPanel({ student, sports, onSaved }) {
   const loadVideos = () => api.videos(student.id).then(setVideos).catch(() => {})
   usePoll(videos.some(v => inFlight(v.status)), loadVideos)
 
+  const asTyped = results => Object.fromEntries(Object.entries(results).map(([k, v]) => {
+    const metric = tests.find(t => t.key === k)
+    return [k, metric?.key === 'timeTrial2km' ? formatValue(v, metric) : String(v)]
+  }))
+
   useEffect(() => {
     api.results(student.id)
       // anything typed while the saved numbers were loading wins over them
-      .then(r => setValues(typed => ({
-        ...Object.fromEntries(Object.entries(r.results).map(([k, v]) => {
-          const metric = tests.find(t => t.key === k)
-          return [k, metric?.key === 'timeTrial2km' ? formatValue(v, metric) : String(v)]
-        })),
-        ...typed,
-      })))
+      .then(r => { const saved = asTyped(r.results); setShown(saved); setValues(typed => ({ ...saved, ...typed })) })
       .catch(() => {})
     loadVideos()
   }, [student.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // a field still showing its saved number isn't judged again: it isn't being sent
+  const problems = Object.fromEntries(tests.map(t => [t.key,
+    kept[t.key] || (values[t.key] ?? '') === (shown[t.key] ?? '') ? null : checkValue(t, values[t.key])]))
+  const type = (key, text) => { setValues(v => ({ ...v, [key]: text })); setKept(k => ({ ...k, [key]: false })) }
+
   async function submit(e) {
     e.preventDefault()
+    setTried(true)
+    if (Object.values(problems).some(Boolean)) {
+      setStatus({ ok: false, text: 'Check the results marked above first.' })
+      return
+    }
     setBusy(true)
     setStatus(null)
     try {
-      const results = {}
-      for (const t of tests) {
-        const parsed = parseValue(values[t.key])
-        if (parsed !== null) results[t.key] = parsed
-      }
       const res = await api.saveResults(student.id, {
-        results,
+        results: changedResults(tests, values, shown),
         declared_position: position,
         coach_notes: notes,
         sessions_observed: sessions === '' ? null : Number(sessions),
       })
+      const saved = asTyped(res.results)
+      setShown(saved)
+      setValues(saved)
+      setKept({})
+      setTried(false)
       setStatus({
         ok: true,
-        text: `Saved ${res.saved} measurement${res.saved === 1 ? '' : 's'} for ${student.name}. Open the Dashboard for the full report.`,
+        text: res.saved
+          ? `Saved ${res.saved} new measurement${res.saved === 1 ? '' : 's'} for ${student.name}. Open the Dashboard for the full report.`
+          : `Saved for ${student.name} — no new measurements.`,
       })
       onSaved()
     } catch (err) {
@@ -179,8 +193,21 @@ function ResultsPanel({ student, sports, onSaved }) {
               <input id={t.key} inputMode="decimal"
                      placeholder={t.key === 'timeTrial2km' ? 'e.g. 8:30'
                        : ladders[t.key] ? `${ladders[t.key][0]} → ${ladders[t.key][4]}` : `${t.poor} → ${t.elite}`}
-                     value={values[t.key] ?? ''}
-                     onChange={e => setValues(v => ({ ...v, [t.key]: e.target.value }))} />
+                     value={values[t.key] ?? ''} aria-invalid={tried && problems[t.key] ? true : undefined}
+                     onChange={e => type(t.key, e.target.value)} />
+              {tried && problems[t.key] && (
+                <p className="note err" role="alert">
+                  {problems[t.key].text}{' '}
+                  {problems[t.key].fix && (
+                    <><button type="button" className="linkbtn" onClick={() => type(t.key, problems[t.key].fix)}>
+                      Use {problems[t.key].fix}</button>{' · '}</>
+                  )}
+                  {problems[t.key].range && (
+                    <button type="button" className="linkbtn" onClick={() => setKept(k => ({ ...k, [t.key]: true }))}>
+                      Keep it as typed</button>
+                  )}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -189,6 +216,7 @@ function ResultsPanel({ student, sports, onSaved }) {
             ? `Placeholders show the University → International targets for the ${student.category === 'M' ? "men's" : "women's"} team. `
             : 'Placeholders show the poor → elite range until their team is set on their Profile tab. '}
           Leave a field blank if it wasn&apos;t tested — the prediction just reports lower confidence.
+          Only the numbers you change are saved as new results.
         </p>
 
         <div className="grid2" style={{ marginTop: 14 }}>
