@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 /* Motion, written by hand rather than pulled in as a library: a ring that fills, a number
    that counts up, quiet toasts, the marker that slides under the chosen tab, and the
@@ -212,7 +212,12 @@ export function Switcher({ value, order = [], id, children }) {
       {panes.map(p => (
         <div key={p.key} className={`pane${p.leaving ? ' out' : p.fresh ? ' in' : ''}`}
              aria-hidden={p.leaving || undefined} inert={p.leaving || undefined}>
-          {children(p.key)}
+          {/* a page whose code is still on its way waits inside its own panel. Left to a
+              boundary further out, the wait hid the whole switch, and the old panel then
+              came back and left a second time (and was never taken away) */}
+          <Suspense fallback={<div className="skeleton" style={{ textAlign: 'center' }}>Loading</div>}>
+            {children(p.key)}
+          </Suspense>
         </div>
       ))}
     </div>

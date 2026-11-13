@@ -127,6 +127,9 @@ select {
   background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
   background-position: calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size: 5px 5px; background-repeat: no-repeat;
 }
+/* the list a select opens has no colours of its own: it borrows the select's background,
+   and a see-through one (the sport picker in the menu) opened white under light ink */
+option { background-color: var(--surface); color: var(--ink); }
 input[type='file'] { border-style: dashed; background: transparent; }
 input[type='checkbox'], input[type='radio'] { width: auto; padding: 0; accent-color: var(--volt); }
 input[type='range'] { accent-color: var(--acc-line); }
