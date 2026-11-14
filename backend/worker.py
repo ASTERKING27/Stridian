@@ -201,8 +201,11 @@ def work_queue(db, caps):
     for model, runner, what in runners:
         failed = set()   # a job that errored waits for the next pass, not an instant retry
         while (job := claim(db, model, failed)) is not None:
-            heartbeat(db, caps, f"{what} #{job.id}")
-            log.info("analysing %s #%s (%s)", what, job.id, job.original_name)
+            # kept aside: once the row is gone (a coach deleted the clip mid-analysis) the
+            # job itself can't be asked for its id any more, and asking would end the pass
+            job_id = job.id
+            heartbeat(db, caps, f"{what} #{job_id}")
+            log.info("analysing %s #%s (%s)", what, job_id, job.original_name)
             started = time.monotonic()
             try:
                 with tempfile.TemporaryDirectory() as tmp:
@@ -211,8 +214,8 @@ def work_queue(db, caps):
             except Exception as exc:  # noqa: BLE001 — one bad file must not stop the queue
                 db.rollback()
                 log.exception("  failed")
-                failed.add(job.id)
-                current = db.get(model, job.id)
+                failed.add(job_id)
+                current = db.get(model, job_id)
                 if current is not None:          # None: deleted by a coach mid-analysis
                     fail_or_retry(db, current, exc)
             done += 1

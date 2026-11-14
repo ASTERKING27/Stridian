@@ -77,6 +77,17 @@ def main_test():
         total = sum(r["weight"] for r in rows)
         assert abs(sum(r["score"] * r["weight"] for r in rows) / total - winger["fit"]) < 0.11
 
+        # a changed position is news once; confirming the one they already have is not
+        other = next(p["position"] for p in report["positions"]
+                     if p["position"] not in ("Winger", report["recommended"]["position"]))
+        sent = len(SENT)
+        ok(c.post(f"/api/students/{sid}/verify", headers=CH, json={"position": other}))
+        ok(c.post(f"/api/students/{sid}/verify", headers=CH, json={"position": other}))
+        assert SENT[sent:] == [("Your position changed", ["ExponentPushToken[student]"])], SENT[sent:]
+        # and the diet plan speaks of the position their coach confirmed, not the engine's own pick
+        notes = ok(c.get("/api/student/report", headers=SH))["diet"]["notes"]
+        assert any(f"workload of a {other.lower()}." in n or f"workload of an {other.lower()}." in n for n in notes), notes
+
         # the focus streak: history, best, and a session the coach logs late
         focus = ok(c.get("/api/student/coach", headers=SH))["focus"]
         assert len(focus["history"]) == 8 and focus["best"] == 0 and focus["restored"] is None
@@ -90,7 +101,15 @@ def main_test():
         if len(days) == 2:      # on a Monday or Tuesday there aren't two earlier days this week
             assert focus["complete"] and focus["restored"]["by"] == "R. Krishnan", focus
             assert ("Streak restored", ["ExponentPushToken[student]"]) in SENT
+            # ...said once: logging a day that is already there changes nothing
+            sent = len(SENT)
+            ok(c.post(f"/api/students/{sid}/focus/log", headers=CH, json={"day": days[0].isoformat()}))
+            assert len(SENT) == sent, SENT[sent:]
         ok(c.post(f"/api/students/{sid}/focus/log", headers=CH, json={"day": (today + timedelta(days=1)).isoformat()}), 400)
+        # this week or last, counted by the week: the day before last week's Monday is too far
+        # back whatever today is, while that Monday is in reach (409: there was no focus that week)
+        ok(c.post(f"/api/students/{sid}/focus/log", headers=CH, json={"day": (monday - timedelta(days=8)).isoformat()}), 400)
+        ok(c.post(f"/api/students/{sid}/focus/log", headers=CH, json={"day": (monday - timedelta(days=7)).isoformat()}), 409)
 
         # a drill clip from the phone: announced, sent in pieces, queued, listed
         clip = b"\0" * (300 * 1024)
@@ -102,6 +121,10 @@ def main_test():
         r = ok(c.put(f"/api/student/videos/{up['id']}/upload", headers={**SH, "X-Chunk-Range": f"bytes {first}-{len(clip) - 1}/{len(clip)}"},
                      content=clip[first:]))
         assert r["done"] and r["status"] == "queued", r
+        # the last piece again (its reply got lost): the same answer, and the coach is told once
+        r = ok(c.put(f"/api/student/videos/{up['id']}/upload", headers={**SH, "X-Chunk-Range": f"bytes {first}-{len(clip) - 1}/{len(clip)}"},
+                     content=clip[first:]))
+        assert r["done"] and [title for title, _ in SENT].count("New drill clip") == 1, (r, SENT)
         videos = ok(c.get("/api/student/videos", headers=SH))
         assert videos[0]["uploaded_by"] == "student" and videos[0]["has_pose"] is False and videos[0]["label"] == "Countermovement jump"
         # the coach's Footage › Drill list: the whole squad's clips, with whose each is
@@ -120,6 +143,7 @@ def main_test():
 
         # the weekly nudge only answers Vercel's cron
         ok(c.get("/api/cron/weekly-nudge"), 401)
+        ok(c.get("/api/cron/weekly-nudge", headers={"Authorization": "Bearer caf\xe9".encode("latin-1")}), 401)
         ok(c.get("/api/cron/weekly-nudge", headers={"Authorization": "Bearer s3cret"}))
 
         # deleting accounts: the password is checked, then the student and their record go
