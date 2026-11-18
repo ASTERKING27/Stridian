@@ -3,13 +3,15 @@ import { formatValue, unitOf } from './format.js'
 const r2 = v => Math.round(v * 100) / 100
 
 // Coaches type "8:30" or "510" for a time trial; both land as seconds. Blank is null,
-// anything unreadable NaN.
+// anything unreadable NaN — and a time is minutes and 0–59 seconds, so "8:75", "8:" or
+// "8:30:15" is unreadable rather than some other time. (The website reads them the same.)
 export function parseValue(text) {
   const s = String(text ?? '').trim().replace(',', '.')
   if (!s) return null
   if (s.includes(':')) {
-    const [m, sec] = s.split(':').map(x => (x.trim() === '' ? NaN : Number(x)))
-    return Number.isNaN(m) || Number.isNaN(sec) || sec >= 60 ? NaN : m * 60 + sec
+    const parts = s.split(':')
+    const [m, sec] = parts.map(x => (x.trim() === '' ? NaN : Number(x)))
+    return parts.length !== 2 || !(m >= 0) || !(sec >= 0 && sec < 60) ? NaN : m * 60 + sec
   }
   return Number(s)
 }

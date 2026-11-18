@@ -95,13 +95,19 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 /* Videos go up in 4 MB pieces: the hosted API accepts at most 4.5 MB per request, and
    a dropped connection then costs one piece, not the whole file. The server always
-   answers with how many bytes it really has, and the next piece starts from there. */
-async function chunkedUpload(startUrl, extra, uploadUrl, file, onProgress = () => {}) {
+   answers with how many bytes it really has, and the next piece starts from there.
+   A piece the server refuses isn't sent again (that answer won't change), and an upload
+   that fails is removed, so it doesn't sit in the clip list as "uploading". */
+async function chunkedUpload(startUrl, extra, uploadUrl, deleteUrl, file, onProgress = () => {}) {
   const { id, chunkSize } = await send('POST', startUrl, {
     filename: file.name, size: file.size, content_type: file.type || null, ...extra,
   })
   let offset = 0
   let failures = 0
+  const fail = err => {
+    fetch(deleteUrl(id), { method: 'DELETE', headers: authHeaders() }).catch(() => {})
+    throw err
+  }
   while (offset < file.size) {
     const end = Math.min(offset + chunkSize, file.size)
     try {
@@ -122,8 +128,9 @@ async function chunkedUpload(startUrl, extra, uploadUrl, file, onProgress = () =
       failures = 0
       onProgress(offset / file.size)
     } catch (err) {
+      if (err.status && err.status < 500) fail(err)      // refused: retrying won't help
       failures += 1
-      if (failures > 4) throw err
+      if (failures > 4) fail(err)
       await sleep(1000 * 2 ** failures)   // 2, 4, 8, 16 s — rides out a patchy connection
     }
   }
@@ -204,7 +211,8 @@ export const api = {
 
   videos: id => get(`/api/students/${id}/videos`),
   uploadVideo: (id, file, onProgress) =>
-    chunkedUpload(`/api/students/${id}/videos`, {}, v => `/api/videos/${v}/upload`, file, onProgress),
+    chunkedUpload(`/api/students/${id}/videos`, {}, v => `/api/videos/${v}/upload`, v => `/api/videos/${v}`,
+                  file, onProgress),
   deleteVideo: videoId => send('DELETE', `/api/videos/${videoId}`),
 
   // match lane (YOLO): clips belong to the sport, tracks get assigned to students
@@ -212,7 +220,7 @@ export const api = {
   match: id => get(`/api/matches/${id}`),
   uploadMatch: (file, { label = '', attackDirection = 'right' } = {}, onProgress) =>
     chunkedUpload('/api/matches', { label, attack_direction: attackDirection },
-                  c => `/api/matches/${c}/upload`, file, onProgress),
+                  c => `/api/matches/${c}/upload`, c => `/api/matches/${c}`, file, onProgress),
   assignTrack: (clipId, trackId, studentId) =>
     send('POST', `/api/matches/${clipId}/assign`, { track_id: trackId, student_id: studentId }),
   unassignTrack: (clipId, trackId) => send('DELETE', `/api/matches/${clipId}/assign/${trackId}`),
@@ -308,13 +316,16 @@ export async function download(url) {
 
 // ---- shared formatting -----------------------------------------------------
 
-// Coaches can type "8:30" or "510" for a time trial; both land as seconds.
+// Coaches can type "8:30" or "510" for a time trial; both land as seconds. A time is
+// minutes and 0–59 seconds: "8:75", "8:" or "8:30:15" is a slip, not 9:15, 8:00 or 8:30.
+// (The phone app reads them the same way: mobile/src/lib/entry.js.)
 export function parseValue(text) {
   const s = String(text ?? '').trim().replace(',', '.')     // "5,2" is 5.2
   if (!s) return null
   if (s.includes(':')) {
-    const [m, sec] = s.split(':').map(Number)
-    return Number.isNaN(m) || Number.isNaN(sec) ? null : m * 60 + sec
+    const parts = s.split(':')
+    const [m, sec] = parts.map(x => (x.trim() === '' ? NaN : Number(x)))
+    return parts.length !== 2 || !(m >= 0) || !(sec >= 0 && sec < 60) ? null : m * 60 + sec
   }
   const n = Number(s)
   return Number.isNaN(n) ? null : n
