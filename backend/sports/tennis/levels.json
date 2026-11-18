@@ -1,0 +1,544 @@
+{
+ "sprint20m": {
+  "targets": {
+   "M": [
+    3.3,
+    3.23,
+    3.16,
+    3.09,
+    3.02
+   ],
+   "W": [
+    3.62,
+    3.54,
+    3.46,
+    3.38,
+    3.3
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC12397999/",
+   "Axman et al. (2025) Physical Performance Tests in 8008 Competitive Youth Tennis Players - A Systematic Review and Meta-Analysis of Normative Values, European Journal of Sport Science"
+  ],
+  "note": "Meta-analysis pooled U18 competitive tennis players: boys 3.09 s, girls 3.38 s, mapped to national. The other levels are spread evenly (about 0.07-0.08 s per level), and international is estimated. The women's gap (~9-10%) matches the published sex difference."
+ },
+ "verticalJump": {
+  "targets": {
+   "M": [
+    44,
+    47,
+    50,
+    53,
+    57
+   ],
+   "W": [
+    33,
+    35,
+    37,
+    39,
+    42
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC12397999/",
+   "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf"
+  ],
+  "note": "Assumes a free-arm vertical jump, as the app's 30-65 cm anchors imply. Meta-analysis hands-on-hips CMJ for U18 players is 38 cm (boys) and 31 cm (girls); adding ~12-15% for arm swing gives about 43/35. Chinese national/international juniors aged ~15 jumped 50.6/39.6 cm. National-to-international is estimated from these. Take ~6 cm off every value if the app measures hands-on-hips CMJ."
+ },
+ "handGrip": {
+  "targets": {
+   "M": [
+    44,
+    47,
+    50,
+    53,
+    56
+   ],
+   "W": [
+    30,
+    32,
+    34,
+    36,
+    38
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC12397999/",
+   "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf"
+  ],
+  "note": "Dominant hand. Meta-analysis pooled values: U18 boys 49.9 kg (U17 49.1), U18 girls 35.8 kg (U17 37.7). Chinese elite juniors: 47.7 / 37.0 kg. Junior values were mapped to state-national, and adult international (~56/38) plus the lower levels are estimated."
+ },
+ "onCourtAgility": {
+  "targets": {
+   "M": [
+    17.3,
+    16.9,
+    16.5,
+    16.1,
+    15.7
+   ],
+   "W": [
+    18.4,
+    18.0,
+    17.6,
+    17.2,
+    16.8
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://peerj.com/articles/19339/",
+   "https://doi.org/10.3390/ijerph18126512",
+   "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf"
+  ],
+  "note": "Assumes the tennis Spider run (5 sprints from the centre of the baseline), which is the standard on-court agility test in tennis. Published values: collegiate women (ITN 5+) 18.2 s, mapped to university/zonal; elite Hungarian U18 juniors 18.05 s (boys) and 19.28 s (girls); Chinese national juniors 18.3/19.1 s. Protocols differ by ~1 s, so the adult men's and international values are estimated. Note: the app's 11-18 s anchors do not fit a Spider run."
+ },
+ "yoyoLevel": {
+  "targets": {
+   "M": [
+    16.3,
+    16.8,
+    17.3,
+    17.8,
+    18.5
+   ],
+   "W": [
+    15.2,
+    15.6,
+    16.1,
+    16.5,
+    17.1
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://intjmorphol.com/wp-content/uploads/2025/08/Art_42_434_2025.pdf",
+   "https://www.theyoyotest.com/table-YYIR1.htm"
+  ],
+  "note": "Yo-Yo IR1 in speed-level.shuttle notation (M 1200-1920 m, W 840-1440 m). The only tennis data found: Chinese national/international juniors aged ~15 ran 1504 m (~17.2) and 1100 m (~16.0), mapped to state. The rest is estimated, and tennis sits well below football norms."
+ },
+ "heightCm": {
+  "targets": {
+   "M": [
+    173,
+    175,
+    177,
+    179,
+    182
+   ],
+   "W": [
+    160,
+    162,
+    164,
+    166,
+    169
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://tenniscompanion.org/players/male/height-and-weight/",
+   "https://tenniscompanion.org/players/female/height-and-weight/",
+   "https://baselinerank.com/blog/atp-top-100-height-analysis/"
+  ],
+  "note": "Tour top-100 averages are ATP 188 cm (top-10 191.9) and WTA 174 cm. Those are a ceiling, not Indian international level. The ladder is estimated from Indian university population heights, stepping up about 2-3 cm per level. No Indian tennis height data was found."
+ },
+ "matchMetresPerMin": {
+  "targets": {
+   "M": [
+    42,
+    44,
+    46,
+    48,
+    50
+   ],
+   "W": [
+    40,
+    41,
+    42,
+    43,
+    44
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "http://efsupit.ro/images/stories/2iunie2017/art126.pdf",
+   "https://pubmed.ncbi.nlm.nih.gov/25111161/",
+   "https://www.jssm.org/16-4-489.p_d_f"
+  ],
+  "note": "Tennis GPS match play (whole match, including time between points): young players 46.0 m/min; adolescent boys 3362 m in 81 min (41 m/min). These are mapped to university-state. The footballer 105-120 m/min figure does not apply. Hawk-Eye in-point distance per point is 7.4 m (pro men) vs 6.9 m (junior boys) but 5.9 m (pro women) vs 6.3 m (junior girls), so the women's ladder is nearly flat."
+ },
+ "matchTopSpeedKmh": {
+  "targets": {
+   "M": [
+    16.5,
+    17.3,
+    18.1,
+    18.9,
+    19.8
+   ],
+   "W": [
+    15.2,
+    15.9,
+    16.6,
+    17.3,
+    18.2
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "http://efsupit.ro/images/stories/2iunie2017/art126.pdf",
+   "https://pubmed.ncbi.nlm.nih.gov/25111161/",
+   "https://www.atptour.com/en/news/physicality-index-detailed-explainer-2023"
+  ],
+  "note": "Youth GPS peak speeds are 4.34 m/s (15.6 km/h) and 4.4 m/s (15.8 km/h). The ATP Physicality Index lists a men's-tennis maximum speed of 23.58 km/h. Adult university to international peaks are estimated between these, and women are set ~8% lower. A short filmed clip gives a lower peak than a full match."
+ },
+ "matchHsrPerMin": {
+  "targets": {
+   "M": [
+    0.5,
+    0.7,
+    0.9,
+    1.1,
+    1.4
+   ],
+   "W": [
+    0.3,
+    0.45,
+    0.6,
+    0.75,
+    0.9
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "http://efsupit.ro/images/stories/2iunie2017/art126.pdf"
+  ],
+  "note": "Young players covered 0.51 m/min above 3.8 m/s (13.7 km/h), mapped to university men. The other levels are estimated. High-speed running is a tiny share of tennis movement because most movements happen within ~2.5 m."
+ },
+ "matchSprintMetresPerMin": {
+  "targets": {
+   "M": [
+    0.01,
+    0.03,
+    0.05,
+    0.08,
+    0.12
+   ],
+   "W": [
+    0.01,
+    0.01,
+    0.02,
+    0.03,
+    0.05
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "http://efsupit.ro/images/stories/2iunie2017/art126.pdf",
+   "https://www.atptour.com/en/news/physicality-index-detailed-explainer-2023"
+  ],
+  "note": "Running above 18 km/h is rare in tennis: youth peak speeds (~15.6 km/h) never reach it, and only elite adults touch 18-23 km/h. Values are estimated near zero and are flat for university/zonal women. This metric will barely separate tennis players."
+ },
+ "matchAccelPerMin": {
+  "targets": {
+   "M": [
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+   ],
+   "W": [
+    0.45,
+    0.5,
+    0.6,
+    0.7,
+    0.8
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://pubmed.ncbi.nlm.nih.gov/25111161/",
+   "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2025.1613661/xml"
+  ],
+  "note": "Adolescent boys: high accelerations 0.6/min. Elite U16 boys: 56-58 accelerations of at least 2 m/s² per match. Neither study used the 3 m/s² threshold, so the ladder is estimated around these values."
+ },
+ "card_firstInPct": {
+  "targets": {
+   "M": [
+    55.0,
+    56.8,
+    58.5,
+    60.3,
+    62.0
+   ],
+   "W": [
+    55.0,
+    56.8,
+    58.5,
+    60.3,
+    62.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f",
+   "Kovalchik & Reid (2017) Comparing Matchplay Characteristics and Physical Demands of Junior and Professional Tennis Athletes in the Era of Big Data, J Sports Sci Med 16:489-497",
+   "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+  ],
+  "note": "Elite maps to international. At the 2017 Australian Open: pro men 63.7%, junior boys 59.3%; pro women 57.1%, junior girls 55.0%. At the 2023 Roland Garros: men ~61%. Levels are interpolated evenly from the approved 55 to 62. The women's elite value of 62 is above the observed pro average of ~57, but was kept as approved."
+ },
+ "card_firstWonPct": {
+  "targets": {
+   "M": [
+    62.0,
+    64.5,
+    67.0,
+    69.5,
+    72.0
+   ],
+   "W": [
+    57.0,
+    58.8,
+    60.5,
+    62.3,
+    64.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f",
+   "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+  ],
+  "note": "Elite maps to international: pro men 72.1% and pro women 64.2% at the 2017 AO match the approved Elite targets almost exactly. Junior boys 66.7% sits at state level; junior girls 64.1% is already at the pro women's value. Even interpolation from the approved University values."
+ },
+ "card_secondWonPct": {
+  "targets": {
+   "M": [
+    45.0,
+    46.3,
+    47.5,
+    48.8,
+    50.0
+   ],
+   "W": [
+    40.0,
+    41.5,
+    43.0,
+    44.5,
+    46.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f",
+   "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+  ],
+  "note": "Pro men 50.4% / junior boys 47.3%, and pro women 45.6% / junior girls 44.3% (2017 AO), so Elite maps to international. At the 2023 Grand Slams, male winners won 54-55% and losers 44%. Even interpolation."
+ },
+ "card_acePct": {
+  "targets": {
+   "M": [
+    5.0,
+    6.3,
+    7.5,
+    8.8,
+    10.0
+   ],
+   "W": [
+    2.0,
+    2.5,
+    3.0,
+    3.5,
+    4.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f"
+  ],
+  "note": "Aces per service point at the 2017 AO: pro men 8.0%, junior boys 3.6%, pro women 3.8%, junior girls 2.8%. Elite maps to international. Evidence suggests the men's approved University target of 5 is high, since elite junior boys averaged only 3.6%. It was kept as approved."
+ },
+ "card_dfPct": {
+  "targets": {
+   "M": [
+    15.0,
+    13.8,
+    12.5,
+    11.3,
+    10.0
+   ],
+   "W": [
+    15.0,
+    14.3,
+    13.5,
+    12.8,
+    12.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f"
+  ],
+  "note": "The 2017 AO double faults per service point (pro men 3.8%, junior boys 4.9%, pro women 5.0%, junior girls 5.4%) were converted per second serve using first-serve-in %. That gives pro men ~10.5%, junior boys ~12.0%, pro women ~11.7%, junior girls ~12.0%. Elite maps to international. Lower is better, and the ladder falls evenly from the approved 15."
+ },
+ "card_wue": {
+  "targets": {
+   "M": [
+    0.8,
+    0.93,
+    1.05,
+    1.18,
+    1.3
+   ],
+   "W": [
+    0.7,
+    0.74,
+    0.78,
+    0.81,
+    0.85
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match",
+   "https://www.tennisabstract.com/blog/2015/09/04/a-closer-look-at-the-winner-unforced-error-ratio/"
+  ],
+  "note": "At the 2023 Roland Garros and US Open, male match winners averaged ~1.1-1.2 and losers ~0.76-0.81 (overall ~0.9-1.0). Tennis Abstract: 1.2 for men and 0.85 for women each go with ~70% match wins. The approved Elite (1.3 / 0.85) is a strong tour value, so it maps to international. Even interpolation."
+ },
+ "card_netWonPct": {
+  "targets": {
+   "M": [
+    58.0,
+    60.3,
+    62.5,
+    64.8,
+    67.0
+   ],
+   "W": [
+    58.0,
+    59.8,
+    61.5,
+    63.3,
+    65.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+  ],
+  "note": "2023 Roland Garros and US Open men: winners 70.2%, losers 61.3-63.6%, averaging about 66-67% (the approved Elite). This maps to international. No women's or sub-elite net data was found, so the women's ladder and lower levels are interpolated evenly from the approved targets."
+ },
+ "card_bpConvPct": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "published",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f"
+  ],
+  "note": "Set to null under rule 4: the level average falls as opposition gets stronger, because better servers are harder to break. At the 2017 AO: junior boys 42.9% vs pro men 37.5%, junior girls 44.4% vs pro women 42.9%. Approved targets (M 35→40, W 40→45) are not used as a ladder; university-level averages are likely above them."
+ },
+ "card_bpSavedPct": {
+  "targets": {
+   "M": [
+    50.0,
+    52.5,
+    55.0,
+    57.5,
+    60.0
+   ],
+   "W": [
+    50.0,
+    51.0,
+    52.0,
+    53.0,
+    54.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f"
+  ],
+  "note": "The mirror of break-point conversion, which rises with level. At the 2017 AO: pro men ~62.5% saved vs junior boys ~57.1%; pro women ~57.1% vs junior girls ~55.6%. Elite maps to international (approved 60 / 54, slightly below the pros). Even interpolation."
+ },
+ "card_returnWonPct": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "published",
+  "sources": [
+   "https://www.jssm.org/16-4-489.p_d_f",
+   "https://www.jhse.es/index.php/jhse/article/view/key-performance-indicators-success-tennis-match"
+  ],
+  "note": "Set to null under rule 4. A level's average return-points-won equals 100 minus its serve-points-won, and serve dominance grows with level. From the 2017 AO serve stats: junior boys ~41% vs pro men ~36%, junior girls ~45% vs pro women ~44%. The approved targets (M 35→38, W 40→43) even sit below what a typical university returner would post."
+ },
+ "card_effForehand": {
+  "targets": {
+   "M": [
+    0,
+    5,
+    10,
+    15,
+    20
+   ],
+   "W": [
+    0,
+    5,
+    10,
+    15,
+    20
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published data uses this (+ minus -) / attempts coding. Elite maps to international to match the other card stats. Even interpolation from the approved University (0) to Elite (20)."
+ },
+ "card_effBackhand": {
+  "targets": {
+   "M": [
+    -5,
+    0,
+    5,
+    10,
+    15
+   ],
+   "W": [
+    -5,
+    0,
+    5,
+    10,
+    15
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published data uses this coding. Elite maps to international, with even interpolation from the approved -5 to 15."
+ },
+ "card_effDefence": {
+  "targets": {
+   "M": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+   ],
+   "W": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published data uses this coding. Elite maps to international, with even interpolation from the approved -10 to 10."
+ }
+}

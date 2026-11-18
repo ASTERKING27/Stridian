@@ -382,8 +382,9 @@ form stays text.
 
 ## Match cards
 
-The paper sheet a scorer fills in during a match, for all seven sports, defined in
-`backend/match_cards.py`. Volleyball copies the Directorate of Sports' hardcopy word for
+The paper sheet a scorer fills in during a match, for all seven sports: each sport's card
+is its own `backend/sports/<sport>/card.py`, and `backend/match_cards.py` is the engine
+they share. Volleyball copies the Directorate of Sports' hardcopy word for
 word; the others follow its five parts at the same depth, with their own skills:
 
 | Part | What it is |
@@ -435,7 +436,7 @@ Everything rests on one idea, so the output is always explainable.
    never disagrees with the Levels tab (a score is capped just short of a target it
    hasn't reached). A measure with no ladder for them (no team set, a stat that isn't
    compared across levels, uncalibrated footage) is scored against the `poor → elite`
-   range in `sports_config.py` instead: a 30 m sprint of 5.20 s scores 0, 3.90 s scores
+   range in the sport's `tests.py` instead: a 30 m sprint of 5.20 s scores 0, 3.90 s scores
    100. Timed tests need no special case in either — the arithmetic runs both directions.
    A strength is 60 or more (State level), a weak link under 40 (short of Zonal).
 2. **Weight.** Each position is a weight profile over those metrics. A football winger
@@ -472,7 +473,7 @@ others' picks in its own top three), or disagree — and what a disagreement usu
 
 ### Editing the weights
 
-Defaults live in `sports_config.py`, but they are **seeded into the database on first
+Defaults live in each sport's `backend/sports/<sport>/tests.py`, but they are **seeded into the database on first
 run and read from there afterwards** — so changing them is a normal app action on the
 Weights tab, not a code edit. A coach only ever edits their own sport.
 
@@ -502,13 +503,14 @@ of it meets; at least three comparable measures are needed before it names one. 
   are read against that team's targets; match-card measures use the team and format
   (T20 / 50-over) of the cards they played. A student with no team set borrows it from
   their latest match card, and otherwise the tab asks for it.
-* **Where the numbers come from.** `backend/levels.json` holds every ladder with its
-  `basis` (`published`, `mixed` or `estimated`), its sources and a note on how the levels
-  were mapped. Published norms were used where they exist (Indian studies first, then
-  federation and international data); the levels between were interpolated and the rest
-  estimated. Match-card ladders start at the directorate's University target. A measure
-  that gets *worse* at higher levels because the opposition does (T20 economy, smash
-  winners in badminton) has no ladder at all rather than a misleading one.
+* **Where the numbers come from.** Each sport's `backend/sports/<sport>/levels.json`
+  holds every ladder with its `basis` (`published`, `mixed` or `estimated`), its sources
+  and a note on how the levels were mapped. Published norms were used where they exist
+  (Indian studies first, then federation and international data); the levels between were
+  interpolated and the rest estimated. Match-card ladders start at the directorate's
+  University target. A measure that gets *worse* at higher levels because the opposition
+  does (T20 economy, smash winners in badminton) has no ladder at all rather than a
+  misleading one.
 * **Retuning.** Weights → **Level targets** lists every ladder, men's and women's, with
   where it came from. A coach edits one measure at a time for their own sport; a ladder
   must never get worse going up, and clearing all five stops comparing that measure.
@@ -595,9 +597,10 @@ visible. The app reports a `detectionRate` and warns when it is low.
 
 #### Sport-specific technique
 
-On top of the general movement measures, `pose_sports.py` finds the moment that matters
-— the frame where the ankle is fastest, or the wrist is highest — and measures the
-things only that sport cares about.
+On top of the general movement measures, each sport's own analyser
+(`backend/sports/<sport>/analyser.py`, run by `pose_sports.py`) finds the moment that
+matters — the frame where the ankle is fastest, or the wrist is highest — and measures
+the things only that sport cares about.
 
 | Sport | Measured at the key frame |
 |---|---|
@@ -605,9 +608,15 @@ things only that sport cares about.
 | **Volleyball** | contact height above the head, elbow extension and shoulder angle at contact, how much of the reach came from the approach jump |
 | **Basketball** | release elbow angle, release height, knee bend in the set, whether the follow-through holds |
 | **Cricket** | bowling arm, elbow angle when the arm reaches horizontal and again at release, the extension between them, front-knee angle, trunk lean |
+| **Badminton** | on an overhead (the hand above the head): racket arm, how high the hand is, elbow angle and the jump at contact; and the deepest lunge — front-knee angle, lunge length, trunk lean |
+| **Tennis** | on the serve: hitting arm, how high the hand is and the elbow angle at contact, the knee bend in the trophy position, how far the legs drive the hips up into contact, trunk lean |
+| **Kho-Kho** | over the whole chase or dodge: top speed, changes of direction and the knee bend at each turn, the deepest crouch, the flattest body angle and the longest reach of a dive |
 
 Each fires its own drills — a narrow plant foot, an arm that isn't extended at contact, a
-collapsing follow-through, a front leg giving way at release.
+collapsing follow-through, a front leg giving way at release, a lunge bent at the waist,
+a serve with no leg drive, a chaser turning tall. A clip that doesn't show the movement
+(a rally with no overhead, a clip with no serve) gets no technique block rather than a
+wrong one.
 
 **On the ICC 15° rule.** The cricket analyser measures elbow extension through the
 delivery swing and compares it to the ICC's 15-degree limit. Read that number as a
@@ -671,7 +680,7 @@ correct answer rather than a flattering one. Peak speed is exempt: a peak is a p
 however short the clip.
 
 **A caveat worth repeating to whoever uses this:** ByteTrack will occasionally swap two
-players who cross closely, and the reference ranges in `sports_config.py` were set for
+players who cross closely, and the reference ranges in each sport's `analyser.py` were set for
 typical wide footage. Retune them from the Weights tab once you have clips from your own
 camera — framing shifts these numbers more than the players do.
 
@@ -814,7 +823,8 @@ the streak's last eight weeks and who restored a week, push tokens, account dele
 and the weekly cron. `backend/test_mobile_api.py` runs all of it against a throwaway
 database: `python backend/test_mobile_api.py`. `python backend/test_guards.py` checks what
 the server turns away (results no athlete can post, a student's eleventh clip of the day),
-and `npm run check` in `frontend/` the Coach Entry form's logic.
+`python backend/test_analysers.py` every sport's folder and its video analyser on stick
+figures whose angles are known, and `npm run check` in `frontend/` the Coach Entry form's logic.
 
 ---
 
@@ -971,7 +981,16 @@ requirements.txt    the website's (light) Python packages — what Vercel instal
 backend/
   main.py           FastAPI app — all routes, uploads, verification, sheet sync
   docreader.py      reads certificates and match cards with Gemini (the one file to change to swap AI)
-  match_cards.py    every sport's match card: skills, formulas, targets, Parts C/D, zones
+  sports/           one folder per sport — football/, basketball/, volleyball/, cricket/,
+                    badminton/, tennis/, khokho/ — each the whole sport:
+    tests.py          the test battery, positions and starting weights, training tips
+    analyser.py       its video analyser: technique from a drill clip, how footage is read
+    nutrition.py      what a training day costs, per kilogram of bodyweight
+    card.py           its match card: skills, formulas, targets, Parts C/D, zones
+    levels.json       its level ladders, men's and women's, with sources
+  sports/kit.py     what the sports' tests and cards are written with
+  sports/pose.py    the pose landmarks and the geometry every analyser shares
+  match_cards.py    the match-card engine: layout, formulas, Parts C/D, checks, the AI read
   export.py         the Excel downloads
   worker.py         the worker: queue, analysis, training, retention, sheet repair
   trainer.py        learns position weights from verified students (pure logic)
@@ -987,15 +1006,14 @@ backend/
   models.py         coaches, students, student logins, achievements, test results,
                     weights, videos, match clips, match cards, model versions, app state
   schemas.py        request/response validation
-  sports_config.py  sports, metrics, reference ranges, default weights, match
-                    archetypes, nutrition profiles
+  sports_config.py  builds the sports from sports/: metrics, ranges, weights, footage
+                    archetypes, nutrition profiles, training tips
   scoring.py        the prediction engine (no DB access — pure logic)
   levels.py         the University → International read-out (pure logic)
   coach.py          the second coach: the dashboards' words, rings, milestones, weekly focus
-  levels.json       every sport's level ladders, men's and women's, with sources
   nutrition.py      diet engine + food table
   video.py          MediaPipe drill pipeline, metric maths, drill rules
-  pose_sports.py    sport-specific technique: strike, spike, shot, bowling action
+  pose_sports.py    runs the sport's own analyser on a drill clip
   match_video.py    YOLO + ByteTrack match pipeline (worker only)
   match_metrics.py  track metrics + homography, numpy only (website and worker)
   requirements.txt  everything for the laptop / iMac

@@ -81,7 +81,7 @@ def backend_status():
 # The pipeline
 # --------------------------------------------------------------------------- #
 
-def analyse_match(path, attack_direction="right", keyframe_path=None, family="field",
+def analyse_match(path, attack_direction="right", keyframe_path=None, sport="Football",
                   frames_dir=None):
     """Track every player in the clip. Never raises — returns a status dict.
 
@@ -172,7 +172,7 @@ def analyse_match(path, attack_direction="right", keyframe_path=None, family="fi
         tracks = []
         for tid, samples in keep.items():
             metrics, context = build_track_metrics(
-                samples, team_mean_x, attack_direction, family=family)
+                samples, team_mean_x, attack_direction, sport=sport)
             if not metrics:
                 continue
             tracks.append({

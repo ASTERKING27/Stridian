@@ -1,0 +1,454 @@
+{
+ "sprint30m": {
+  "targets": {
+   "M": [
+    4.85,
+    4.75,
+    4.63,
+    4.51,
+    4.4
+   ],
+   "W": [
+    5.4,
+    5.28,
+    5.15,
+    5.02,
+    4.9
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC9425793/",
+   "Kalpana K, Cherian KS, Khanna GL (2022) Energy availability and RED-S risk assessment among Kho-Kho players in India, Sport Sciences for Health",
+   "https://www.academia.edu/30049542/A_COMPARATIVE_STUDY_OF_SELECTED_PHYSICAL_FITNESS_VARIABLES_BETWEEN_KABADDI_AND_KHO_KHO_MALE_PLAYERS",
+   "https://www.academia.edu/90631689/Change_of_Performance_Characteristics_in_Different_Age_Group_of_Kho_Kho_Players"
+  ],
+  "note": "Men national = published 4.51 s 30 m sprint (n=52 national male players, Kalpana 2022). University men estimated from intercollegiate 50 m 7.09 s (Singh & Dubey 2016); international extrapolated. Women estimated ~11% slower, consistent with 18-23 y club/university women's 50 m 8.34 s (Kapas & Paul 2022)."
+ },
+ "shuttleRun": {
+  "targets": {
+   "M": [
+    10.9,
+    10.55,
+    10.25,
+    9.4,
+    9.2
+   ],
+   "W": [
+    11.9,
+    11.55,
+    11.2,
+    10.15,
+    9.95
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.ijfmr.com/papers/2025/3/46170.pdf",
+   "Das S, Sekh N (2025) A Comparative Status on Selected Physiological and Motor Variables of Different Level Women Kho-Kho Players in West Bengal, IJFMR 7(3)",
+   "https://www.journalofsports.com/pdf/2023/vol8issue1/PartB/8-1-52481.pdf",
+   "https://www.academia.edu/90631689/Change_of_Performance_Characteristics_in_Different_Age_Group_of_Kho_Kho_Players"
+  ],
+  "note": "Women state/national = published 4x10 m (block pick-up) 11.20 / 10.15 s (Das & Sekh 2025); university blends their district 12.38 s with club/university women 11.34 s (Kapas & Paul 2022). Men estimated ~8% faster; college men 11.44 s (Paudyal 2023, Nepal) is the slow bound. Protocols vary a lot between Indian studies."
+ },
+ "standingBroadJump": {
+  "targets": {
+   "M": [
+    2.18,
+    2.24,
+    2.31,
+    2.4,
+    2.5
+   ],
+   "W": [
+    1.82,
+    1.9,
+    1.98,
+    2.07,
+    2.16
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.journalofsports.com/pdf/2023/vol8issue1/PartB/8-1-52481.pdf",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC9425793/",
+   "https://www.ijfmr.com/papers/2025/3/46170.pdf"
+  ],
+  "note": "College men 2.02 m (Paudyal 2023) sets the low end; national men estimated ~2.40 m from their 44-47 cm vertical jump (Kalpana 2022). Women: district 1.87 m published (Das & Sekh 2025); their state 2.12 / national 2.55 m were discounted as implausible (national women above national men, SD only 0.07-0.15 m), so women set ~17% below men."
+ },
+ "sitAndReach": {
+  "targets": {
+   "M": [
+    22,
+    25,
+    28,
+    32,
+    34
+   ],
+   "W": [
+    28,
+    31,
+    34,
+    38,
+    40
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.ijfmr.com/papers/2025/3/46170.pdf",
+   "https://www.academia.edu/25446537/A_comparative_study_of_flexibility_between_kabaddi_and_kho_kho_male_players"
+  ],
+  "note": "Women published district 27.7 / state 34.2 / national 38.9 cm (Das & Sekh 2025), mapped university/state/national. Men estimated ~6 cm lower (usual sex gap); male kho-kho studies use incompatible box zeros (e.g. 5.9 in university men, Pandey 2016), so not used directly."
+ },
+ "heightCm": {
+  "targets": {
+   "M": [
+    166,
+    166,
+    167,
+    168,
+    169
+   ],
+   "W": [
+    156,
+    158,
+    160,
+    162,
+    163
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.academia.edu/83844647/Physical_and_anthropometric_characteristics_of_national_level_male_runners_of_kho_kho_game",
+   "Tyagi S, Vanaik A, Kumar A (2018) Physical and anthropometric characteristics of national level male runners of kho-kho game, International Journal of Applied Research 4(5):490-492",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC9425793/",
+   "https://www.ijfmr.com/papers/2025/3/46170.pdf",
+   "https://www.academia.edu/90631689/Change_of_Performance_Characteristics_in_Different_Age_Group_of_Kho_Kho_Players"
+  ],
+  "note": "National men 168.9 cm (n=100, Tyagi 2018) and ~164-168 cm (n=52, Kalpana 2022) -> national 168; height barely separates levels in kho-kho so the male ladder is near-flat. Women: West Bengal district/state/national 158.5/162.6/165.7 cm (SD ~1 cm, implausibly tight) blended with 18-23 y club/university women 153.5 cm (Kapas & Paul 2022)."
+ },
+ "matchMetresPerMin": {
+  "targets": {
+   "M": [
+    100,
+    108,
+    116,
+    124,
+    132
+   ],
+   "W": [
+    92,
+    99,
+    107,
+    114,
+    121
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No kho-kho GPS/time-motion study found (searched Indian journals). Estimated for a defender's active bout on a 27x16 m court (near-continuous running broken by pole turns and dodges), kept inside the app's 60-140 anchors; women ~8% lower. Chasers sitting in the squares will read far lower, so compare like with like."
+ },
+ "matchTopSpeedKmh": {
+  "targets": {
+   "M": [
+    22.0,
+    23.0,
+    24.0,
+    25.0,
+    26.0
+   ],
+   "W": [
+    19.5,
+    20.5,
+    21.5,
+    22.5,
+    23.5
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Estimated. Longest straight in kho-kho is ~20-24 m (post to post), so peaks sit well below football; a 4.5 s 30 m sprinter reaches ~25-27 km/h over that distance."
+ },
+ "matchHsrPerMin": {
+  "targets": {
+   "M": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0
+   ],
+   "W": [
+    3.0,
+    3.8,
+    4.6,
+    5.4,
+    6.2
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Estimated (>15 km/h). Short straights and constant direction changes limit time above 15 km/h; no kho-kho tracking data exists to calibrate."
+ },
+ "matchSprintMetresPerMin": {
+  "targets": {
+   "M": [
+    0.8,
+    1.0,
+    1.3,
+    1.6,
+    2.0
+   ],
+   "W": [
+    0.4,
+    0.55,
+    0.7,
+    0.9,
+    1.1
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Estimated (>20 km/h). Only the active chaser's lane sprints and long dives cross 20 km/h, so values are small; treat as low-confidence."
+ },
+ "matchAccelPerMin": {
+  "targets": {
+   "M": [
+    2.0,
+    2.4,
+    2.8,
+    3.2,
+    3.6
+   ],
+   "W": [
+    1.7,
+    2.0,
+    2.4,
+    2.7,
+    3.0
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Estimated (>3 m/s^2). Kho-kho is dominated by bursts: kho-and-go starts, pole turns and dodges, so acceleration counts are relatively high for the distance covered."
+ },
+ "card_touchSuccess": {
+  "targets": {
+   "M": [
+    35,
+    38.8,
+    42.5,
+    46.3,
+    50
+   ],
+   "W": [
+    35,
+    38.8,
+    42.5,
+    46.3,
+    50
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Directorate targets kept (University 35, Elite 50 -> international), even interpolation. No published attempt counts exist; UKK only publishes successful outs. One set for mat and traditional."
+ },
+ "card_chaserOuts": {
+  "targets": {
+   "M": [
+    1.5,
+    1.88,
+    2.25,
+    2.63,
+    3.0
+   ],
+   "W": [
+    1.5,
+    1.88,
+    2.25,
+    2.63,
+    3.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.ultimatekhokho.com/news/dream-team-from-season-1-of-ultimate-kho-kho",
+   "https://www.ultimatekhokho.com/news/ultimate-kho-kho-season-2-hall-of-fame-meet-the-top-attackers",
+   "https://www.ultimatekhokho.com/news/ultimate-kho-kho-season-2-all-your-faqs-answered"
+  ],
+  "note": "Elite 3 mapped to international. UKK scores every out at 2 pts; league-leading attackers (Indian internationals) scored 84-108 pts a season, ~3.5-5 outs/match, so a typical international at 3 is consistent. Between levels interpolated."
+ },
+ "card_diveShare": {
+  "targets": {
+   "M": [
+    30,
+    37.5,
+    45,
+    52.5,
+    60
+   ],
+   "W": [
+    30,
+    37.5,
+    45,
+    52.5,
+    60
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.ultimatekhokho.com/news/ultimate-kho-kho-season-2-hall-of-fame-meet-the-top-attackers",
+   "https://www.ultimatekhokho.com/news/dream-team-from-season-1-of-ultimate-kho-kho"
+  ],
+  "note": "Elite 60 mapped to international. UKK (mat) top attackers took 65-75% of outs by pole/sky dive (e.g. Ramji Kashyap S2: 58 of 84 pts from dives), so league leaders sit just above. Dives are likely rarer on mud grounds, but no data quantifies it, so one set is kept."
+ },
+ "card_khoQuality": {
+  "targets": {
+   "M": [
+    25,
+    28.8,
+    32.5,
+    36.3,
+    40
+   ],
+   "W": [
+    25,
+    28.8,
+    32.5,
+    36.3,
+    40
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Directorate targets kept (University 25, Elite 40 -> international), even interpolation. No published kho-grading data found."
+ },
+ "card_khoFoul": {
+  "targets": {
+   "M": [
+    10,
+    8.8,
+    7.5,
+    6.3,
+    5
+   ],
+   "W": [
+    10,
+    8.8,
+    7.5,
+    6.3,
+    5
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Lower is better. Directorate targets kept (University 10, Elite 5 -> international), even interpolation. No published foul-kho rates found."
+ },
+ "card_defendTime": {
+  "targets": {
+   "M": [
+    60,
+    70,
+    80,
+    90,
+    100
+   ],
+   "W": [
+    60,
+    70,
+    80,
+    90,
+    100
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.ultimatekhokho.com/news/dream-team-from-season-1-of-ultimate-kho-kho"
+  ],
+  "note": "Elite 100 mapped to international. UKK S1 best defenders (India internationals) averaged ~101-106 s/match (e.g. 20:23 over 12 matches; 1:43/match), which matches Elite 100 closely. Between levels interpolated."
+ },
+ "card_avgRun": {
+  "targets": {
+   "M": [
+    45,
+    52.5,
+    60,
+    67.5,
+    75
+   ],
+   "W": [
+    45,
+    52.5,
+    60,
+    67.5,
+    75
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Directorate targets kept (University 45, Elite 75 -> international), even interpolation. UKK does not publish runs per match, so per-run time could not be checked."
+ },
+ "card_notOutPct": {
+  "targets": {
+   "M": [
+    10,
+    12.5,
+    15,
+    17.5,
+    20
+   ],
+   "W": [
+    10,
+    12.5,
+    15,
+    17.5,
+    20
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Directorate targets kept (University 10, Elite 20 -> international), even interpolation. No published survival-to-end-of-turn rates found."
+ },
+ "card_defErrors": {
+  "targets": {
+   "M": [
+    0.5,
+    0.38,
+    0.25,
+    0.13,
+    0
+   ],
+   "W": [
+    0.5,
+    0.38,
+    0.25,
+    0.13,
+    0
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Lower is better. Directorate targets kept (University 0.5, Elite 0 -> international), even interpolation. No published error counts found."
+ },
+ "card_dodgeEff": {
+  "targets": {
+   "M": [
+    0,
+    7.5,
+    15,
+    22.5,
+    30
+   ],
+   "W": [
+    0,
+    7.5,
+    15,
+    22.5,
+    30
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Directorate targets kept (University 0, Elite 30 -> international), even interpolation. No published dodge-outcome data found."
+ }
+}

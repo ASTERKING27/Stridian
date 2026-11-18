@@ -24,6 +24,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+# the landmark numbers and the joint-angle maths every sport's analyser shares
+from sports.pose import (L_ANKLE, L_ELBOW, L_HIP, L_KNEE, L_SHOULDER, L_WRIST, NOSE,  # noqa: F401
+                         R_ANKLE, R_ELBOW, R_HIP, R_KNEE, R_SHOULDER, R_WRIST, angle_at)
+
 
 @contextlib.contextmanager
 def _quiet_nan():
@@ -43,15 +47,7 @@ MODEL_URL = (
 
 MAX_FRAMES = 300  # sampled evenly across the clip - keeps a 2-minute video under ~20s
 
-# BlazePose 33-point topology (identical in both MediaPipe APIs)
-NOSE = 0
-L_SHOULDER, R_SHOULDER = 11, 12
-L_ELBOW, R_ELBOW = 13, 14
-L_WRIST, R_WRIST = 15, 16
-L_HIP, R_HIP = 23, 24
-L_KNEE, R_KNEE = 25, 26
-L_ANKLE, R_ANKLE = 27, 28
-
+# the bones drawn on the thumbnail (BlazePose's 33 points, numbered in sports/pose.py)
 SKELETON = [
     (L_SHOULDER, R_SHOULDER), (L_SHOULDER, L_ELBOW), (L_ELBOW, L_WRIST),
     (R_SHOULDER, R_ELBOW), (R_ELBOW, R_WRIST), (L_SHOULDER, L_HIP),
@@ -155,19 +151,6 @@ def backend_status():
 # --------------------------------------------------------------------------- #
 # Geometry helpers - pure functions, unit-testable without any video
 # --------------------------------------------------------------------------- #
-
-def angle_at(a, b, c):
-    """Interior angle in degrees at point b, formed by a-b-c. NaN if any point is missing."""
-    a, b, c = np.asarray(a, float), np.asarray(b, float), np.asarray(c, float)
-    if np.isnan(a).any() or np.isnan(b).any() or np.isnan(c).any():
-        return math.nan
-    ba, bc = a - b, c - b
-    na, nc = np.linalg.norm(ba), np.linalg.norm(bc)
-    if na == 0 or nc == 0:
-        return math.nan
-    cosine = float(np.clip(np.dot(ba, bc) / (na * nc), -1.0, 1.0))
-    return math.degrees(math.acos(cosine))
-
 
 def _nanmin(arr):
     arr = np.asarray(arr, float)
@@ -475,7 +458,8 @@ def analyse_video(path, height_cm=None, thumbnail_path=None, sport=None):
 
         metrics = compute_metrics(points, effective_fps, height_cm) if detected else {}
 
-        # sport-specific technique on top of the general movement measures
+        # sport-specific technique on top of the general movement measures: the sport's
+        # own analyser (backend/sports/<sport>/analyser.py)
         sport_block = {}
         if detected and sport:
             import pose_sports

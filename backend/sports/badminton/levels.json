@@ -1,0 +1,485 @@
+{
+ "sprint20m": {
+  "targets": {
+   "M": [
+    3.3,
+    3.24,
+    3.18,
+    3.12,
+    3.06
+   ],
+   "W": [
+    3.63,
+    3.56,
+    3.5,
+    3.43,
+    3.37
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.topendsports.com/sport/badminton/fitness-testing.htm"
+  ],
+  "note": "No badminton 20 m sprint norms found (topendsports recommends the test with 5/10 m splits but gives no values). Estimated for electronic gates, standing start: trained court-sport men ~3.3 s rising ~2% per level; women +10%."
+ },
+ "verticalJump": {
+  "targets": {
+   "M": [
+    44,
+    47,
+    50,
+    53,
+    56
+   ],
+   "W": [
+    33,
+    35,
+    38,
+    40,
+    42
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.badmintonitalia.it/images/FORMAZIONE-DOCUMENTAZIONE-RICERCA/Physiological_characteristics_of_elite_and_sub-elite_badminton_players_2009_badmin.pdf",
+   "Ooi et al. (2009) Physiological characteristics of elite and sub-elite badminton players, J Sports Sci 27(14):1591-1599",
+   "https://websites.mygameday.app/get_file.cgi?id=256038"
+  ],
+  "note": "Ooi 2009: Malaysian world-ranked men CMJ 46.3 cm vs sub-elite squad 46.0 cm (no difference). App scale (30-65) matches Badminton Australia's arm-swing Sargent jump (men 'average' 41-50, 'above average' 51-60 cm), so ladder is arm-swing values ~5-10 cm above Ooi's CMJ; women ~25% lower."
+ },
+ "handGrip": {
+  "targets": {
+   "M": [
+    40,
+    43,
+    46,
+    49,
+    52
+   ],
+   "W": [
+    26,
+    28,
+    30,
+    32,
+    34
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://websites.mygameday.app/get_file.cgi?id=256038",
+   "https://www.recentscientific.com/sites/default/files/4888.pdf"
+  ],
+  "note": "No adult badminton grip data in kg found. Badminton Australia NJP norms (mean of both hands): men 'average' 48-52, women 26-30 kg; Indian players (Hyderabad, mean age 15) only 26/21 kg. Estimated dominant-hand ladder; women ~65% of men. Grip discriminates level weakly."
+ },
+ "onCourtAgility": {
+  "targets": {
+   "M": [
+    13.6,
+    13.2,
+    12.8,
+    12.4,
+    12.0
+   ],
+   "W": [
+    14.8,
+    14.4,
+    14.0,
+    13.5,
+    13.1
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.badmintonitalia.it/images/FORMAZIONE-DOCUMENTAZIONE-RICERCA/Physiological_characteristics_of_elite_and_sub-elite_badminton_players_2009_badmin.pdf",
+   "https://websites.mygameday.app/get_file.cgi?id=256038"
+  ],
+  "note": "The app does not fix a protocol, so values sit inside its 18-11 s scale with a ~12% spread from university to international (women ~9% slower). Ooi 2009's sideways agility test (15.3 s elite vs 15.0 s sub-elite) and four-corner test did not separate levels; Badminton Australia's on-court speed test is ~10 s."
+ },
+ "yoyoLevel": {
+  "targets": {
+   "M": [
+    16.2,
+    17.1,
+    17.8,
+    18.7,
+    19.6
+   ],
+   "W": [
+    14.7,
+    15.4,
+    16.1,
+    16.6,
+    17.3
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.mdpi.com/1660-4601/18/2/638",
+   "Liu et al. (2021) The Effect of Eight-Week Sprint Interval Training on Aerobic Performance of Elite Badminton Players, IJERPH 18(2):638",
+   "https://efdeportes.com/efdeportes/index.php/EFDeportes/article/download/2407/1321?inline=1",
+   "https://www.topendsports.com/testing/yo-yo-intermittent-levels.htm"
+  ],
+  "note": "Yo-Yo IR1 levels. International: Chinese national semi-finalists ran IR2 1083 m (men) / 725 m (women), converted at an estimated IR1 ~2.1x IR2 to ~2280 m (19.6) / ~1520 m (17.3). University: Brazilian club players ran IR1 1028 m; set at 1160 m (16.2) for men. Even 280 m (men) / 200 m (women) steps between."
+ },
+ "heightCm": {
+  "targets": {
+   "M": [
+    171,
+    172,
+    174,
+    175,
+    178
+   ],
+   "W": [
+    159,
+    161,
+    163,
+    165,
+    168
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.ijok.org/index.php/ijok/article/download/91/54/126",
+   "Kavanashri et al. (2023) Anthropometry and Physical Characteristics of Indian Badminton Players, Int J Kinanthropometry",
+   "https://www.mdpi.com/1660-4601/18/2/638",
+   "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0037821",
+   "https://www.badmintonitalia.it/images/FORMAZIONE-DOCUMENTAZIONE-RICERCA/Physiological_characteristics_of_elite_and_sub-elite_badminton_players_2009_badmin.pdf"
+  ],
+  "note": "National = Indian sub-elite players with national/international experience (M 175.4, W 165.2 cm). International = Chinese national semi-finalists (M ~178, W ~168), Spanish national championship (M 178, W 165), Malaysian elite (176). University estimated; zonal/state interpolated."
+ },
+ "matchMetresPerMin": {
+  "targets": {
+   "M": [
+    38,
+    40,
+    43,
+    45,
+    48
+   ],
+   "W": [
+    36,
+    38,
+    41,
+    44,
+    46
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton",
+   "Rojas-Valverde et al. (2020) Identification of games and sex-related activity profile in junior international badminton, Int J Perf Anal Sport",
+   "https://www.academia.edu/115287476/Relationships_Between_Results_Of_An_Internal_And_External_Match_Load_Determining_Method_In_Male_Singles_Badminton_Players",
+   "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2026.1753118/full"
+  ],
+  "note": "Whole-match averages including rest between rallies. U18 international juniors, UWB tracking: 44.6 (M) / 43.5 (W) m/min, mapped to national. Elite African men (10 Hz GPS): 1763 m in 35.3 min = 50 m/min, mapped to international ~48. Lower levels estimated from shorter rallies and lower work density."
+ },
+ "matchTopSpeedKmh": {
+  "targets": {
+   "M": [
+    8.4,
+    8.8,
+    9.2,
+    9.6,
+    10.0
+   ],
+   "W": [
+    8.0,
+    8.4,
+    8.8,
+    9.2,
+    9.6
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton",
+   "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2026.1753118/full"
+  ],
+  "note": "The app reports the 95th percentile of smoothed speed, not the absolute peak. Published: max speed ~10.8-11.0 km/h (M) and ~10.4-11.0 (W) in U18 internationals; top-30 world singles footwork 2.2-2.6 m/s (8-9.4 km/h). High-school players were often as fast, so the ladder is deliberately shallow."
+ },
+ "matchHsrPerMin": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "published",
+  "sources": [
+   "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton"
+  ],
+  "note": "Null: the app's court threshold (14.4 km/h) is above the ~11 km/h maximum badminton players reach on court, so the value is ~0 at every level and cannot rank players. A badminton-specific threshold (~9 km/h) would be needed first."
+ },
+ "matchSprintMetresPerMin": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "published",
+  "sources": [
+   "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton"
+  ],
+  "note": "Null: the 18 km/h sprint threshold is never reached on a badminton court (published max ~11 km/h), so the value is 0 at every level."
+ },
+ "matchAccelPerMin": {
+  "targets": {
+   "M": [
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8
+   ],
+   "W": [
+    0.3,
+    0.35,
+    0.4,
+    0.5,
+    0.6
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.academia.edu/44434750/International_Journal_of_Performance_Analysis_in_Sport_Identification_of_games_and_sex_related_activity_profile_in_junior_international_badminton",
+   "https://www.jssm.org/jssm-24-901.xml-Fulltext",
+   "https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.640199/full"
+  ],
+  "note": "Method-dependent. IMU counts are high (Guo 2025: 55.9 efforts >3 m/s2 per set; Fu 2021: ~1.7 M / 2.9 W accelerations per min). Position tracking like the app's video is closer to UWB, where the whole-match maximum averaged only 3.87 (M) / 3.47 (W) m/s2, so bursts above 3 m/s2 are rare. Estimated low; calibrate on real clips."
+ },
+ "card_wue": {
+  "targets": {
+   "M": [
+    1.0,
+    1.05,
+    1.1,
+    1.15,
+    1.2
+   ],
+   "W": [
+    1.0,
+    1.05,
+    1.1,
+    1.15,
+    1.2
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.academia.edu/28708169/Changes_in_the_Game_Characteristics_of_a_Badminton_Match_A_Longitudinal_Study_through_the_Olympic_Game_Finals_Analysis_in_Mens_Singles",
+   "Laffaye, Phomsoupha & Dor (2015) Changes in the game characteristics of a badminton match, J Sports Sci Med"
+  ],
+  "note": "Elite mapped to international. Olympic men's singles finals: 36% winners, 23% forced errors, 41% unforced errors, a pooled W:UE of ~0.88, below both approved targets. The approved targets read as a winning player's ratio, not a level average; kept per rule 5."
+ },
+ "card_serveWonPct": {
+  "targets": {
+   "M": [
+    48,
+    48.5,
+    49,
+    49.5,
+    50
+   ],
+   "W": [
+    48,
+    48.5,
+    49,
+    49.5,
+    50
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.mdpi.com/1660-4601/16/21/4057"
+  ],
+  "note": "No published rally-won-on-serve % found (Gomez 2019 splits point outcome by serving/receiving but not win share). Between evenly matched players this sits near the structural serve (dis)advantage at every level, so it discriminates weakly. Approved targets kept; Elite = international."
+ },
+ "card_serveErrPct": {
+  "targets": {
+   "M": [
+    3.0,
+    2.5,
+    2.0,
+    1.5,
+    1.0
+   ],
+   "W": [
+    3.0,
+    2.5,
+    2.0,
+    1.5,
+    1.0
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published serve-fault rates found. Approved University 3 / Elite 1 kept, Elite mapped to international (serve faults are rare in elite play), with even interpolation between."
+ },
+ "card_receiveErrPct": {
+  "targets": {
+   "M": [
+    12.0,
+    10.8,
+    9.5,
+    8.3,
+    7.0
+   ],
+   "W": [
+    12.0,
+    10.8,
+    9.5,
+    8.3,
+    7.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.mdpi.com/2076-3417/16/8/3819",
+   "Hayashi et al. (2026) Novel Analysis of Game Performance in Badminton: BWF Top-Ranking vs Regional University League Players, Applied Sciences 16(8):3819"
+  ],
+  "note": "Men's singles receive errors: BWF top-ranking 6.8% vs university league 13.6%. Approved University 12 kept (rule 5); Elite 7 matches BWF, so Elite = international. Evenly interpolated; women assumed equal (no data)."
+ },
+ "card_smashWinPct": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "published",
+  "sources": [
+   "https://www.mdpi.com/2076-3417/16/8/3819",
+   "Hayashi et al. (2026) Applied Sciences 16(8):3819"
+  ],
+  "note": "Null (rule 4): smash ace rate falls as opposition defence improves. University players 15.4% after a lift and 22.3% after a clear, vs BWF 12.2% and 14.2%; after a long receive both ~24.5%. Approved 12/13 fit BWF players but would rate university players as international."
+ },
+ "card_smashErrPct": {
+  "targets": {
+   "M": [
+    10.0,
+    9.3,
+    8.5,
+    7.8,
+    7.0
+   ],
+   "W": [
+    10.0,
+    9.3,
+    8.5,
+    7.8,
+    7.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.mdpi.com/2076-3417/16/8/3819",
+   "Hayashi et al. (2026) Applied Sciences 16(8):3819"
+  ],
+  "note": "Smash error rates: BWF 7.1-9.4% vs university 8.0-15.8% depending on preceding shot. Approved University 10 kept; Elite 7 matches BWF, so Elite = international; even interpolation. Women assumed equal."
+ },
+ "card_netErrPct": {
+  "targets": {
+   "M": [
+    8.0,
+    7.3,
+    6.5,
+    5.8,
+    5.0
+   ],
+   "W": [
+    8.0,
+    7.3,
+    6.5,
+    5.8,
+    5.0
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.mdpi.com/2076-3417/16/8/3819"
+  ],
+  "note": "Hayashi 2026 reports significantly lower hairpin (net) error rates and >90% rally-continuing hairpin shots for BWF players vs university players, but the exact rates were not accessible. Approved targets kept, Elite = international, even interpolation."
+ },
+ "card_netKillPct": {
+  "targets": {
+   "M": [
+    50,
+    52.5,
+    55,
+    57.5,
+    60
+   ],
+   "W": [
+    50,
+    52.5,
+    55,
+    57.5,
+    60
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published net-kill conversion data found. Approved targets kept, Elite = international. Like smash winners, this may fall against stronger defence; revisit with the app's own data."
+ },
+ "card_liftNegPct": {
+  "targets": {
+   "M": [
+    25,
+    22.5,
+    20,
+    17.5,
+    15
+   ],
+   "W": [
+    25,
+    22.5,
+    20,
+    17.5,
+    15
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published data on graded (+/-) lifts and clears. Approved University 25 / Elite 15 kept, Elite = international, even interpolation."
+ },
+ "card_effDefence": {
+  "targets": {
+   "M": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+   ],
+   "W": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "Coach-graded (+ minus -) / attempts; no published equivalent found. Approved targets kept, Elite = international, even interpolation."
+ },
+ "card_effDrop": {
+  "targets": {
+   "M": [
+    10,
+    15,
+    20,
+    25,
+    30
+   ],
+   "W": [
+    10,
+    15,
+    20,
+    25,
+    30
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.mdpi.com/2076-3417/16/8/3819"
+  ],
+  "note": "Coach-graded. Hayashi 2026 found >90% rally-continuing drops and significantly fewer drop errors for BWF players, but its ace-minus-error 'effectiveness' is opposition-sensitive, and the paper's grading differs from this card's +/-. Approved targets kept, Elite = international."
+ }
+}

@@ -346,7 +346,8 @@ def build_report(db: Session, student: Student) -> dict:
     report["levels"]["position"] = position      # whose weights the overall level used
     if student.status == "verified" and position:
         # once the coach has confirmed a position, what to train is ranked for that one
-        report["developmentPlan"] = scoring.development_plan(report["metrics"], weights.get(position, {}))
+        report["developmentPlan"] = scoring.development_plan(report["metrics"], weights.get(position, {}),
+                                                             student.sport)
     report["matchClips"] = [
         {"clipId": a.clip_id, "trackId": a.track_id, "label": a.clip.label,
          "originalName": a.clip.original_name, "metrics": a.metrics, "context": a.context,
@@ -1923,68 +1924,8 @@ def clip_detail(clip: MatchClip) -> dict:
 
 
 # Known real-world dimensions a coach can mark out, so nobody has to remember that a
-# football pitch's penalty area is 40.32 m wide.
-CALIBRATION_PRESETS = {
-    "Football": [
-        {"key": "penalty-area", "label": "Penalty area (40.32 × 16.5 m)",
-         "corners": ["Left edge, goal line", "Right edge, goal line",
-                     "Right edge, 18-yard line", "Left edge, 18-yard line"],
-         "world": [[0, 0], [40.32, 0], [40.32, 16.5], [0, 16.5]]},
-        {"key": "goal-area", "label": "Six-yard box (18.32 × 5.5 m)",
-         "corners": ["Left edge, goal line", "Right edge, goal line",
-                     "Right edge, 6-yard line", "Left edge, 6-yard line"],
-         "world": [[0, 0], [18.32, 0], [18.32, 5.5], [0, 5.5]]},
-        {"key": "full-pitch", "label": "Full pitch (105 × 68 m)",
-         "corners": ["Near-left corner", "Near-right corner",
-                     "Far-right corner", "Far-left corner"],
-         "world": [[0, 0], [105, 0], [105, 68], [0, 68]]},
-    ],
-    "Basketball": [
-        {"key": "full-court", "label": "FIBA court (28 × 15 m)",
-         "corners": ["Near-left corner", "Near-right corner",
-                     "Far-right corner", "Far-left corner"],
-         "world": [[0, 0], [28, 0], [28, 15], [0, 15]]},
-        {"key": "three-second", "label": "Restricted area (4.9 × 5.8 m)",
-         "corners": ["Left edge, baseline", "Right edge, baseline",
-                     "Right edge, free-throw line", "Left edge, free-throw line"],
-         "world": [[0, 0], [4.9, 0], [4.9, 5.8], [0, 5.8]]},
-    ],
-    "Volleyball": [
-        {"key": "full-court", "label": "Court (18 × 9 m)",
-         "corners": ["Near-left corner", "Near-right corner",
-                     "Far-right corner", "Far-left corner"],
-         "world": [[0, 0], [18, 0], [18, 9], [0, 9]]},
-        {"key": "half-court", "label": "One side (9 × 9 m)",
-         "corners": ["Left corner at the net", "Right corner at the net",
-                     "Right back corner", "Left back corner"],
-         "world": [[0, 0], [9, 0], [9, 9], [0, 9]]},
-    ],
-    "Cricket": [
-        {"key": "pitch", "label": "Pitch (20.12 × 3.05 m)",
-         "corners": ["Left of the bowler's crease", "Right of the bowler's crease",
-                     "Right of the batter's crease", "Left of the batter's crease"],
-         "world": [[0, 0], [3.05, 0], [3.05, 20.12], [0, 20.12]]},
-    ],
-    "Badminton": [
-        {"key": "badminton-doubles", "label": "Badminton court (13.4 × 6.1 m)",
-         "corners": ["Near-left corner", "Near-right corner",
-                     "Far-right corner", "Far-left corner"],
-         "world": [[0, 0], [6.1, 0], [6.1, 13.4], [0, 13.4]]},
-    ],
-    "Tennis": [
-        {"key": "tennis-doubles", "label": "Tennis court (23.77 × 10.97 m)",
-         "corners": ["Near-left corner", "Near-right corner",
-                     "Far-right corner", "Far-left corner"],
-         "world": [[0, 0], [10.97, 0], [10.97, 23.77], [0, 23.77]]},
-    ],
-    "Kho-Kho": [
-        {"key": "field", "label": "Field (27 × 16 m)",
-         "corners": ["Near-left corner", "Near-right corner",
-                     "Far-right corner", "Far-left corner"],
-         "world": [[0, 0], [27, 0], [27, 16], [0, 16]]},
-    ],
-}
-
+# football pitch's penalty area is 40.32 m wide: each sport's own, in its analyser.py.
+CALIBRATION_PRESETS = sc.CALIBRATION_PRESETS
 
 
 @app.post("/api/matches", status_code=201)
@@ -2114,7 +2055,7 @@ def calibrate_match(clip_id: int, payload: CalibrationIn, db: Session = Depends(
 
     tracks, message = match_metrics.recompute(
         {"tracks": clip.tracks}, image_points, world_points,
-        family=sc.SPORT_MATCH_FAMILY[clip.sport],
+        sport=clip.sport,
         attack_direction=clip.attack_direction,
     )
     if tracks is None:
@@ -2142,7 +2083,7 @@ def clear_calibration(clip_id: int, db: Session = Depends(get_db),
 
     rebuilt, _message = match_metrics.recompute(
         {"tracks": clip.tracks},
-        family=sc.SPORT_MATCH_FAMILY[clip.sport],
+        sport=clip.sport,
         attack_direction=clip.attack_direction,
     )
     clip.tracks = rebuilt

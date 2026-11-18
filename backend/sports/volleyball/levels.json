@@ -1,0 +1,428 @@
+{
+ "standingReach": {
+  "targets": {
+   "M": [
+    235,
+    238,
+    244,
+    250,
+    255
+   ],
+   "W": [
+    205,
+    208,
+    215,
+    222,
+    229
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.redalyc.org/pdf/3010/301023489009.pdf",
+   "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+   "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads"
+  ],
+  "note": "No published Indian standing-reach data found. Derived from the heightCm ladder (Indian inter-university and India squad heights) using a reach/height ratio of ~1.31 (men) and ~1.30 (women)."
+ },
+ "blockTouch": {
+  "targets": {
+   "M": [
+    285,
+    296,
+    308,
+    319,
+    330
+   ],
+   "W": [
+    245,
+    253,
+    262,
+    270,
+    278
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+   "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads",
+   "https://en.wikipedia.org/wiki/2017_Asian_Women%27s_Volleyball_Championship_squads",
+   "Pradhan K (2017) Physical Fitness and Performance Indicators of Indian Female Volleyball Players, Bhatter College J Multidisciplinary Studies 7(1) - http://www.bcjms.bhattercollege.ac.in/v7/n1/ped-en-v7-01-01.pdf"
+  ],
+  "note": "International = India squad averages (men 2019 Asian Ch. 330 cm; women U23 2015 278 cm; Asian senior women teams 262-288). University = standing reach + ~50 cm (M) / ~40 cm (W) block jump, cross-checked with Indian sub-junior national-camp girls (250 cm); levels between interpolated. Federation-listed block heights are self-reported and tend to run high."
+ },
+ "spikeTouch": {
+  "targets": {
+   "M": [
+    298,
+    310,
+    321,
+    333,
+    344
+   ],
+   "W": [
+    252,
+    261,
+    270,
+    279,
+    288
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+   "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads",
+   "https://en.wikipedia.org/wiki/2018_FIVB_Men%27s_Volleyball_Nations_League_squads",
+   "http://www.bcjms.bhattercollege.ac.in/v7/n1/ped-en-v7-01-01.pdf",
+   "https://www.scirp.org/journal/paperinformation?paperid=137216"
+  ],
+  "note": "International = India men 2019 squad mean 343.9 cm (VNL teams 331-352) and India women U23 286 cm (Asian senior teams 287-300). University = standing reach + ~62 cm (M) / ~47 cm (W) approach jump (Japanese Div-1 university women spike jump 55 cm; Indian sub-junior national girls 255 cm); interpolated between."
+ },
+ "proAgility": {
+  "targets": {
+   "M": [
+    4.95,
+    4.85,
+    4.74,
+    4.62,
+    4.5
+   ],
+   "W": [
+    5.4,
+    5.27,
+    5.15,
+    5.02,
+    4.9
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://doi.org/10.3390/sports13100339",
+   "https://ovrperformance.com/blogs/news/pro-agility-benchmarks-by-sport-gender-and-level"
+  ],
+  "note": "NCAA Division I women volleyball 5-10-5 = 4.9 +/- 0.2 s (Sports 2025), mapped to international for Indian women. Men set ~0.4 s faster, per the college men/women gap in coaching benchmarks (blog, secondary). Lower levels interpolated to the app's poor anchor."
+ },
+ "serveVelocity": {
+  "targets": {
+   "M": [
+    65,
+    72,
+    79,
+    86,
+    93
+   ],
+   "W": [
+    50,
+    54,
+    58,
+    63,
+    67
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://thesportjournal.org/article/normative-profiles-for-serve-speed-for-the-training-of-the-serve-and-reception-in-volleyball/",
+   "https://link.springer.com/article/10.1186/s13102-024-01031-z"
+  ],
+  "note": "Sport Journal norms: FIVB World League men power jump serve 73-104 km/h, jump float 40-75; Spanish Queen's Cup women power jump 66-89, floats 40-61. International = a hard jump serve (M) / strong float-to-jump serve (W); university = float-serve speeds. Turkish league data confirm speed rises with league level."
+ },
+ "attackVelocity": {
+  "targets": {
+   "M": [
+    72,
+    77,
+    81,
+    86,
+    90
+   ],
+   "W": [
+    59,
+    62,
+    65,
+    68,
+    71
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://ojs.ub.uni-konstanz.de/cpa/article/view/2174/2030",
+   "https://jhp-ojs-tamucc.tdl.org/jhp/article/view/jshp.0053.2015",
+   "https://journals.sagepub.com/doi/full/10.1177/0363546505274935"
+  ],
+  "note": "International men's spikes in competition averaged 22.8-25.2 m/s (82-91 km/h, ISBS); Spanish 1st-division women jump spike 71.2 km/h. These are mapped to international. Forthomme (2005) confirms 1st > 2nd division. University values estimated, and the levels between interpolated."
+ },
+ "heightCm": {
+  "targets": {
+   "M": [
+    179,
+    182,
+    186,
+    191,
+    195
+   ],
+   "W": [
+    158,
+    160,
+    165,
+    171,
+    176
+   ]
+  },
+  "basis": "published",
+  "sources": [
+   "Koley S, Singh J, Sandhu JS - Anthropometric and physiological characteristics on Indian inter-university volleyball players - https://www.redalyc.org/pdf/3010/301023489009.pdf",
+   "https://en.wikipedia.org/wiki/2019_Asian_Men%27s_Volleyball_Championship_squads",
+   "https://en.wikipedia.org/wiki/2015_Asian_Women%27s_U23_Volleyball_Championship_squads"
+  ],
+  "note": "Indian inter-university players: M 181.9 cm, W 159.7 cm (zonal). India men squad 2019: 195.3 cm, India women U23 2015: 176.3 cm (international). University set 2-3 cm below zonal; levels between interpolated."
+ },
+ "matchMetresPerMin": {
+  "targets": {
+   "M": [
+    35,
+    38,
+    40,
+    43,
+    45
+   ],
+   "W": [
+    32,
+    34,
+    36,
+    39,
+    41
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://link.springer.com/article/10.1186/s13102-025-01302-3",
+   "Mroczek D et al. (2014) Analysis of male volleyball players' motor activities during a top level match, J Strength Cond Res 28(8)",
+   "https://peerj.com/articles/16736/"
+  ],
+  "note": "National-level men covered ~1250-1340 m in 30-min matches (~42-45 m/min, IMU), mapped to national. Live-ball-only rates are much higher (elite women 68.6 m/min). Polish top-league men covered ~1.2 km per 3-set match. Level differences and women's values (~8% lower) are estimated."
+ },
+ "matchTopSpeedKmh": {
+  "targets": {
+   "M": [
+    15.0,
+    15.8,
+    16.5,
+    17.3,
+    18.0
+   ],
+   "W": [
+    13.5,
+    14.3,
+    15.0,
+    15.8,
+    16.5
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://link.springer.com/article/10.1186/s13102-025-01365-2",
+   "https://link.springer.com/article/10.1186/s13102-025-01302-3"
+  ],
+  "note": "LPS data on elite/national-team women: training max speed 15.9-17.1 km/h, warm-up 13.1-15.3. National-level men exceed 15 km/h ~8 times per 30 min. Women's elite value mapped to international; men set ~1.5 km/h higher; lower levels estimated. Well below the app's football-based anchors."
+ },
+ "matchHsrPerMin": {
+  "targets": {
+   "M": [
+    0.3,
+    0.4,
+    0.5,
+    0.65,
+    0.8
+   ],
+   "W": [
+    0.15,
+    0.22,
+    0.3,
+    0.4,
+    0.5
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://link.springer.com/article/10.1186/s13102-025-01302-3"
+  ],
+  "note": "Only published figure: 8.3 +/- 6.0 efforts above 15 km/h per 30-min match (national-level men). Assumed ~2-3 m per effort (~0.7 m/min) at national/international. Other levels and women estimated. Volleyball HSR is tiny, so this discriminates poorly."
+ },
+ "matchSprintMetresPerMin": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://link.springer.com/article/10.1186/s13102-025-01365-2"
+  ],
+  "note": "Null: volleyball players' top speeds are ~15-18 km/h (LPS data), so distance above 18 km/h is ~0 m/min at every level. The measure cannot separate levels in a 9 x 9 m half-court."
+ },
+ "matchAccelPerMin": {
+  "targets": {
+   "M": [
+    0.4,
+    0.47,
+    0.54,
+    0.62,
+    0.7
+   ],
+   "W": [
+    0.35,
+    0.41,
+    0.47,
+    0.53,
+    0.6
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://link.springer.com/article/10.1186/s13102-025-01302-3",
+   "https://link.springer.com/article/10.1186/s13102-025-01365-2"
+  ],
+  "note": "National-level men made 18.7 +/- 9.3 high-intensity accelerations (plus 19 decelerations >3 m/s2) per 30-min match = 0.62/min, mapped to national. Elite women made 18.5-31.8 accelerations in a 45-min warm-up. Other levels and women estimated."
+ },
+ "card_attackEff": {
+  "targets": {
+   "M": [
+    25,
+    27.5,
+    30,
+    32.5,
+    35
+   ],
+   "W": [
+    20,
+    22.5,
+    25,
+    27.5,
+    30
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Kountouris P et al. (2015) Evidence for Differences in Men's and Women's Volleyball Games Based on Skills Effectiveness in Four Consecutive Olympic Tournaments, Comprehensive Psychology 4:9 - https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+   "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+  ],
+  "note": "Olympics: successful/faulty attacks M 47.1/16.5%, W 39.6/15.0%, i.e. efficiency ~31% (M) / ~25% (W). AVC Challenge Cup 2023 kill% M 48.5-56.9, W 40.3-49.2. Directorate Elite (35/30) mapped to international, which is ambitious vs Olympic averages. University kept at the approved 25/20."
+ },
+ "card_receptionPos": {
+  "targets": {
+   "M": [
+    30,
+    32.5,
+    35,
+    37.5,
+    40
+   ],
+   "W": [
+    30,
+    32.5,
+    35,
+    37.5,
+    40
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+   "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+  ],
+  "note": "Published elite 'excellent' reception is 58.8-60.4% (Olympics) and 'precise' is 53.5-60.2% (AVC Challenge Cup 2023). Both count perfect+good, not perfect-only as in the app formula, so they are not directly comparable. Kept the approved University 30, mapped Elite 40 to international, and interpolated."
+ },
+ "card_serveAce": {
+  "targets": {
+   "M": null,
+   "W": null
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+   "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+  ],
+  "note": "Null (rule 4): ace % depends on the opponent's reception. International rates are at or below the approved University target of 5: Olympics M 5.0%, W 4.5%; AVC Challenge Cup 2023 M 2.9-5.3%, W 3.0-3.8%. If a single target is needed, keep the directorate's 5 (University) / 6 (Elite) as flat targets."
+ },
+ "card_serveFault": {
+  "targets": {
+   "M": null,
+   "W": [
+    15,
+    13.3,
+    11.7,
+    10,
+    8.5
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9",
+   "https://www.jhse.es/index.php/jhse/article/download/comparative-analysis-volleyball-skills-balanced-sets/75/3157"
+  ],
+  "note": "Men null (rule 4): elite men serve riskier jump serves and fault more (Olympics 15.2%, AVC 14.4-15.5%; directorate Elite 20 is worse than University 15). Women fault less at higher levels (Olympics 8.7%, AVC 6.4-7.0%), so the approved Elite 10 was mapped to national and international set to 8.5."
+ },
+ "card_setEff": {
+  "targets": {
+   "M": [
+    30,
+    33.8,
+    37.5,
+    41.3,
+    45
+   ],
+   "W": [
+    30,
+    33.8,
+    37.5,
+    41.3,
+    45
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published set-efficiency norms using the (+ minus -)/attempts formula were found. Kept the approved University 30, mapped Elite 45 to international, and interpolated evenly."
+ },
+ "card_digEff": {
+  "targets": {
+   "M": [
+    5,
+    8.8,
+    12.5,
+    16.3,
+    20
+   ],
+   "W": [
+    5,
+    8.8,
+    12.5,
+    16.3,
+    20
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "No published dig-efficiency norms using this formula were found. Kept the approved University 5, mapped Elite 20 to international, and interpolated evenly."
+ },
+ "card_blockPerSet": {
+  "targets": {
+   "M": [
+    0.3,
+    0.38,
+    0.45,
+    0.53,
+    0.6
+   ],
+   "W": [
+    0.3,
+    0.38,
+    0.45,
+    0.53,
+    0.6
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://journals.sagepub.com/doi/10.2466/30.50.CP.4.9"
+  ],
+  "note": "The only published figure is Olympic block success (18.6% M, 17% W); no per-player per-set norms were found. Kept the approved University 0.3, mapped Elite 0.6 to international, and interpolated. Middle blockers will sit well above these all-position values."
+ }
+}
