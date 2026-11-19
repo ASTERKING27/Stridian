@@ -204,11 +204,18 @@ def score_inputs(db: Session, student: Student, entries: list):
     return card_values, ranges, context
 
 
+def match_assignments_of(student: Student) -> list:
+    """The clips a student was identified in, in the sport they play now. Like their match
+    cards: someone moved to another sport keeps their old footage, but it says nothing
+    about the new one, and that sport's coach couldn't open the clip to check it."""
+    return [a for a in student.match_assignments if a.clip.sport == student.sport]
+
+
 def match_values_of(student: Student) -> dict:
     """A student's footage metrics over every clip they were identified in. A clip counts
     by how long they were tracked in it, which is kept in the assignment's context."""
     return match_metrics.aggregate([{**a.metrics, "_context": a.context or {}}
-                                    for a in student.match_assignments if a.metrics])
+                                    for a in match_assignments_of(student) if a.metrics])
 
 
 def metric_rows(db: Session, student: Student) -> list:
@@ -344,7 +351,7 @@ def build_report(db: Session, student: Student) -> dict:
         {"clipId": a.clip_id, "trackId": a.track_id, "label": a.clip.label,
          "originalName": a.clip.original_name, "metrics": a.metrics, "context": a.context,
          "createdAt": a.clip.created_at}
-        for a in sorted(student.match_assignments, key=lambda a: a.created_at, reverse=True)
+        for a in sorted(match_assignments_of(student), key=lambda a: a.created_at, reverse=True)
     ]
     report["student"] = StudentOut.model_validate(student).model_dump()
     if student.declared_position:
@@ -364,7 +371,7 @@ def build_report(db: Session, student: Student) -> dict:
     report["diet"] = nutrition.plan(
         StudentOut.model_validate(student).model_dump(),
         student.sport,
-        report["recommended"]["position"] if report.get("recommended") else None,
+        position,       # the one their coach confirmed, once there is one
     )
     return report
 
@@ -1035,7 +1042,8 @@ def weekly_nudge(authorization: str | None = Header(default=None), db: Session =
     """Saturday evening (vercel.json "crons"): students whose weekly focus isn't done yet
     get one reminder. Vercel calls it with the CRON_SECRET; nobody else can."""
     secret = os.environ.get("CRON_SECRET", "")
-    if not secret or not hmac.compare_digest(authorization or "", f"Bearer {secret}"):
+    # bytes, not text: comparing text with a non-ASCII character in it raises instead
+    if not secret or not hmac.compare_digest((authorization or "").encode(), f"Bearer {secret}".encode()):
         raise HTTPException(401, "Not allowed.")
     week = second_coach.week_of(second_coach.today_ist(utcnow()))
     behind = [(w.student, len(w.sessions or [])) for w in db.scalars(select(FocusWeek).where(FocusWeek.week == week))
@@ -1161,7 +1169,10 @@ def coach_log_focus(student_id: int, payload: FocusLogIn, db: Session = Depends(
     streak was restored."""
     student = coach_student(student_id, coach, db)
     today = second_coach.today_ist(utcnow())
-    if payload.day > today or (today - payload.day).days > 13:
+    # by the week, not by counting days back: thirteen days ago is the week before last
+    # on every day but a Sunday
+    open_weeks = {second_coach.week_of(today), second_coach.week_of(today - timedelta(days=7))}
+    if payload.day > today or second_coach.week_of(payload.day) not in open_weeks:
         raise HTTPException(400, "Log a session from this week or last week.")
     week = db.scalar(select(FocusWeek).where(FocusWeek.student_id == student.id,
                                              FocusWeek.week == second_coach.week_of(payload.day))
@@ -1169,11 +1180,14 @@ def coach_log_focus(student_id: int, payload: FocusLogIn, db: Session = Depends(
     if week is None:
         raise HTTPException(409, f"{student.name} had no weekly focus that week, so there is nothing to log it against.")
     day = payload.day.isoformat()
-    if day not in (week.sessions or []):
+    added = day not in (week.sessions or [])
+    if added:
         week.sessions = sorted([*(week.sessions or []), day])
         week.restored_by, week.restored_at, week.restored_day = coach.name, utcnow(), day
     db.commit()
-    if len(week.sessions) == second_coach.TARGET_SESSIONS:
+    # only the session that completes the week says so, and only once: logging a day
+    # that was already there changes nothing
+    if added and len(week.sessions) == second_coach.TARGET_SESSIONS:
         push.notify(db, "coach", "Streak restored", f"{coach.name} logged {payload.day.strftime('%A')}'s session — that week counts.",
                     students=push.student_account_ids(db, student), data={"tab": "dash"})
     return {"week": week.week, "sessions": list(week.sessions)}
@@ -1484,6 +1498,7 @@ def verify_student(student_id: int, payload: VerifyIn, db: Session = Depends(get
     if payload.position not in sc.get_sport(student.sport)["positions"]:
         raise HTTPException(400, f"'{payload.position}' is not a position in {student.sport}")
     first = student.status != "verified"
+    same = not first and student.verified_position == payload.position
     student.status = "verified"
     student.verified_position = payload.position
     student.verified_by_id = coach.id
@@ -1491,9 +1506,10 @@ def verify_student(student_id: int, payload: VerifyIn, db: Session = Depends(get
     db.commit()
     db.refresh(student)
     sync_sheet(db, [student])
-    push.notify(db, "coach", "You're verified" if first else "Your position changed",
-                f"{coach.name} confirmed you as {payload.position}. Your report is ready.",
-                students=push.student_account_ids(db, student), data={"tab": "report"})
+    if not same:        # confirming the position they already had is nothing to announce
+        push.notify(db, "coach", "You're verified" if first else "Your position changed",
+                    f"{coach.name} confirmed you as {payload.position}. Your report is ready.",
+                    students=push.student_account_ids(db, student), data={"tab": "report"})
     return student
 
 
@@ -1827,8 +1843,11 @@ async def student_video_chunk(video_id: int, request: Request,
                               db: Session = Depends(get_db),
                               account: StudentAccount = Depends(auth.current_student)):
     record = _my_video(video_id, account, db)
+    arriving = record.status == "uploading"
     out = await take_chunk(record, request, x_chunk_range, db)
-    if out["done"] and out["status"] == "queued":
+    # only the request that finished the upload: the last piece sent again (its reply was
+    # lost) finds the clip already queued, and the coach has been told
+    if arriving and out["done"] and out["status"] == "queued":
         student = record.student
         push.notify(db, "coach", "New drill clip", f"{student.name} sent a drill clip for analysis.",
                     coaches=push.sport_coach_ids(db, student.sport), data={"student": student.id})

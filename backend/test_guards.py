@@ -62,10 +62,40 @@ def run():
         ok(c.post(f"/api/students/{sid}/videos", headers=CH, json=clip), 201)    # their coach still can
 
     # footage counts by how long they were tracked: ten seconds can't outvote three minutes
-    clips = [NS(metrics={"matchTopSpeed": 10.0}, context={"trackedSeconds": 10}),
-             NS(metrics={"matchTopSpeed": 2.0}, context={"trackedSeconds": 190}),
-             NS(metrics=None, context=None)]
-    assert main.match_values_of(NS(match_assignments=clips)) == {"matchTopSpeed": 2.4}
+    here, there = NS(sport="Football"), NS(sport="Basketball")
+    clips = [NS(metrics={"matchTopSpeed": 10.0}, context={"trackedSeconds": 10}, clip=here),
+             NS(metrics={"matchTopSpeed": 2.0}, context={"trackedSeconds": 190}, clip=here),
+             NS(metrics=None, context=None, clip=here),
+             # ...and only in the sport they play now: a clip from one they have left says
+             # nothing about this one, and this sport's coach couldn't open it to check
+             NS(metrics={"matchTopSpeed": 9.0}, context={"trackedSeconds": 600}, clip=there)]
+    assert main.match_values_of(NS(sport="Football", match_assignments=clips)) == {"matchTopSpeed": 2.4}
+
+    # a clip its coach deletes while the worker is analysing it doesn't end the worker's
+    # pass: the next clip in the queue is still analysed
+    import worker
+    with main.SessionLocal() as db:
+        db.add_all(main.VideoAnalysis(student_id=sid, original_name=name, stored_name="k", status="queued")
+                   for name in ("gone.mp4", "next.mp4"))
+        db.commit()
+
+    def analyse(db, job, tmp):
+        if job.original_name == "gone.mp4":
+            with main.SessionLocal() as coach_side:
+                coach_side.delete(coach_side.get(main.VideoAnalysis, job.id))
+                coach_side.commit()
+            db.commit()
+            raise RuntimeError("the clip is gone")
+        job.status = "done"
+        db.commit()
+
+    worker.run_video = analyse
+    worker.log.disabled = True       # the failure is the point; its traceback isn't
+    with main.SessionLocal() as db:
+        assert worker.work_queue(db, {"pose": True, "match": False}) == 2
+        left = {v.original_name: v.status for v in db.scalars(main.select(main.VideoAnalysis))
+                if v.original_name.endswith(("gone.mp4", "next.mp4"))}
+        assert left == {"next.mp4": "done"}, left
 
     # training from weights saved before the match-card measures existed leaves those as they are
     live = sc.default_weights("Football")
