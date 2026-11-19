@@ -197,8 +197,9 @@ def movement_metrics(samples, team_mean_x, attack_direction="right"):
 track_metrics = movement_metrics
 
 
-def calibrated_metrics(samples, H, family="field"):
-    """The metres-and-km/h layer. Only produced once the pitch has been marked out."""
+def calibrated_metrics(samples, H, sport="Football"):
+    """The metres-and-km/h layer. Only produced once the pitch has been marked out.
+    What counts as high-speed running and a sprint is the sport's own (its analyser.py)."""
     if H is None or len(samples) < 3:
         return {}
 
@@ -228,7 +229,7 @@ def calibrated_metrics(samples, H, family="field"):
     speeds = _smooth(raw_speeds)
     kmh = [v * 3.6 for v in speeds]
 
-    thresholds = SPEED_THRESHOLDS[family]
+    thresholds = SPEED_THRESHOLDS[sport]
     hsr_m = sum(d for d, v in zip(steps, kmh) if v >= thresholds["hsr"])
     sprint_m = sum(d for d, v in zip(steps, kmh) if v >= thresholds["sprint"])
 
@@ -264,13 +265,13 @@ def calibrated_metrics(samples, H, family="field"):
 
 
 def build_track_metrics(samples, team_mean_x, attack_direction="right", height_cm=None,
-                        H=None, family="field"):
+                        H=None, sport="Football"):
     """Everything measurable about one track, in one dict."""
     metrics = movement_metrics(samples, team_mean_x, attack_direction)
     if not metrics:
         return {}, {}
 
-    calibrated = calibrated_metrics(samples, H, family)
+    calibrated = calibrated_metrics(samples, H, sport)
     calibration_context = calibrated.pop("_calibrated", None)
     metrics.update(calibrated)
 
@@ -318,7 +319,7 @@ def aggregate(per_clip):
     return out
 
 
-def recompute(clip_payload, image_points=None, world_points=None, family="field",
+def recompute(clip_payload, image_points=None, world_points=None, sport="Football",
               attack_direction="right"):
     """Re-derive every track's metrics from the stored samples.
 
@@ -345,7 +346,7 @@ def recompute(clip_payload, image_points=None, world_points=None, family="field"
     for track in tracks:
         samples = [tuple(s) for s in track["samples"]]
         metrics, context = build_track_metrics(
-            samples, team_mean_x, attack_direction, H=H, family=family)
+            samples, team_mean_x, attack_direction, H=H, sport=sport)
         out.append({**track, "metrics": metrics, "context": context})
 
     units = "real-world units" if H is not None else "scale-free units"

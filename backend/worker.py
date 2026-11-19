@@ -165,13 +165,13 @@ def run_match(db, job, tmp):
     import match_video
 
     src = tmp / ("match" + Path(job.original_name).suffix.lower())
-    stored, direction, family = job.stored_name, job.attack_direction, sc.SPORT_MATCH_FAMILY[job.sport]
+    stored, direction, sport = job.stored_name, job.attack_direction, job.sport
     db.commit()   # release the connection for the long part, as in run_video
     storage.download(stored, src)
     keyframe, frames_dir = tmp / "key.jpg", tmp / "frames"
     frames_dir.mkdir()
     result = match_video.analyse_match(src, attack_direction=direction, keyframe_path=keyframe,
-                                       family=family, frames_dir=frames_dir)
+                                       sport=sport, frames_dir=frames_dir)
 
     job.status = result.get("status", "failed")
     job.message = result.get("message")

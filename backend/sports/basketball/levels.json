@@ -1,0 +1,440 @@
+{
+ "wingspan": {
+  "targets": {
+   "M": [
+    179,
+    181,
+    186,
+    192,
+    202
+   ],
+   "W": [
+    166,
+    168,
+    172,
+    176,
+    182
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "Cui Y et al. (2019) Key Anthropometric and Physical Determinants for Different Playing Positions During NBA Draft Combine Test, Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+   "https://www.kheljournal.com/archives/2025/vol12issue1/PartC/12-1-20-236.pdf"
+  ],
+  "note": "No Indian wingspan data found. Derived from the heightCm ladder using an arm-span/height ratio rising from ~1.03 (sub-elite) to ~1.045 (NBA Combine: drafted PG 186.3 cm tall / 198.0 cm span, C 207.9 / 221.4). Women use the same approach (ratio ~1.02-1.03)."
+ },
+ "standingReach": {
+  "targets": {
+   "M": [
+    230,
+    233,
+    238,
+    246,
+    257
+   ],
+   "W": [
+    214,
+    217,
+    221,
+    226,
+    234
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+   "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+  ],
+  "note": "Derived from the heightCm ladder using the Combine reach/height ratio (~1.33; e.g. undrafted SG 189.9 cm tall / 252.6 cm reach) and ~1.31-1.32 for lower levels. The international men's value (257) sits near Combine undrafted guards. Women's college all-star combine forwards (185-193 cm) reached 254-255 cm, well above the Indian women's ladder."
+ },
+ "laneAgility": {
+  "targets": {
+   "M": [
+    13.0,
+    12.7,
+    12.4,
+    12.1,
+    11.8
+   ],
+   "W": [
+    14.15,
+    13.85,
+    13.5,
+    13.2,
+    12.85
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+   "https://lpsathletic.com/nba-draft-combine-stats-measurements-agility-strength-standards/",
+   "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+  ],
+  "note": "The published data are NBA Combine only: 11.1-11.9 s for drafted players and 11.4-12.3 s for undrafted players, by position. The India international level was set just slower than the undrafted Combine mean, with even steps down to university. Women are ~9% slower. One women's all-star combine forward ran 11.65 s, which is elite."
+ },
+ "shuttleRun": {
+  "targets": {
+   "M": [
+    3.65,
+    3.57,
+    3.5,
+    3.43,
+    3.35
+   ],
+   "W": [
+    3.98,
+    3.89,
+    3.81,
+    3.73,
+    3.65
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+   "PLOS One (2024) Anthropometric and physical fitness indicators in the combine draft between the finalist and the eliminated player in the NBA All-Star slam dunk contest https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0299262",
+   "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+  ],
+  "note": "Treated as the Combine 3/4-court sprint, as the app's description says. Combine drafted players ran 3.2-3.4 s and undrafted 3.3-3.5 s; dunk-contest finalists ran 3.15 s. International was set at 3.35 s with even steps down to university. Women are ~9% slower; a highlighted women's combine guard ran 3.36 s. The Combine also has a separate ~3.0 s 'shuttle run', so the app label is ambiguous."
+ },
+ "standingVertical": {
+  "targets": {
+   "M": [
+    42,
+    45,
+    50,
+    55,
+    62
+   ],
+   "W": [
+    30,
+    32,
+    36,
+    40,
+    45
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Vignesh PS, Antharias PM (2025) Analysis of vertical jumping ability and height on basketball playing ability of inter university male basketball players, Int J Physical Education, Sports and Health 12(1) https://www.kheljournal.com/archives/2025/vol12issue1/PartC/12-1-20-236.pdf",
+   "Ziv G, Lidor R (2010) Vertical jump in female and male basketball players - a review, J Sci Med Sport https://www.sciencedirect.com/science/article/abs/pii/S1440244009000887",
+   "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full"
+  ],
+  "note": "Published anchor: 156 men from 13 universities at the South Zone inter-university tournament (zonal level) jumped 0.43 m, taken as ~43-45 cm. NBA Combine drafted players reach 71-77 cm, the upper bound. International (62) is interpolated between these. Women are ~28% lower, inside the 22-48 cm female range in Ziv & Lidor."
+ },
+ "maxVertical": {
+  "targets": {
+   "M": [
+    52,
+    56,
+    61,
+    67,
+    75
+   ],
+   "W": [
+    37,
+    40,
+    44,
+    48,
+    54
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+   "https://collegefootballnetwork.com/womens-college-basketball/wnba-draft-prospects-boosting-stock-tampa/"
+  ],
+  "note": "Built as the standingVertical ladder plus a run-up gain. At the Combine the gain is +10-15 cm (drafted PG 76.5 standing vs 91.9 max; C 70.8 vs 81.1). Lower levels were given smaller gains. Women are ~28% lower; one women's combine guard went 27.5 in standing and 32.5 in approach, i.e. +5 in (~13 cm)."
+ },
+ "heightCm": {
+  "targets": {
+   "M": [
+    174,
+    176,
+    180,
+    185,
+    193
+   ],
+   "W": [
+    163,
+    165,
+    168,
+    172,
+    177
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Vignesh PS, Antharias PM (2025) Int J Physical Education, Sports and Health 12(1) https://www.kheljournal.com/archives/2025/vol12issue1/PartC/12-1-20-236.pdf",
+   "Cui Y et al. (2019) Frontiers in Psychology 10:2359 https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.02359/full",
+   "Applied Sciences (2025) Exploring the Relationship Between Vertical Jump and Short Sprint Performance in Female Basketball Players https://www.mdpi.com/2076-3417/15/9/4868"
+  ],
+  "note": "Men: the zonal value comes from South Zone inter-university players (175.9 cm, published). The international value (193) is estimated for India's senior/WUG squads and sits below the NBA Combine mean (~197). Women: all estimated, with the top anchored to Spanish third-tier elite women (177.0 cm)."
+ },
+ "matchMetresPerMin": {
+  "targets": {
+   "M": [
+    58,
+    62,
+    66,
+    71,
+    77
+   ],
+   "W": [
+    54,
+    58,
+    62,
+    66,
+    71
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Specific Absolute Velocity Thresholds during Male Basketball Games Using Local Positional System; Differences between Age Categories, Applied Sciences 11(10):4390 (2021) https://www.mdpi.com/2076-3417/11/10/4390",
+   "Comparing Average and Peak Physical Demands and Well-Being Status During Basketball Back-to-Back Games, Applied Sciences 14(23):11374 (2024) https://www.mdpi.com/2076-3417/14/23/11374",
+   "Game vs. Practice Differences in External Load in U16 and U18 Women's Basketball Players, Sports 13(9):296 (2025) https://www.mdpi.com/2075-4663/13/9/296",
+   "Stojanovic E et al. (2018) The Activity Demands and Physiological Responses Encountered During Basketball Match-Play: A Systematic Review, Sports Med https://link.springer.com/article/10.1007/s40279-017-0794-z"
+  ],
+  "note": "LPS data for elite men give ~74-84 m/min of on-court time (U18 men 77.9; senior+junior men 83.95). Top-tier U16 women give 68.4 m/min. International was set a little below these because a filmed clip includes dead-ball time. The level trend is weak: seniors cover fewer m/min than juniors, and Stojanovic says higher levels play more intermittently, so the ladder is kept shallow."
+ },
+ "matchTopSpeedKmh": {
+  "targets": {
+   "M": [
+    19.0,
+    20.0,
+    21.0,
+    22.5,
+    24.0
+   ],
+   "W": [
+    17.0,
+    18.0,
+    19.0,
+    20.5,
+    22.0
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Petway AJ et al. (2020) Training load and match-play demands in basketball based on competition level: A systematic review, PLOS One 15(3):e0229212 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229212",
+   "Study of the Load During Official Competition in Professional Women's Basketball - A Case Study, Sports 13(2):59 (2025) https://www.mdpi.com/2075-4663/13/2/59"
+  ],
+  "note": "Petway reports top speed of 8.09 m/s (29 km/h) for elite/NBA and 6.2 m/s (22.3 km/h) for sub-elite. In the Spanish women's 2nd division, match peaks were 21.1-24.3 km/h. The ladder is set below whole-game peaks because the app takes the peak from a short clip, not a full game."
+ },
+ "matchHsrPerMin": {
+  "targets": {
+   "M": [
+    4.0,
+    5.0,
+    6.0,
+    7.5,
+    9.5
+   ],
+   "W": [
+    3.0,
+    3.8,
+    4.6,
+    5.8,
+    7.5
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Applied Sciences 11(10):4390 (2021) https://www.mdpi.com/2076-3417/11/10/4390",
+   "High-Speed Running and Sprinting Thresholds in Elite Female Team Sports: A Systematic Review, Applied Sciences 15(10):5497 (2025) https://www.mdpi.com/2076-3417/15/10/5497"
+  ],
+  "note": "Elite men: 14.7% of 84 m/min is at 12-18 km/h and 5.2% above 18 km/h. That puts distance above 14.4 km/h at ~10 m/min, used for international; lower levels are estimated. Female basketball studies put HSR at ~14 km/h, but there are few; women are estimated ~20% lower."
+ },
+ "matchSprintMetresPerMin": {
+  "targets": {
+   "M": [
+    1.2,
+    1.7,
+    2.3,
+    3.2,
+    4.2
+   ],
+   "W": [
+    0.6,
+    0.9,
+    1.3,
+    1.8,
+    2.5
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "Applied Sciences 11(10):4390 (2021) https://www.mdpi.com/2076-3417/11/10/4390",
+   "Portes R et al. (2020) Comparing the External Loads Encountered during Competition between Elite, Junior Male and Female Basketball Players, IJERPH 17(4):1456 https://www.mdpi.com/1660-4601/17/4/1456"
+  ],
+  "note": "Elite senior+junior men: 5.23% of 84 m/min above 18 km/h gives ~4.4 m/min, used for the international men's value. Lower levels are estimated. Portes found males cover more high-intensity and sprint distance than females at the same level, so women are set ~40% lower (estimated)."
+ },
+ "matchAccelPerMin": {
+  "targets": {
+   "M": [
+    0.6,
+    0.8,
+    1.0,
+    1.3,
+    1.6
+   ],
+   "W": [
+    0.5,
+    0.65,
+    0.8,
+    1.0,
+    1.25
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "Petway AJ et al. (2020) PLOS One 15(3):e0229212 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229212",
+   "Portes R et al. (2020) IJERPH 17(4):1456 https://www.mdpi.com/1660-4601/17/4/1456"
+  ],
+  "note": "Petway reports 43-145 total and 1-15 high-intensity accelerations per elite match. Thresholds vary between studies, so bursts above 3 m/s² were estimated at ~1-2 per minute on court for elite. Video tracking may count more. Women are set slightly lower."
+ },
+ "card_fgPct": {
+  "targets": {
+   "M": [
+    45,
+    45.5,
+    46,
+    46.5,
+    47
+   ],
+   "W": [
+    45,
+    45.5,
+    46,
+    46.5,
+    47
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+   "https://www.basketball-reference.com/wnba/years/2025.html"
+  ],
+  "note": "University = the approved 45. The approved Elite 47 equals the NBA 2025-26 league average (47.1%), so Elite maps to international, with even steps between. Doubt: the WNBA 2025 average is only 43.9%, so the women's targets are above pro women's averages; the flat ladder minimum is kept because the university target is fixed."
+ },
+ "card_threePct": {
+  "targets": {
+   "M": [
+    34,
+    34.5,
+    35,
+    35.5,
+    36
+   ],
+   "W": [
+    34,
+    34.5,
+    35,
+    35.5,
+    36
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+   "https://www.basketball-reference.com/wnba/years/2025.html"
+  ],
+  "note": "Elite 36 = the NBA 2025-26 average (36.0%), so Elite maps to international. The WNBA 2025 average is 33.8%, below even the women's university target of 34; the university value is kept per rule 5."
+ },
+ "card_ftPct": {
+  "targets": {
+   "M": [
+    73,
+    74.3,
+    75.5,
+    76.8,
+    78
+   ],
+   "W": [
+    73,
+    74.3,
+    75.5,
+    76.8,
+    78
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+   "https://www.basketball-reference.com/wnba/years/2025.html"
+  ],
+  "note": "Elite 78 matches both the NBA 2025-26 average (78.3%) and the WNBA 2025 average (78.7%), so Elite maps to international for both sexes, with even steps from the approved 73."
+ },
+ "card_efgPct": {
+  "targets": {
+   "M": [
+    51,
+    52,
+    53,
+    54,
+    55
+   ],
+   "W": [
+    51,
+    52,
+    53,
+    54,
+    55
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+   "https://www.basketball-reference.com/wnba/years/2025.html"
+  ],
+  "note": "Elite 55 is about the NBA 2025-26 average (54.6%), so Elite maps to international. The WNBA 2025 average is 50.0%, below the women's university target of 51, which is kept per rule 5."
+ },
+ "card_tsPct": {
+  "targets": {
+   "M": [
+    55,
+    55.8,
+    56.5,
+    57.3,
+    58
+   ],
+   "W": [
+    55,
+    55.8,
+    56.5,
+    57.3,
+    58
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+   "https://www.basketball-reference.com/wnba/years/2025.html"
+  ],
+  "note": "Elite 58 is about the NBA 2025-26 average (58.1%), so Elite maps to international. The WNBA 2025 average is 54.2%, below the women's university target of 55, which is kept per rule 5."
+ },
+ "card_astTo": {
+  "targets": {
+   "M": [
+    1.2,
+    1.35,
+    1.5,
+    1.65,
+    1.8
+   ],
+   "W": [
+    1.2,
+    1.35,
+    1.5,
+    1.65,
+    1.8
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.basketball-reference.com/leagues/NBA_stats_per_game.html",
+   "https://www.basketball-reference.com/wnba/years/2025.html"
+  ],
+  "note": "In the NBA 2025-26, 26.7 assists / 14.5 turnovers = 1.84, which matches Elite 1.8, so Elite maps to international. In the WNBA 2025, 20.3 / 12.9 = 1.57, so the women's top is ambitious. These are team-level ratios and individual guards run higher."
+ }
+}

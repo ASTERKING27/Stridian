@@ -7,9 +7,9 @@ the highest level it reaches and how far away the next one is.
 This is a second, plainer reading of the same numbers. The 0-100 scores, the position
 engine and the trainer never read it.
 
-The starting numbers are in levels.json. They come from published norms where those exist,
-and are interpolated or estimated where they don't; each measure says which, and where
-from. Coaches retune them for their sport one measure at a time. Their edits live in
+The starting numbers are in each sport's levels.json (backend/sports/<sport>/). They come
+from published norms where those exist, and are interpolated or estimated where they
+don't; each measure says which, and where from. Coaches retune them for their sport one measure at a time. Their edits live in
 AppState["levels:<sport>"] as {metric key: targets}, and a reset deletes the edit.
 
 `targets` has the same shape as a match card's: {"M": ladder, "W": ladder}, optionally
@@ -18,15 +18,13 @@ or None when the measure can't be compared across levels (T20 economy rises in s
 leagues, for one).
 """
 
-import json
-from pathlib import Path
-
 import match_cards
 import sports_config as sc
-from sports_config import TRAINING_TIPS, UNTRAINABLE
 from models import LEVELS
+from sports import ALL
+from sports_config import UNTRAINABLE
 
-DEFAULTS = json.loads((Path(__file__).parent / "levels.json").read_text(encoding="utf-8"))
+DEFAULTS = {sport.NAME: sport.LEVELS for sport in ALL}
 LEVEL_WORDS = ("University", "Zonal", "State", "National", "International")
 CATEGORIES = ("M", "W")
 # how much each kind of evidence counts towards the overall level: the tests and the
@@ -167,7 +165,7 @@ def read_out(sport, values, category, card_category=None, card_format=None, weig
         entry = DEFAULTS[sport][key]
         rows.append({"key": key, **meta, "value": value, "ladder": steps, "level": level, "next": nxt,
                      "custom": key in (overrides or {}), "basis": entry["basis"],
-                     "tip": TRAINING_TIPS.get(key), "trainable": key not in UNTRAINABLE})
+                     "tip": sc.tip(sport, key), "trainable": key not in UNTRAINABLE})
 
     groups = {g: _summary([r for r in rows if group_of(r["source"]) == g], weights)
               for g in ("test", "card", "match")}

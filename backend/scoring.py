@@ -11,7 +11,7 @@ Nothing here reads the database; main.py passes the weights in, so the coach's e
 weights and the built-in defaults go through identical code.
 """
 
-from sports_config import TRAINING_TIPS, get_sport, metric_map
+from sports_config import get_sport, metric_map, tip
 
 # A metric is only called a strength / weakness past these score lines. On the level
 # scale (below) that is State level or better, and short of Zonal level.
@@ -254,8 +254,8 @@ def _build_why(position, fit, drivers, drags, blurb):
     return " ".join(parts)
 
 
-def development_plan(metric_rows, top_position_weights):
-    """What to train, weakest-and-most-relevant first."""
+def development_plan(metric_rows, top_position_weights, sport_name=None):
+    """What to train, weakest-and-most-relevant first, with the sport's own advice for each."""
     plan = []
     for row in metric_rows:
         if row["score"] is None or row["score"] >= WEAKNESS_LINE or row["role"]:
@@ -268,7 +268,7 @@ def development_plan(metric_rows, top_position_weights):
             "value": row["value"],
             "unit": row["unit"],
             "relevance": round(weight, 4),
-            "tip": TRAINING_TIPS.get(row["key"], "Work on this with your coach using sport-specific drills."),
+            "tip": tip(sport_name, row["key"], "Work on this with your coach using sport-specific drills."),
         })
     plan.sort(key=lambda p: (-p["relevance"], p["score"]))
     return plan
@@ -300,7 +300,7 @@ def analyse(sport_name, student_profile, test_values, weights_by_position,
     recommended = ranked[0] if ranked and ranked[0]["fit"] is not None else None
 
     top_weights = weights_by_position.get(recommended["position"], {}) if recommended else {}
-    plan = development_plan(metric_rows, top_weights)
+    plan = development_plan(metric_rows, top_weights, sport_name)
 
     margin = None
     if recommended and len(ranked) > 1 and ranked[1]["fit"] is not None:

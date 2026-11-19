@@ -1,0 +1,521 @@
+{
+ "sprint30m": {
+  "targets": {
+   "M": [
+    4.55,
+    4.44,
+    4.33,
+    4.22,
+    4.1
+   ],
+   "W": [
+    5.2,
+    5.1,
+    4.99,
+    4.89,
+    4.75
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.academia.edu/32019110/The_Role_and_Development_of_Sprinting_Speed_in_Soccer (Haugen et al. 2014)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+   "https://link.springer.com/article/10.1007/s40279-025-02251-0 (Compton et al. 2025, Benchmarking physical performance in women's football, Sports Med)",
+   "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)"
+  ],
+  "note": "International M from elite senior 30 m ~4.0-4.3 s (Haugen review; Portuguese U19 elite 4.23-4.31); W international = Chile NT 4.74 s, national/tier-2 steps from Compton meta (-0.15 s, -0.32 s). University/zonal/state estimated and interpolated."
+ },
+ "cmj": {
+  "targets": {
+   "M": [
+    33,
+    35,
+    37,
+    39,
+    41
+   ],
+   "W": [
+    24,
+    25,
+    26,
+    27,
+    29
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.academia.edu/32019110/The_Role_and_Development_of_Sprinting_Speed_in_Soccer (Haugen et al. 2014)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+   "https://link.springer.com/article/10.1007/s40279-025-02251-0 (Compton et al. 2025, Benchmarking physical performance in women's football, Sports Med)",
+   "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)"
+  ],
+  "note": "Elite men 37-42 cm and elite women 26-33 cm (Haugen review); Chile women NT 29.3 cm; Compton: +3.3 cm national->international, flat below. Indian youth elite VJ ~29-32 cm; lower levels estimated."
+ },
+ "agilityTtest": {
+  "targets": {
+   "M": [
+    10.5,
+    10.25,
+    10.0,
+    9.8,
+    9.6
+   ],
+   "W": [
+    11.8,
+    11.45,
+    11.1,
+    10.8,
+    10.5
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.cepcometti.com/wp-content/uploads/2018/02/testT.pdf (Pauole et al. 2000, JSCR, T-test in college men/women)",
+   "https://www.topendsports.com/testing/tests/t-test.htm",
+   "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)"
+  ],
+  "note": "Pauole 2000: US intercollegiate athletes M 9.94 / W 10.94 s, recreational M 10.49 / W 12.52 s; norms 'excellent' <9.5 M / <10.5 W. University placed near recreational-athlete level, international at 'excellent' border. Indian youth players ran 11.9 s (likely slower surface/timing), so the university value is a doubtful middle ground."
+ },
+ "yoyoLevel": {
+  "targets": {
+   "M": [
+    17.2,
+    17.6,
+    18.2,
+    18.8,
+    19.5
+   ],
+   "W": [
+    15.4,
+    15.6,
+    16.1,
+    16.4,
+    16.8
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.topendsports.com/testing/results/yo-yo-intermittent.htm (summarising Bangsbo et al. (2008) Sports Med)",
+   "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+   "https://link.springer.com/article/10.1007/s40279-025-02251-0 (Compton et al. 2025, Benchmarking physical performance in women's football, Sports Med)"
+  ],
+  "note": "Values are level.shuttle converted from distance (M 1480/1640/1800/2040/2240 m; W 920/1000/1120/1240/1400 m); interpolate in metres, not decimals. M: Bangsbo moderate 1810, sub-elite 2030, elite 2190, top-class 2420 m; Mohr 2040 vs 2260 m. W: Bangsbo sub-elite 1160, elite 1360 m; Chile NT 1437 m; Compton tier steps +170/+184 m. University/zonal extrapolated below."
+ },
+ "heightCm": {
+  "targets": {
+   "M": [
+    170,
+    171,
+    172,
+    173,
+    175
+   ],
+   "W": [
+    158,
+    158,
+    159,
+    160,
+    161
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://ijpefs.org/index.php/ijpefs/article/view/36 (Singh, Kulkarni & Sandhu 2013, Indian U-22 national players)",
+   "https://www.academia.edu/113191896/ (Kadyan & Paul 2022, Indian elite youth soccer players, IJHS)",
+   "https://www.academia.edu/16626733/ (Dey, Jana & Bandyopadhyay 2015, Indian senior national women)",
+   "https://pubs.sciepub.com/ajssm/3/2/4/index.html (Sharma 2015, Indian women footballers by level)",
+   "https://www.mdpi.com/2075-4663/14/9/400 (Preissler et al. 2026, Brazilian women by stage)"
+  ],
+  "note": "Indian U-22 national men 173 cm, Indian elite youth 168-171 cm; Indian senior national women 158.4 cm, Indian national/inter-university/state women 161-162 cm (small sample). Height barely separates levels in Indian data; ladder kept nearly flat."
+ },
+ "matchMetresPerMin": {
+  "targets": {
+   "M": [
+    95,
+    98,
+    101,
+    104,
+    110
+   ],
+   "W": [
+    88,
+    91,
+    94,
+    98,
+    106
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)",
+   "https://researchonline.ljmu.ac.uk/id/eprint/4044/ (match physical performance of elite female players in international competition)",
+   "https://www.frontiersin.org/articles/604605 (Griffin et al. 2021, women's international vs domestic matches)",
+   "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)"
+  ],
+  "note": "Chile women NT 108 m/min; England women internationals ~10.3 km (~109 m/min); international women cover ~8% more than domestic (Griffin). Men international from pro 10-11 km/match; lower levels estimated."
+ },
+ "matchTopSpeedKmh": {
+  "targets": {
+   "M": [
+    27.5,
+    28.5,
+    29.5,
+    30.5,
+    31.5
+   ],
+   "W": [
+    23.5,
+    24.2,
+    24.9,
+    25.6,
+    26.5
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.mdpi.com/2075-4663/13/1/18 (narrative review, velocity/acceleration profile by position)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+  ],
+  "note": "Elite men's match peak ~30.7 km/h season average, forwards ~31.8-32 km/h; Chile women NT peak 25.3 km/h. Per-match (not season-best) peaks; the app's 33 km/h elite anchor is above typical single-match peaks. Lower levels estimated."
+ },
+ "matchHsrPerMin": {
+  "targets": {
+   "M": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0
+   ],
+   "W": [
+    1.6,
+    2.1,
+    2.6,
+    3.0,
+    3.8
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2023.1116293/full (systematic review, HSR >19.8 and sprint >25.2 km/h in professional men)",
+   "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)",
+   "https://researchonline.ljmu.ac.uk/id/eprint/4044/ (match physical performance of elite female players in international competition)",
+   "https://www.frontiersin.org/articles/604605 (Griffin et al. 2021, women's international vs domestic matches)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+  ],
+  "note": "Pro men 618-1001 m >19.8 km/h per match (~6.5-10.5 m/min); moderate pros ~22% less high-intensity running than top-class (Mohr). England women internationals ~7.5 m/min, but Chile NT only 515 m >18 km/h, so Indian women scaled well below; +26% domestic->international (Griffin). Lower levels estimated."
+ },
+ "matchSprintMetresPerMin": {
+  "targets": {
+   "M": [
+    0.4,
+    0.6,
+    0.9,
+    1.2,
+    1.8
+   ],
+   "W": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.3
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2023.1116293/full (systematic review, HSR >19.8 and sprint >25.2 km/h in professional men)",
+   "Mohr, Krustrup & Bangsbo (2003) Match performance of high-standard soccer players with special reference to development of fatigue, J Sports Sci 21:519-528 (https://scispace.com/papers/match-performance-of-high-standard-soccer-players-with-5f9b0ayrca)",
+   "https://researchonline.ljmu.ac.uk/id/eprint/4044/ (match physical performance of elite female players in international competition)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+  ],
+  "note": "Pro men 153-295 m >25.2 km/h per match (~1.6-3.1 m/min); top-class 58% more sprinting than moderate (Mohr). Women: England internationals ~1.8 m/min, but with match peaks ~25 km/h (Chile) the 25.2 km/h men's threshold is rarely crossed, so women's values are tiny and estimated."
+ },
+ "matchAccelPerMin": {
+  "targets": {
+   "M": [
+    0.3,
+    0.33,
+    0.36,
+    0.4,
+    0.45
+   ],
+   "W": [
+    0.25,
+    0.28,
+    0.31,
+    0.34,
+    0.38
+   ]
+  },
+  "basis": "estimated",
+  "sources": [
+   "https://www.nature.com/articles/s41598-021-97903-2 (Pons et al. 2021, accelerations by video tracking vs GPS)",
+   "https://pmc.ncbi.nlm.nih.gov/articles/PMC8391224/ (Villaseca-Vicuna et al. 2021, Chile women's national team)"
+  ],
+  "note": "GPS literature: ~30 accelerations >2.75 m/s2 per elite match (~0.33/min); Chile women 102 >2 m/s2 per match. The app's 1.5/min elite anchor is far above GPS counts; video tracking may count more, so retune after calibration."
+ },
+ "card_passPct": {
+  "targets": {
+   "M": [
+    75,
+    77.3,
+    79.5,
+    81.8,
+    84
+   ],
+   "W": [
+    75,
+    77.3,
+    79.5,
+    81.8,
+    84
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://www.statsperform.com/insights/why-womens-football-analytics-are-set-to-transform-the-industry-insights-from-opta/ (Women's Euro 2025: pass accuracy 79.1%, conversion 12.2%)",
+   "https://arxiv.org/html/2506.22119v1 (Carstens et al. 2025, men's vs women's elite pass accuracy)"
+  ],
+  "note": "Women's Euro 2025 averaged 79.1% pass accuracy; men's top leagues run higher (ground passes 90-95% men vs 85-90% women). University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Women's 84 is above the Euro 2025 average (doubtful but kept)."
+ },
+ "card_shotAcc": {
+  "targets": {
+   "M": [
+    30,
+    31.3,
+    32.5,
+    33.8,
+    35
+   ],
+   "W": [
+    30,
+    31.3,
+    32.5,
+    33.8,
+    35
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://fbref.com/en/comps/82/Indian-Super-League-Stats (ISL squad SoT% and goals/shot)"
+  ],
+  "note": "ISL squads 26-38% shots on target (~30% average). University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Note the University target already equals the Indian top-flight average."
+ },
+ "card_conversion": {
+  "targets": {
+   "M": [
+    10,
+    10.3,
+    10.5,
+    10.8,
+    11
+   ],
+   "W": [
+    10,
+    10.3,
+    10.5,
+    10.8,
+    11
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://fbref.com/en/comps/82/Indian-Super-League-Stats (ISL squad SoT% and goals/shot)",
+   "https://www.statsperform.com/insights/why-womens-football-analytics-are-set-to-transform-the-industry-insights-from-opta/ (Women's Euro 2025: pass accuracy 79.1%, conversion 12.2%)"
+  ],
+  "note": "ISL squads 0.05-0.13 goals/shot (~8%); Women's Euro 2025 12.2%. University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Conversion barely rises with level because defending improves too."
+ },
+ "card_crossAcc": {
+  "targets": {
+   "M": [
+    15,
+    16.3,
+    17.5,
+    18.8,
+    20
+   ],
+   "W": [
+    15,
+    16.3,
+    17.5,
+    18.8,
+    20
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. No published cross-accuracy average seen in this search."
+ },
+ "card_dribblePct": {
+  "targets": {
+   "M": [
+    45,
+    46.8,
+    48.5,
+    50.3,
+    52
+   ],
+   "W": [
+    45,
+    46.8,
+    48.5,
+    50.3,
+    52
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated."
+ },
+ "card_tacklePct": {
+  "targets": {
+   "M": [
+    50,
+    52.5,
+    55,
+    57.5,
+    60
+   ],
+   "W": [
+    50,
+    52.5,
+    55,
+    57.5,
+    60
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated."
+ },
+ "card_aerialPct": {
+  "targets": {
+   "M": [
+    50,
+    52.5,
+    55,
+    57.5,
+    60
+   ],
+   "W": [
+    50,
+    52.5,
+    55,
+    57.5,
+    60
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. League-wide aerial win % is 50% by construction; the ladder only makes sense for the position-filtered (CB/striker) card."
+ },
+ "card_savePct": {
+  "targets": {
+   "M": [
+    62,
+    63.5,
+    65,
+    66.5,
+    68
+   ],
+   "W": [
+    62,
+    63.5,
+    65,
+    66.5,
+    68
+   ]
+  },
+  "basis": "mixed",
+  "sources": [
+   "https://fbref.com/en/comps/82/Indian-Super-League-Stats (ISL squad SoT% and goals/shot)"
+  ],
+  "note": "ISL squad SoT% and goals/shot imply ~70% of on-target shots saved. University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Women's elite conversion (12.2%) suggests women's save % may sit lower; same ladder kept."
+ },
+ "card_interceptEff": {
+  "targets": {
+   "M": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ],
+   "W": [
+    40,
+    45,
+    50,
+    55,
+    60
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+ },
+ "card_chanceEff": {
+  "targets": {
+   "M": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+   ],
+   "W": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+ },
+ "card_touchEff": {
+  "targets": {
+   "M": [
+    10,
+    15,
+    20,
+    25,
+    30
+   ],
+   "W": [
+    10,
+    15,
+    20,
+    25,
+    30
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+ },
+ "card_gkHighEff": {
+  "targets": {
+   "M": [
+    50,
+    55,
+    60,
+    65,
+    70
+   ],
+   "W": [
+    50,
+    55,
+    60,
+    65,
+    70
+   ]
+  },
+  "basis": "estimated",
+  "sources": [],
+  "note": "University = approved target; Elite mapped to international (Elite values match top-flight/international averages, above Indian top-flight levels); levels between evenly interpolated. Coach-coded net efficiency; no published equivalent."
+ }
+}

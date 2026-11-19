@@ -18,7 +18,7 @@ from datetime import date, datetime, timedelta
 
 from levels import LEVEL_WORDS
 from scoring import normalize_ladder
-from sports_config import TRAINING_TIPS, UNTRAINABLE
+from sports_config import UNTRAINABLE, tip
 
 TARGET_SESSIONS = 3            # sessions a week that complete the weekly focus
 CARDS_MAX = 5                  # things the dashboard says at once; the tabs have the rest
@@ -185,7 +185,7 @@ def focus_view(week, report, today, weeks):
     return {
         "week": week["week"], "key": week["metric_key"],
         "label": row["label"] if row else week["metric_key"],
-        "tip": TRAINING_TIPS.get(week["metric_key"], "Work on it with your coach using sport-specific drills."),
+        "tip": tip(report.get("sport"), week["metric_key"], "Work on it with your coach using sport-specific drills."),
         "ring": ring(row) if row and row.get("ladder") and row["level"] is not None else None,
         "sessions": sessions, "target": TARGET_SESSIONS,
         "doneToday": today.isoformat() in sessions,
@@ -381,7 +381,7 @@ def student_coach(student, report, history, achievements, weeks, seen, today, pr
             t, b = say(WEAK if weak else STEP, "weak")
             cards.append(_card("focus" if weak else "step", t.format(label=row["label"]),
                                b.format(L=level_name(row["level"]), pos=position,
-                                        tip=TRAINING_TIPS.get(focus_key, "Work on it with your coach.")),
+                                        tip=tip(student.get("sport"), focus_key, "Work on it with your coach.")),
                                "My report", focus_key))
 
         # 4. their best weapon
