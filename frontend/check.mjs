@@ -23,4 +23,9 @@ assert.deepEqual(checkValue(sprint, '44.5'), { text: 'Usually between 2.34 and 8
 assert.equal(checkValue(cmj, '-5').fix, null)
 for (const junk of ['abc', '1e999', '4.4.5']) assert.equal(checkValue(sprint, junk).text, 'That isn’t a number.')
 assert.equal(checkValue(trial, 'eight').text, 'Type minutes and seconds, like 8:30.')
+// a time is minutes and 0–59 seconds: anything else is a slip, never a different time
+for (const slip of ['8:75', '8:', ':30', '8:30:15', '8:-5', '-8:30']) {
+  assert.equal(checkValue(trial, slip).text, 'Type minutes and seconds, like 8:30.', slip)
+}
+assert.equal(checkValue(trial, '9:05'), null)
 console.log('form: ok')

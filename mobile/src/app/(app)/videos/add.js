@@ -5,7 +5,7 @@ import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg'
 import { api, getSports } from '../../../lib/api'
 import { useData } from '../../../lib/useData'
 import { pickVideo } from '../../../lib/media'
-import { clipName, uploadClip } from '../../../lib/upload'
+import { clipName, forgetUpload, uploadClip } from '../../../lib/upload'
 import { useSession } from '../../../lib/session'
 import { useTheme } from '../../../lib/theme'
 import { haptic } from '../../../lib/haptics'
@@ -39,6 +39,11 @@ export default function AddVideo() {
   const [prog, setProg] = useState({ sent: 0, total: 1, piece: 1, pieces: 1 })
   const [error, setError] = useState(null)
   const abort = useRef(null)
+  const partial = useRef(null)      // what the server kept of a clip whose upload broke off
+  const owner = useRef({})
+  owner.current = isMatch ? { match: dir } : { studentId: who?.id }
+  // a clip abandoned half-sent (a new one chosen, or the screen left) is removed
+  const discard = () => { forgetUpload(partial.current, owner.current); partial.current = null }
 
   useEffect(() => {
     getSports().then(list => {
@@ -47,7 +52,7 @@ export default function AddVideo() {
       setDrill(d => d || tests[0] || '')
     }).catch(() => {})
   }, [sport])
-  useEffect(() => () => abort.current?.abort(), [])
+  useEffect(() => () => { abort.current?.abort(); discard() }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function choose(camera) {
     setError(null)
@@ -58,6 +63,7 @@ export default function AddVideo() {
       const a = await pickVideo({ camera, maxDuration: isMatch ? 180 : 120 })
       if (!a) return
       const picked = { uri: a.uri, name: clipName(a), size: a.fileSize, duration: a.duration }
+      discard()
       setClip(picked)
       send(picked)
     } catch (err) { haptic.error(); setError(err) }
@@ -67,12 +73,16 @@ export default function AddVideo() {
     abort.current = new AbortController()
     setStage('up')
     setError(null)
+    // trying again after the connection broke carries on from what the server already has
+    const upload = partial.current
+    partial.current = null
     try {
-      await uploadClip(isMatch ? { uri: file.uri, name: file.name, label: label.trim() || null, match: dir }
-        : { uri: file.uri, name: file.name, label: drill || null, studentId: who?.id }, p => setProg(p), abort.current.signal)
+      await uploadClip(isMatch ? { uri: file.uri, name: file.name, label: label.trim() || null, match: dir, upload }
+        : { uri: file.uri, name: file.name, label: drill || null, studentId: who?.id, upload }, p => setProg(p), abort.current.signal)
       haptic.success()
       setStage('done')
     } catch (err) {
+      partial.current = err.upload ?? null
       if (err.kind === 'cancel') return setStage('pick')
       haptic.error()
       setError(err)
@@ -150,7 +160,7 @@ export default function AddVideo() {
         </View>
         <View style={{ gap: 10 }}>
           {error?.kind !== 'size' && <Btn label="Try again" icon={I.retry} onPress={() => send()} />}
-          <Btn kind="secondary" label="Choose a different video" onPress={() => { setStage('pick'); setClip(null) }} />
+          <Btn kind="secondary" label="Choose a different video" onPress={() => { discard(); setStage('pick'); setClip(null) }} />
         </View>
         <View>
           <Eyebrow style={{ paddingBottom: 6 }}>OTHER REASONS IT CAN STOP</Eyebrow>
